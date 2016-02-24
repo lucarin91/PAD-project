@@ -6,9 +6,7 @@ apply plugin: 'java'
 
 sourceCompatibility = 1.5
 
-repositories {
-    mavenCentral()
-}
+
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
@@ -17,15 +15,24 @@ dependencies {
 
 apply plugin: 'application'
 
+repositories {
+    mavenCentral()
+}
+
 mainClassName = "lr.PadFs"
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
-
+    compile 'junit:junit:4.8.2'
+    compile 'com.fasterxml.jackson:jackson-datatype-json-org:1.8.0'
+    compile ('log4j:log4j:1.2.15') {
+        exclude group: 'javax.jms'
+        exclude group: 'com.sun.jdmk'
+        exclude group: 'com.sun.jmx'
+    }
 }
-
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.7'
