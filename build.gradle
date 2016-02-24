@@ -24,6 +24,15 @@ mainClassName = "lr.PadFs"
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/libs'
+        }
+    }
+}
+
+
 dependencies {
     compile 'junit:junit:4.8.2'
     compile 'com.fasterxml.jackson:jackson-datatype-json-org:1.8.0'
