@@ -22,25 +22,23 @@ public class PadFs {
                 startupMembers.add(new RemoteGossipMember("127.0.0." + i, 2000, i + ""));
             }
 
-            List<GossipService> clients = new ArrayList<>();
+            List<Node> clients = new ArrayList<>();
             int clusterMembers = 5;
             for (int i = 1; i < clusterMembers + 1; ++i) {
-                GossipService gossipService = null;
-                final int finalI = i;
-                gossipService = new GossipService("127.0.0." + i, 2000, i + "", LogLevel.DEBUG, startupMembers, settings,
-                        (member, state) -> System.out.println("id" + finalI + " - " + member + " " + state));
-                clients.add(gossipService);
-                gossipService.start();
+                final ConsistentHash<GossipMember> ch = new ConsistentHash<>();
+                Node Node = new Node("127.0.0." + i, 2000, i + "", LogLevel.DEBUG, startupMembers, settings);
+                clients.add(Node);
+                Node.start();
             }
 
-            Thread.sleep(1000);
+            Thread.sleep(10000);
             for (int i = 0; i < clusterMembers; ++i) {
                 List<LocalGossipMember> list = clients.get(i).get_gossipManager().getMemberList();
                 System.out.println(list.get(0).getAddress());
                 System.out.println(list.size());
             }
 
-            clients.forEach(GossipService::shutdown);
+            clients.forEach(Node::shutdown);
 
         } catch (InterruptedException e) {
             System.out.print(e);
