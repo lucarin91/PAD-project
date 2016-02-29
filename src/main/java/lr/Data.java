@@ -21,15 +21,22 @@ public class Data<T> {
     public Data(JSONObject json) {
         try {
             this.key = json.getString("key");
-        } catch (JSONException e) { }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
         try {
             this.hash = json.getInt("hash");
-        } catch (JSONException e) { }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
         try {
-            this.value = (T)json.get("value");
-        } catch (JSONException e) { }
+            //TODO: improve the cast to T
+            this.value = (T) json.get("value");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     public void setKey(String key) {
