@@ -22,13 +22,13 @@ public class PadFs {
                 startupMembers.add(new RemoteGossipMember("127.0.0." + i, 2000, i + ""));
             }
 
-            List<Node> clients = new ArrayList<>();
+            List<NodeService> clients = new ArrayList<>();
             int clusterMembers = 5;
             for (int i = 1; i < clusterMembers + 1; ++i) {
                 //final ConsistentHash<GossipMember> ch = new ConsistentHash<>();
-                Node Node = new Node("127.0.0." + i, 2000, i + "", LogLevel.DEBUG, startupMembers, settings);
-                clients.add(Node);
-                Node.start();
+                NodeService NodeService = new NodeService("127.0.0." + i, 2000, i + "", LogLevel.DEBUG, startupMembers, settings);
+                clients.add(NodeService);
+                NodeService.start();
             }
 
             Thread.sleep(10000);
@@ -37,8 +37,8 @@ public class PadFs {
                 System.out.println(list.get(0).getAddress() + " "+ list.size());
             }
 
-            clients.forEach(Node::printStatus);
-            clients.forEach(Node::shutdown);
+            clients.forEach(NodeService::printStatus);
+            clients.forEach(NodeService::shutdown);
 
         } catch (InterruptedException e) {
             e.printStackTrace();

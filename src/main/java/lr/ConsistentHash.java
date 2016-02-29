@@ -14,26 +14,39 @@ import java.util.TreeMap;
 public class ConsistentHash<T> {
 
     private TreeMap<Integer, T> _map;
+    private int _replication;
+    private final static int default_replication = 3;
 
     public ConsistentHash() {
+        this(default_replication);
+    }
+
+    public ConsistentHash(int replication) {
+        _replication = replication;
         _map = new TreeMap<>();
     }
 
-    public ConsistentHash(Collection<T> list) {
-        this();
-
-        for ( T item : list){
+    public ConsistentHash(Collection<T> list, int replication) {
+        this(replication);
+        for (T item : list) {
             add(item);
         }
     }
 
+    public ConsistentHash(Collection<T> list) {
+        this(list, default_replication);
+    }
 
     public boolean add(T node) {
-        if (!_map.containsKey(MurmurHash.hash32(node.toString()))) {
-            _map.put(MurmurHash.hash32(node.toString()), node);
-            return true;
-        } else
-            return false;
+        boolean insert = true;
+        for (int i = 0; i < _replication; i++) {
+            int hash = MurmurHash.hash32(node.toString() + i);
+            if (!_map.containsKey(hash))
+                _map.put(hash, node);
+            else
+                insert = false;
+        }
+        return insert;
     }
 
 //    public boolean add(String key, T node) {
@@ -45,7 +58,8 @@ public class ConsistentHash<T> {
 //    }
 
     public void remove(T node) {
-        _map.remove(MurmurHash.hash32(node.toString()));
+        for (int i = 0; i < _replication; i++)
+            _map.remove(MurmurHash.hash32(node.toString() + i));
     }
 
     public T get(int key) {
