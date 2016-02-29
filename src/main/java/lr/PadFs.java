@@ -25,7 +25,7 @@ public class PadFs {
             List<Node> clients = new ArrayList<>();
             int clusterMembers = 5;
             for (int i = 1; i < clusterMembers + 1; ++i) {
-                final ConsistentHash<GossipMember> ch = new ConsistentHash<>();
+                //final ConsistentHash<GossipMember> ch = new ConsistentHash<>();
                 Node Node = new Node("127.0.0." + i, 2000, i + "", LogLevel.DEBUG, startupMembers, settings);
                 clients.add(Node);
                 Node.start();
@@ -34,16 +34,16 @@ public class PadFs {
             Thread.sleep(10000);
             for (int i = 0; i < clusterMembers; ++i) {
                 List<LocalGossipMember> list = clients.get(i).get_gossipManager().getMemberList();
-                System.out.println(list.get(0).getAddress());
-                System.out.println(list.size());
+                System.out.println(list.get(0).getAddress() + " "+ list.size());
             }
 
+            clients.forEach(Node::printStatus);
             clients.forEach(Node::shutdown);
 
         } catch (InterruptedException e) {
-            System.out.print(e);
+            e.printStackTrace();
         } catch (UnknownHostException e) {
-            System.out.print(e);
+            e.printStackTrace();
         } finally {
             System.exit(0);
         }
