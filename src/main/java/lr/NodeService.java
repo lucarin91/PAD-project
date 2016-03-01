@@ -157,7 +157,10 @@ public class NodeService extends Node{
     }
 
     private void callback(GossipMember member, GossipState state) {
-        _ch.add(new Node(member));
+        if (state.equals(GossipState.UP))
+            _ch.add(new Node(member));
+        else
+            _ch.remove(new Node(member));
         System.out.println(id + ". " + member + " " + state);
     }
 
