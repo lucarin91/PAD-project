@@ -65,7 +65,9 @@ public class ConsistentHash<T> {
     public T get(int key) {
         Integer res = _map.ceilingKey(key);
         if (res != null) {
-            return _map.get(key);
+            T n = _map.get(res);
+            //System.out.println(n);
+            return n;
         } else {
             return _map.firstEntry().getValue();
         }

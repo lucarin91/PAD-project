@@ -12,6 +12,8 @@ import java.util.List;
 
 public class PadFs {
     public static void main(String[] args) {
+        List<NodeService> clients = new ArrayList<>();
+        ;
         try {
             System.out.println("Hello World!");
 
@@ -22,7 +24,6 @@ public class PadFs {
                 startupMembers.add(new RemoteGossipMember("127.0.0." + i, 2000, i + ""));
             }
 
-            List<NodeService> clients = new ArrayList<>();
             int clusterMembers = 5;
             for (int i = 1; i < clusterMembers + 1; ++i) {
                 //final ConsistentHash<GossipMember> ch = new ConsistentHash<>();
@@ -31,21 +32,26 @@ public class PadFs {
                 NodeService.start();
             }
 
+
             Thread.sleep(10000);
+
+
+            clients.get(0).addData(new Data<>("test1","come va?"));
+
+            Thread.sleep(10000);
+    /*
             for (int i = 0; i < clusterMembers; ++i) {
                 List<LocalGossipMember> list = clients.get(i).get_gossipManager().getMemberList();
                 System.out.println(list.get(0).getAddress() + " "+ list.size());
             }
-
+*/
             clients.forEach(NodeService::printStatus);
-            clients.forEach(NodeService::shutdown);
 
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | UnknownHostException e) {
             e.printStackTrace();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        } finally {
-            System.exit(0);
         }
+
+        clients.forEach(NodeService::shutdown);
+        System.exit(0);
     }
 }

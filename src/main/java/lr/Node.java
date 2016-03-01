@@ -64,6 +64,14 @@ public class Node {
         this.portM = portM;
     }
 
+    public String getHostG(){
+        return ip+":"+portG;
+    }
+
+    public String getHostM(){
+        return ip+":"+portM;
+    }
+
     @Override
     public String toString() {
         return "["+id+" "+ip+" "+portG+" "+portM+"]";

@@ -1,5 +1,6 @@
 package lr;
 
+import ie.ucd.murmur.MurmurHash;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -12,9 +13,9 @@ public class Data<T> {
     private int hash;
     private T value;
 
-    public Data(String key, int hash, T value) {
+    public Data(String key, T value) {
         this.key = key;
-        this.hash = hash;
+        this.hash = MurmurHash.hash32(key);
         this.value = value;
     }
 
