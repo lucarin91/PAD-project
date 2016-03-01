@@ -65,11 +65,12 @@ public class NodeService extends Node {
 
         _passiveThread = new Thread(this::passiveRequest);
         _passiveThread.start();
-    }
-
-    public void start() {
         _gossipManager.start();
     }
+    /*
+    public void start() {
+
+    }*/
 
     /***
      * Type of message:

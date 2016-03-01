@@ -1,6 +1,9 @@
 package lr;
 
 import com.google.code.gossip.*;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,7 +15,7 @@ import java.util.List;
 /**
  * Created by luca on 24/02/16.
  */
-
+@SpringBootApplication
 public class PadFs {
     public static void main(String[] args) throws IOException {
 
@@ -32,9 +35,11 @@ public class PadFs {
                 //final ConsistentHash<GossipMember> ch = new ConsistentHash<>();
                 NodeService NodeService = new NodeService("127.0.0." + i, 2000, i + "", LogLevel.DEBUG, startupMembers, settings);
                 clients.add(NodeService);
-                NodeService.start();
+            //    NodeService.start();
             }
+            RestNode r = RestNode.getInstance("rest", "127.0.0.20", 2000, startupMembers);
 
+            SpringApplication.run(PadFs.class);
 
 //            Runtime.getRuntime().addShutdownHook(new Thread() {
 //                public void run() {
@@ -60,6 +65,7 @@ public class PadFs {
         } catch (InterruptedException | UnknownHostException e) {
             e.printStackTrace();
             clients.forEach(NodeService::shutdown);
+            //r.shoutdown();
         }
 
         while (true) {

@@ -11,11 +11,11 @@ public class Node {
     protected int portG;
     protected int portM;
 
-    public Node(GossipMember m){
+    public Node(GossipMember m) {
         this.id = m.getId();
         this.ip = m.getHost();
         this.portG = m.getPort();
-        this.portM = m.getPort()+1;
+        this.portM = m.getPort() + 1;
     }
 
     public Node(String id, String ip, int portG, int portM) {
@@ -29,7 +29,7 @@ public class Node {
         this.id = id;
         this.ip = ip;
         this.portG = port;
-        this.portM = port+1;
+        this.portM = port + 1;
     }
 
     public String getId() {
@@ -64,16 +64,19 @@ public class Node {
         this.portM = portM;
     }
 
-    public String getHostG(){
-        return ip+":"+portG;
+    public String getHostG() {
+        return ip + ":" + portG;
     }
 
-    public String getHostM(){
-        return ip+":"+portM;
+    public String getHostM() {
+        return ip + ":" + portM;
+    }
+
+    public void shutdown() {
     }
 
     @Override
     public String toString() {
-        return "["+id+" "+ip+" "+portG+" "+portM+"]";
+        return "[" + id + " " + ip + " " + portG + " " + portM + "]";
     }
 }
