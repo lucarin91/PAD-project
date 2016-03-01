@@ -79,6 +79,8 @@ public class NodeService extends Node {
      * <p>
      * ADD
      * {"type": "ADD", "key": ..., "hash": ..., "value": ....}
+     * UP
+     * {"type": "UP", "key": ..., "hash": ..., "value": ....}
      * <p>
      * DEL
      * {"type": "DEL", "key": ...., "hash": ... }
@@ -133,11 +135,11 @@ public class NodeService extends Node {
 
 
             } catch (IOException e) {
-                // e.printStackTrace();
+                e.printStackTrace();
                 _toStop.set(true);
             }
         }
-        //shutdown();
+        shutdown();
     }
 
     public boolean addData(Data<?> data) {
@@ -154,7 +156,7 @@ public class NodeService extends Node {
 
                 byte[] json_bytes = json.toString().getBytes();
                 int packet_length = json_bytes.length;
-                //TODO check pachat size
+                //TODO check packet size
 
                 // Convert the packet length to the byte representation of the int.
                 byte[] length_bytes = new byte[4];
@@ -184,10 +186,9 @@ public class NodeService extends Node {
         _gossipManager.shutdown();
         _server.close();
         try {
-            _passiveThread.join();
+            _passiveThread.wait();
             System.out.println("after join");
         } catch (InterruptedException e) {
-            e.printStackTrace();
             e.printStackTrace();
         }
     }
