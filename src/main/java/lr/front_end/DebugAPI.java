@@ -1,5 +1,6 @@
 package lr.front_end;
 
+import ie.ucd.murmur.MurmurHash;
 import lr.Data;
 import lr.Message;
 import lr.Node;
@@ -9,10 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Created by luca on 02/03/16.
@@ -22,17 +20,18 @@ import java.util.Optional;
 public class DebugAPI {
 
     @RequestMapping(method = RequestMethod.GET)
-    public List<Map<String, Data<?>>> status() {
+    public Map<String, Map<String, Data<?>>> status() {
         Optional<GossipResource> opt_r = GossipResource.getInstance();
         if (opt_r.isPresent()) {
             GossipResource r = opt_r.get();
             List<Node> list = r.getNode();
             for (Node n : list) {
-                n.send(new Message(Message.MSG_TYPE.STATUS, Message.SENDER_TYPE.FRONT, r.getIp(), r.getPortM(), null));
+                n.send(new Message(Message.MSG_TYPE.STATUS, Message.SENDER_TYPE.FRONT, r, null));
             }
-            List<Map<String, Data<?>>> res = new ArrayList<>();
-            for (Node n : list){
-                res.add(r.receive().get().getStore());
+            Map<String, Map<String, Data<?>>> res = new HashMap<>();
+            for (Node item : list) {
+                Message m = r.receive().get();
+                res.put(m.getSender().getId(), m.getStore());
             }
             return res;
         } else

@@ -118,7 +118,7 @@ public class NodeService extends Node {
                         System.out.println("from FRONT " + msg);
                         msg.setSender_type(Message.SENDER_TYPE.BACK);
                         if (msg.getType().equals(Message.MSG_TYPE.STATUS)){
-                            send(msg.getSender_ip(), msg.getSender_port(), new Message(_store));
+                            send(msg.getSender().getIp(), msg.getSender().getPortM(), new Message(this, _store));
                         }else
                             _ch.get(msg.getData().getHash()).send(msg);
                     } else {
@@ -127,7 +127,7 @@ public class NodeService extends Node {
                         switch (msg.getType()) {
                             case GET:
                                 // TODO: send back th data to the requestor
-                                send(msg.getSender_ip(), msg.getSender_port(), new Message(_store.get(data.getKey())));
+                                send(msg.getSender().getIp(), msg.getSender().getPortM(), new Message(this, _store.get(data.getKey())));
                                 break;
 
                             case ADD:

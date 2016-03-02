@@ -27,6 +27,13 @@ public class Node {
         this.portM = m.getPort() + 1;
     }
 
+    public Node(JSONObject obj) {
+        this.id = obj.getString("id");
+        this.ip = obj.getString("ip");
+        this.portG = obj.getInt("port_g");
+        this.portM = obj.getInt("port_m");
+    }
+
     public Node(String id, String ip, int portG, int portM) {
         this.id = id;
         this.ip = ip;
@@ -39,6 +46,15 @@ public class Node {
         this.ip = ip;
         this.portG = port;
         this.portM = port + 1;
+    }
+
+    public JSONObject toJson(){
+        JSONObject json = new JSONObject();
+        json.put("id", id);
+        json.put("ip", ip);
+        json.put("port_g", portG);
+        json.put("port_m", portM);
+        return json;
     }
 
     public String getId() {

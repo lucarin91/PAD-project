@@ -32,34 +32,22 @@ public class PadFs {
 
             int clusterMembers = 5;
             for (int i = 1; i < clusterMembers + 1; ++i) {
-                //final ConsistentHash<GossipMember> ch = new ConsistentHash<>();
                 NodeService NodeService = new NodeService("127.0.0." + i, 2000, i + "", LogLevel.DEBUG, startupMembers, settings);
                 clients.add(NodeService);
-                //    NodeService.start();
             }
             GossipResource r = GossipResource.getInstance("rest", "127.0.0.20", 2000, startupMembers);
 
             SpringApplication.run(PadFs.class);
 
-//            Runtime.getRuntime().addShutdownHook(new Thread() {
-//                public void run() {
-//                    System.out.println("shotdownhook - STOP!");
-//                    //clients.forEach(NodeService::shutdown);
-//                }
-//            });
-
             Thread.sleep(10000);
 
-
-            //clients.get(0).send(new Message(Message.MSG_TYPE.ADD, Message.SENDER_TYPE.FRONT, new Data<>("test1", "come va?")));
-
-            //Thread.sleep(10000);
-    /*
+            /*
             for (int i = 0; i < clusterMembers; ++i) {
                 List<LocalGossipMember> list = clients.get(i).get_gossipManager().getMemberList();
                 System.out.println(list.get(0).getAddress() + " "+ list.size());
             }
-*/
+            */
+
             //clients.forEach(NodeService::printStatus);
 
         } catch (InterruptedException | UnknownHostException e) {
@@ -73,8 +61,6 @@ public class PadFs {
             System.out.print("Enter command: ");
             String s = br.readLine();
             if (s.equals("q")) System.exit(0);
-            if (s.equals("add"))
-                clients.get(2).send(new Message(Message.MSG_TYPE.ADD, Message.SENDER_TYPE.FRONT, new Data<>("test3", "come va?")));
         }
     }
 }
