@@ -2,10 +2,7 @@ package lr;
 
 import ie.ucd.murmur.MurmurHash;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * Created by luca on 24/02/16.
@@ -71,6 +68,28 @@ public class ConsistentHash<T> {
         } else {
             return _map.firstEntry().getValue();
         }
+    }
+
+    public List<T> getNext(String key, int n) {
+        List<T> list = new ArrayList<T>();
+        List<Integer> hashs = new ArrayList<>();
+        for (int i=0; i<_replication; i++){
+            hashs.add(MurmurHash.hash32(key + i));
+        }
+        int hash = hashs.get(0);
+        int i=0;
+        while (i<n) {
+            Map.Entry<Integer, T> entry = _map.ceilingEntry(hash);
+            if (entry == null)
+                entry = _map.firstEntry();
+            if (!hashs.contains(entry.getKey()) && !list.contains(entry.getValue())) {
+                list.add(entry.getValue());
+                i++;
+            }
+            hash = entry.getKey()+1;
+        }
+        System.out.print("NUM of REPLICA "+list);
+        return list;
     }
 
     @Override

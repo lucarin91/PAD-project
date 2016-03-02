@@ -15,8 +15,8 @@ import java.util.Optional;
  * Created by luca on 01/03/16.
  */
 @RestController
-@RequestMapping("/")
-public class NodeController {
+@RequestMapping("/api")
+public class PublicAPI {
 
     @RequestMapping(method = RequestMethod.GET)
     public Data get(@RequestParam(value = "key") String key) {
@@ -37,6 +37,28 @@ public class NodeController {
         if (r.isPresent()) {
             Node n = r.get().getRandomNode();
             n.send(new Message(Message.MSG_TYPE.ADD, Message.SENDER_TYPE.FRONT,data));
+            return "send to "+ n.getId();
+        }
+        return "error";
+    }
+
+    @RequestMapping(method = RequestMethod.DELETE)
+    public String del(@RequestParam(value = "key") String key) {
+        Optional<GossipResource> r = GossipResource.getInstance();
+        if (r.isPresent()) {
+            Node n = r.get().getRandomNode();
+            n.send(new Message(Message.MSG_TYPE.DEL, Message.SENDER_TYPE.FRONT, new Data(key)));
+            return "send to "+ n.getId();
+        }
+        return "error";
+    }
+
+    @RequestMapping(method = RequestMethod.PUT)
+    public String update(@RequestBody Data data) {
+        Optional<GossipResource> r = GossipResource.getInstance();
+        if (r.isPresent()) {
+            Node n = r.get().getRandomNode();
+            n.send(new Message(Message.MSG_TYPE.UP, Message.SENDER_TYPE.FRONT, data));
             return "send to "+ n.getId();
         }
         return "error";

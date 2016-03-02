@@ -51,7 +51,7 @@ public class PadFs {
             Thread.sleep(10000);
 
 
-            clients.get(0).send(new Message(Message.MSG_TYPE.ADD, Message.SENDER_TYPE.FRONT, new Data<>("test1", "come va?")));
+            //clients.get(0).send(new Message(Message.MSG_TYPE.ADD, Message.SENDER_TYPE.FRONT, new Data<>("test1", "come va?")));
 
             //Thread.sleep(10000);
     /*
@@ -60,7 +60,7 @@ public class PadFs {
                 System.out.println(list.get(0).getAddress() + " "+ list.size());
             }
 */
-            clients.forEach(NodeService::printStatus);
+            //clients.forEach(NodeService::printStatus);
 
         } catch (InterruptedException | UnknownHostException e) {
             e.printStackTrace();

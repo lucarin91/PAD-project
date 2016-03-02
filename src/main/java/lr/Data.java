@@ -43,7 +43,16 @@ public class Data<T> {
         try {
             //TODO: improve the cast to T
             this.value = (T) json.get("value");
-        }catch(JSONException e){}
+        } catch (JSONException e) {
+        }
+    }
+
+    public JSONObject toJson() {
+        JSONObject obj = new JSONObject();
+        obj.put("key", key);
+        obj.put("hash", hash);
+        obj.put("value", value);
+        return obj;
     }
 
     public void setKey(String key) {

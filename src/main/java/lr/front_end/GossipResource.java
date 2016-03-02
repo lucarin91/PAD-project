@@ -7,9 +7,11 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import com.google.code.gossip.GossipSettings;
 import com.google.code.gossip.LocalGossipMember;
@@ -35,6 +37,12 @@ public class GossipResource extends Node {
     public Node getRandomNode(){
         List<LocalGossipMember> list = _gossipManager.getMemberList();
         return new Node(list.get(_random.nextInt(list.size())));
+    }
+
+    public List<Node> getNode(){
+        List<LocalGossipMember> list = _gossipManager.getMemberList();
+        List<Node> res = list.stream().map(Node::new).collect(Collectors.toList());
+        return res;
     }
 
     private GossipResource(String id, String ip, int port, List<GossipMember> gossipMembers) {
@@ -63,7 +71,7 @@ public class GossipResource extends Node {
     }
 
     public Optional<Message> receive(){
-        System.out.println("FRONT receive message...");
+        //System.out.println("FRONT receive message...");
         try {
             byte[] buf = new byte[_server.getReceiveBufferSize()];
 

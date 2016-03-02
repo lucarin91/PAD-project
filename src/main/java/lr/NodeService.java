@@ -25,9 +25,10 @@ public class NodeService extends Node {
     private Thread _passiveThread;
     private AtomicBoolean _toStop;
     private DatagramSocket _server;
+    private final int replica = 2;
 
     //TODO convert to persistent
-    Map<String,Data<?>> _store;
+    Map<String, Data<?>> _store;
 //    private String _ip;
 //    private int _portG;
 //    private int _portM;
@@ -116,7 +117,10 @@ public class NodeService extends Node {
                     if (msg.getSender_type().equals(Message.SENDER_TYPE.FRONT)) {
                         System.out.println("from FRONT " + msg);
                         msg.setSender_type(Message.SENDER_TYPE.BACK);
-                        _ch.get(msg.getData().getHash()).send(msg);
+                        if (msg.getType().equals(Message.MSG_TYPE.STATUS)){
+                            send(msg.getSender_ip(), msg.getSender_port(), new Message(_store));
+                        }else
+                            _ch.get(msg.getData().getHash()).send(msg);
                     } else {
                         System.out.println("from BACK " + msg);
                         Data data = msg.getData();
@@ -128,17 +132,24 @@ public class NodeService extends Node {
 
                             case ADD:
                                 // TODO: save the new data
-                                _store.put(data.getKey(), data);
+                                _store.putIfAbsent(data.getKey(), data);
+                                ifMasterSendeUpdate(msg);
                                 break;
 
                             case DEL:
-                                _store.remove(data.getKey());
                                 // TODO: remove the data
+                                _store.remove(data.getKey());
+                                ifMasterSendeUpdate(msg);
                                 break;
 
                             case UP:
+                                // TODO: update the data
                                 _store.replace(data.getKey(), data);
+                                ifMasterSendeUpdate(msg);
                                 break;
+                            /*case STATUS:
+                                send(msg.getSender_ip(), msg.getSender_port(), new Message(_store));
+                                break;*/
                         }
                     }
                 } catch (JSONException e) {
@@ -152,6 +163,16 @@ public class NodeService extends Node {
             }
         }
         shutdown();
+    }
+
+    private void ifMasterSendeUpdate(Message msg) {
+        if (msg.getSender_type().equals(Message.SENDER_TYPE.BACK)) {
+            List<Node> list = _ch.getNext(toString(), replica);
+            msg.setSender_type(Message.SENDER_TYPE.MASTER);
+            for (Node n : list) {
+                n.send(msg);
+            }
+        }
     }
 
     public void shutdown() {
@@ -174,11 +195,12 @@ public class NodeService extends Node {
     }
 
     private void callback(GossipMember member, GossipState state) {
-        if (state.equals(GossipState.UP))
-            _ch.add(new Node(member));
-        else
-            _ch.remove(new Node(member));
-        System.out.println(id + ". " + member + " " + state);
+        if (!member.getId().contains("rest"))
+            if (state.equals(GossipState.UP))
+                _ch.add(new Node(member));
+            else
+                _ch.remove(new Node(member));
+        //System.out.println(id + ". " + member + " " + state);
     }
 
     public void printStatus() {

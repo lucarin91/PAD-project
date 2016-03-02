@@ -7,6 +7,10 @@ package lr;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 /***
  * Type of message:
  * <p>
@@ -24,15 +28,36 @@ import org.json.JSONObject;
 
 public class Message {
 
-    public enum MSG_TYPE {ADD, DEL, UP, GET}
+    public enum MSG_TYPE {ADD, DEL, UP, GET, STATUS}
 
-    public enum SENDER_TYPE {FRONT, BACK}
+    public enum SENDER_TYPE {FRONT, MASTER, BACK}
 
     private MSG_TYPE type;
     private SENDER_TYPE sender_type;
     private String sender_ip;
     private int sender_port;
     private Data<?> data;
+    private Map<String, Data<?>> store;
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "type=" + type +
+                ", sender_type=" + sender_type +
+                ", sender_ip='" + sender_ip + '\'' +
+                ", sender_port=" + sender_port +
+                ", data=" + data +
+                ", store=" + store +
+                '}';
+    }
+
+    public Map<String, Data<?>> getStore() {
+        return store;
+    }
+
+    public void setStore(Map<String, Data<?>> store) {
+        this.store = store;
+    }
 
     public Message(JSONObject json) {
         try {
@@ -45,7 +70,19 @@ public class Message {
             this.sender_port = json.getInt("sender_port");
         } catch (JSONException e) {
         }
-        this.data = new Data(json);
+        try {
+            this.data = new Data(json.getJSONObject("data"));
+        } catch (JSONException e) {
+        }
+        try {
+            this.store = new HashMap<String, Data<?>>();
+            JSONObject obj = json.getJSONObject("store");
+            Set<String> set = obj.keySet();
+            for (String s : set){
+                store.put(s, new Data(obj.getJSONObject(s)));
+            }
+        } catch (JSONException | ClassCastException e) {
+        }
     }
 
     public Message(MSG_TYPE type, SENDER_TYPE sender, String sender_ip, int sender_port, Data<?> data) {
@@ -66,17 +103,20 @@ public class Message {
         this.data = data;
     }
 
+    public Message(Map<String,Data<?>> store) {
+        this.store = store;
+    }
+
     public JSONObject toJson() {
         JSONObject json = new JSONObject();
-        if (type!=null) json.put("type", type.name());
-        if (sender_type!=null) json.put("sender_type", sender_type.name());
+        if (type != null) json.put("type", type.name());
+        if (sender_type != null) json.put("sender_type", sender_type.name());
         json.put("sender_ip", sender_ip);
         json.put("sender_port", sender_port);
-        if (data!=null) {
-            json.put("key", data.getKey());
-            json.put("hash", data.getHash());
-            json.put("value", data.getValue());
+        if (data != null) {
+            json.put("data", data.toJson());
         }
+        json.put("store", store);
         return json;
     }
 
@@ -120,14 +160,4 @@ public class Message {
         this.sender_port = sender_port;
     }
 
-    @Override
-    public String toString() {
-        return "Message{" +
-                "type=" + type +
-                ", sender_type=" + sender_type +
-                ", sender_ip='" + sender_ip + '\'' +
-                ", sender_port=" + sender_port +
-                ", data=" + data +
-                '}';
-    }
 }
