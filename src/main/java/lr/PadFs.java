@@ -1,9 +1,9 @@
 package lr;
 
 import com.google.code.gossip.*;
+import lr.front_end.GossipResource;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -35,9 +35,9 @@ public class PadFs {
                 //final ConsistentHash<GossipMember> ch = new ConsistentHash<>();
                 NodeService NodeService = new NodeService("127.0.0." + i, 2000, i + "", LogLevel.DEBUG, startupMembers, settings);
                 clients.add(NodeService);
-            //    NodeService.start();
+                //    NodeService.start();
             }
-            RestNode r = RestNode.getInstance("rest", "127.0.0.20", 2000, startupMembers);
+            GossipResource r = GossipResource.getInstance("rest", "127.0.0.20", 2000, startupMembers);
 
             SpringApplication.run(PadFs.class);
 
@@ -51,7 +51,7 @@ public class PadFs {
             Thread.sleep(10000);
 
 
-            clients.get(0).addData(new Data<>("test1", "come va?"));
+            clients.get(0).send(new Message(Message.MSG_TYPE.ADD, Message.SENDER_TYPE.FRONT, new Data<>("test1", "come va?")));
 
             //Thread.sleep(10000);
     /*
@@ -73,7 +73,9 @@ public class PadFs {
             System.out.print("Enter command: ");
             String s = br.readLine();
             if (s.equals("q")) System.exit(0);
-            if (s.equals("add")) clients.get(2).addData(new Data<>("test2", "asdasdsad"));
+            if (s.equals("add"))
+                clients.get(2).send(new Message(Message.MSG_TYPE.ADD, Message.SENDER_TYPE.FRONT, new Data<>("test3", "come va?")));
         }
     }
 }
+

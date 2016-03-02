@@ -13,35 +13,42 @@ public class Data<T> {
     private int hash;
     private T value;
 
+    public Data() {
+    }
+
+    public Data(String key) {
+        this.key = key;
+        this.hash = MurmurHash.hash32(key);
+    }
+
+
     public Data(String key, T value) {
         this.key = key;
         this.hash = MurmurHash.hash32(key);
         this.value = value;
     }
 
+    @Override
+    public String toString() {
+        return "Data{" +
+                "key='" + key + '\'' +
+                ", hash=" + hash +
+                ", value=" + value +
+                '}';
+    }
+
     public Data(JSONObject json) {
-        try {
-            this.key = json.getString("key");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        try {
-            this.hash = json.getInt("hash");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
+        this.key = json.getString("key");
+        this.hash = json.getInt("hash");
         try {
             //TODO: improve the cast to T
             this.value = (T) json.get("value");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        }catch(JSONException e){}
     }
 
     public void setKey(String key) {
         this.key = key;
+        this.hash = MurmurHash.hash32(key);
     }
 
     public void setHash(int hash) {
@@ -65,12 +72,4 @@ public class Data<T> {
         return value;
     }
 
-    @Override
-    public String toString() {
-        return "Data{" +
-                "key='" + key + '\'' +
-                ", hash=" + hash +
-                ", value=" + value +
-                '}';
-    }
 }

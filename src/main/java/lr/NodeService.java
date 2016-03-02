@@ -2,21 +2,17 @@ package lr;
 
 import java.io.IOException;
 import java.net.*;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ThreadFactory;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.google.code.gossip.*;
 import com.google.code.gossip.event.GossipState;
 import com.google.code.gossip.manager.random.RandomGossipManager;
-import ie.ucd.murmur.MurmurHash;
 import org.apache.log4j.Logger;
 
-import com.google.code.gossip.event.GossipListener;
 import com.google.code.gossip.manager.GossipManager;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -29,6 +25,9 @@ public class NodeService extends Node {
     private Thread _passiveThread;
     private AtomicBoolean _toStop;
     private DatagramSocket _server;
+
+    //TODO convert to persistent
+    Map<String,Data<?>> _store;
 //    private String _ip;
 //    private int _portG;
 //    private int _portM;
@@ -48,6 +47,8 @@ public class NodeService extends Node {
             _ch.add(new Node(m));
         }
         _ch.add(this);
+
+        _store = new HashMap<>();
 
         _toStop = new AtomicBoolean(false);
 //        _ip = ipAddress;
@@ -76,15 +77,15 @@ public class NodeService extends Node {
      * Type of message:
      * <p>
      * GET
-     * {"type": "GET", "key": ..., "hash": ... }
+     * {"type": "GET", "sender": FRONT|BACK, "key": ..., "hash": ... }
      * <p>
      * ADD
-     * {"type": "ADD", "key": ..., "hash": ..., "value": ....}
+     * {"type": "ADD", "sender": FRONT|BACK, "key": ..., "hash": ..., "value": ....}
      * UP
-     * {"type": "UP", "key": ..., "hash": ..., "value": ....}
+     * {"type": "UP", "sender": FRONT|BACK, "key": ..., "hash": ..., "value": ....}
      * <p>
      * DEL
-     * {"type": "DEL", "key": ...., "hash": ... }
+     * {"type": "DEL", "sender": FRONT|BACK, "key": ...., "hash": ... }
      */
     private void passiveRequest() {
         while (!_toStop.get()) {
@@ -109,26 +110,36 @@ public class NodeService extends Node {
                 try {
 
                     JSONObject json = new JSONObject(receivedMessage);
-                    String type = json.getString("type");
+                    Message msg = new Message(json);
 
-                    Data data = new Data<String>(json);
-                    System.out.print(id+".RECEIVE: ");
-                    switch (type) {
-                        case "GET":
-                            System.out.println("GET");
-                            // TODO: send back th data to the requestor
-                            break;
+                    System.out.print(id + ".RECEIVE: ");
+                    if (msg.getSender_type().equals(Message.SENDER_TYPE.FRONT)) {
+                        System.out.println("from FRONT " + msg);
+                        msg.setSender_type(Message.SENDER_TYPE.BACK);
+                        _ch.get(msg.getData().getHash()).send(msg);
+                    } else {
+                        System.out.println("from BACK " + msg);
+                        Data data = msg.getData();
+                        switch (msg.getType()) {
+                            case GET:
+                                // TODO: send back th data to the requestor
+                                send(msg.getSender_ip(), msg.getSender_port(), new Message(_store.get(data.getKey())));
+                                break;
 
-                        case "ADD":
-                            System.out.println("add data "+data);
-                            // TODO: save the new data
-                            break;
+                            case ADD:
+                                // TODO: save the new data
+                                _store.put(data.getKey(), data);
+                                break;
 
-                        case "DEL":
-                            System.out.println("DEL");
-                            // TODO: remove the data
-                            break;
+                            case DEL:
+                                _store.remove(data.getKey());
+                                // TODO: remove the data
+                                break;
 
+                            case UP:
+                                _store.replace(data.getKey(), data);
+                                break;
+                        }
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -141,46 +152,6 @@ public class NodeService extends Node {
             }
         }
         shutdown();
-    }
-
-    public boolean addData(Data<?> data) {
-        System.out.println(id+".SEND: add data "+data);
-        try {
-            Node n = _ch.get(data.getHash());
-            if (n != null) {
-                InetAddress dest = InetAddress.getByName(n.getIp());
-                JSONObject json = new JSONObject();
-                json.put("type", "ADD");
-                json.put("key", data.getKey());
-                json.put("hash", data.getHash());
-                json.put("value", data.getValue());
-
-                byte[] json_bytes = json.toString().getBytes();
-                int packet_length = json_bytes.length;
-                //TODO check packet size
-
-                // Convert the packet length to the byte representation of the int.
-                byte[] length_bytes = new byte[4];
-                length_bytes[0] = (byte) (packet_length >> 24);
-                length_bytes[1] = (byte) ((packet_length << 8) >> 24);
-                length_bytes[2] = (byte) ((packet_length << 16) >> 24);
-                length_bytes[3] = (byte) ((packet_length << 24) >> 24);
-
-                ByteBuffer byteBuffer = ByteBuffer.allocate(4 + json_bytes.length);
-                byteBuffer.put(length_bytes);
-                byteBuffer.put(json_bytes);
-                byte[] buf = byteBuffer.array();
-
-                DatagramSocket socket = new DatagramSocket();
-                DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, dest, n.getPortM());
-                socket.send(datagramPacket);
-                socket.close();
-                return true;
-            }
-        } catch (JSONException | IOException e2) {
-            e2.printStackTrace();
-        }
-        return false;
     }
 
     public void shutdown() {
