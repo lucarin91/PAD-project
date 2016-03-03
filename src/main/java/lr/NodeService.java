@@ -7,15 +7,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.code.gossip.*;
 import com.google.code.gossip.event.GossipState;
 import com.google.code.gossip.manager.random.RandomGossipManager;
+import lr.Messages.*;
+import lr.Messages.Message.*;
 import org.apache.log4j.Logger;
 
 import com.google.code.gossip.manager.GossipManager;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 public class NodeService extends Node {
 
@@ -117,44 +119,27 @@ public class NodeService extends Node {
                     Message msg = mapper.readValue(receivedMessage, Message.class);
 
                     System.out.print(id + ".RECEIVE: ");
-                    if (msg.getSender().getType().equals(NODE_TYPE.FRONT)) {
-                        System.out.println("from FRONT " + msg);
+                    if (msg.getType().equals(MSG_TYPE.REQUEST)) {
+                        System.out.println("REQUEST " + msg);
                         if (msg.getOperation().equals(MSG_OPERATION.STATUS)) {
                             send(msg.getSender().getIp(), msg.getSender().getPortM(), new MessageStatus(MSG_TYPE.RESPONSE,this,_store));
                         } else {
+                            MessageManage msgM = (MessageManage) msg;//mapper.readValue(receivedMessage,MessageManage.class);
                             msg.setSender(this);
-                            _ch.get(msg.getData().getHash()).send(msg);
+                            Node n = _ch.get(msgM.getData().getHash());
+                            if (n.getId().equals(getId())){
+                                doOperation(msgM);
+
+                                List<Node> list = _ch.getNext(toString(), replica);
+                                msgM.setType(MSG_TYPE.MANAGEMENT);
+                                list.stream().map(node -> node.send(msgM));
+                            } else {
+                                n.send(msg);
+                            }
                         }
                     } else {
-                        System.out.println("from BACK " + msg);
-                        Data data = msg.getData();
-                        switch (msg.getType()) {
-                            case GET:
-                                // TODO: send back th data to the requestor
-                                send(msg.getSender().getIp(), msg.getSender().getPortM(), new MessageManage(this, _store.get(data.getKey())));
-                                break;
-
-                            case ADD:
-                                // TODO: save the new data
-                                _store.putIfAbsent(data.getKey(), data);
-                                ifMasterSendeUpdate(msg);
-                                break;
-
-                            case DEL:
-                                // TODO: remove the data
-                                _store.remove(data.getKey());
-                                ifMasterSendeUpdate(msg);
-                                break;
-
-                            case UP:
-                                // TODO: update the data
-                                _store.replace(data.getKey(), data);
-                                ifMasterSendeUpdate(msg);
-                                break;
-                            /*case STATUS:
-                                send(msg.getSender_ip(), msg.getSender_port(), new MessageManage(_store));
-                                break;*/
-                        }
+                        MessageManage msgM = (MessageManage) msg; //mapper.readValue(receivedMessage,MessageManage.class);
+                        doOperation(msgM);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -169,13 +154,29 @@ public class NodeService extends Node {
         shutdown();
     }
 
-    private void ifMasterSendeUpdate(MessageManage msg) {
-        if (msg.getSender_type().equals(MessageManage.SENDER_TYPE.BACK)) {
-            List<Node> list = _ch.getNext(toString(), replica);
-            msg.setSender_type(MessageManage.SENDER_TYPE.MASTER);
-            for (Node n : list) {
-                n.send(msg);
-            }
+    private void doOperation(MessageManage msg){
+        System.out.println("from BACK " + msg);
+        Data data = msg.getData();
+        switch (msg.getOperation()) {
+            case GET:
+                // TODO: send back th data to the requestor
+                send(msg.getSender().getIp(), msg.getSender().getPortM(), new MessageManage(MSG_TYPE.RESPONSE, this, _store.get(data.getKey())));
+                break;
+
+            case ADD:
+                // TODO: save the new data
+                _store.putIfAbsent(data.getKey(), data);
+                break;
+
+            case DEL:
+                // TODO: remove the data
+                _store.remove(data.getKey());
+                break;
+
+            case UP:
+                // TODO: update the data
+                _store.replace(data.getKey(), data);
+                break;
         }
     }
 
@@ -190,10 +191,12 @@ public class NodeService extends Node {
         }
     }
 
+    @JsonIgnore
     public GossipManager get_gossipManager() {
         return _gossipManager;
     }
 
+    @JsonIgnore
     public void set_gossipManager(GossipManager _gossipManager) {
         this._gossipManager = _gossipManager;
     }
@@ -206,7 +209,7 @@ public class NodeService extends Node {
                 List<Node> list = _ch.getNext(toString(), replica);
                 if (list.stream().anyMatch(node -> node.getId().equals(n.getId())))
                     _store.forEach((s, data) -> {
-                        n.send(new MessageManage(MessageManage.MSG_TYPE.ADD, MessageManage.SENDER_TYPE.MASTER, this, data));
+                        n.send(new MessageManage(MSG_TYPE.MANAGEMENT, MSG_OPERATION.ADD, this, data));
                     });
             } else
                 _ch.remove(n);

@@ -1,7 +1,8 @@
 package lr.front_end;
 
 import lr.Data;
-import lr.MessageManage;
+import lr.Messages.MessageManage;
+import lr.Messages.Message.*;
 import lr.Node;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,9 +21,9 @@ public class PublicAPI {
         if (opt_r.isPresent()) {
             GossipResource r = opt_r.get();
             Node n = r.getRandomNode();
-            n.send(new MessageManage(MessageManage.MSG_TYPE.GET, MessageManage.SENDER_TYPE.FRONT, r, new Data(key)));
+            n.send(new MessageManage(MSG_TYPE.REQUEST, MSG_OPERATION.GET, r, new Data(key)));
 
-            return r.receive().get().getData();
+            return r.<MessageManage>receive().get().getData();
         } else
             return null;
     }
@@ -32,7 +33,7 @@ public class PublicAPI {
         Optional<GossipResource> r = GossipResource.getInstance();
         if (r.isPresent()) {
             Node n = r.get().getRandomNode();
-            n.send(new MessageManage(MessageManage.MSG_TYPE.ADD, MessageManage.SENDER_TYPE.FRONT, r.get() , data));
+            n.send(new MessageManage(MSG_TYPE.REQUEST, MSG_OPERATION.ADD, r.get() , data));
             return "send to "+ n.getId();
         }
         return "error";
@@ -43,7 +44,7 @@ public class PublicAPI {
         Optional<GossipResource> r = GossipResource.getInstance();
         if (r.isPresent()) {
             Node n = r.get().getRandomNode();
-            n.send(new MessageManage(MessageManage.MSG_TYPE.DEL, MessageManage.SENDER_TYPE.FRONT, r.get(), new Data(key)));
+            n.send(new MessageManage(MSG_TYPE.REQUEST, MSG_OPERATION.DEL, new Node(Node.NODE_TYPE.FRONT,r.get().getId(),r.get().getIp(), r.get().getPortG()), new Data(key)));
             return "send to "+ n.getId();
         }
         return "error";
@@ -54,7 +55,7 @@ public class PublicAPI {
         Optional<GossipResource> r = GossipResource.getInstance();
         if (r.isPresent()) {
             Node n = r.get().getRandomNode();
-            n.send(new MessageManage(MessageManage.MSG_TYPE.UP, MessageManage.SENDER_TYPE.FRONT, r.get(), data));
+            n.send(new MessageManage(MSG_TYPE.REQUEST, MSG_OPERATION.UP, r.get(), data));
             return "send to "+ n.getId();
         }
         return "error";

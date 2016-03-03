@@ -1,5 +1,10 @@
 package lr.front_end;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.code.gossip.GossipMember;
 
 import java.io.IOException;
@@ -10,13 +15,15 @@ import java.net.SocketException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.jar.JarEntry;
 import java.util.stream.Collectors;
 
 import com.google.code.gossip.GossipSettings;
 import com.google.code.gossip.LocalGossipMember;
 import com.google.code.gossip.manager.GossipManager;
 import com.google.code.gossip.manager.random.RandomGossipManager;
-import lr.MessageManage;
+import lr.Messages.Message;
+import lr.Messages.MessageManage;
 import lr.Node;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,16 +34,19 @@ import org.json.JSONObject;
 public class GossipResource extends Node {
 
     private static GossipResource _r;
+    @JsonIgnore
     private GossipManager _gossipManager;
     private DatagramSocket _server;
     private Random _random;
 
-    public Node getRandomNode(){
+    @JsonIgnore
+    public Node getRandomNode() {
         List<LocalGossipMember> list = _gossipManager.getMemberList();
         return new Node(list.get(_random.nextInt(list.size())));
     }
 
-    public List<Node> getNode(){
+    @JsonIgnore
+    public List<Node> getNode() {
         List<LocalGossipMember> list = _gossipManager.getMemberList();
         List<Node> res = list.stream().map(Node::new).collect(Collectors.toList());
         return res;
@@ -53,21 +63,23 @@ public class GossipResource extends Node {
         }
 
 
-        _gossipManager = new RandomGossipManager(ip, port, id,  new GossipSettings(), gossipMembers, null);
+        _gossipManager = new RandomGossipManager(ip, port, id, new GossipSettings(), gossipMembers, null);
         _gossipManager.start();
         _random = new Random();
     }
 
+    @JsonIgnore
     public static GossipResource getInstance(String id, String ip, int port, List<GossipMember> gossipMembers) {
-        if (_r == null) _r = new GossipResource(id,ip,port,gossipMembers);
+        if (_r == null) _r = new GossipResource(id, ip, port, gossipMembers);
         return _r;
     }
 
-    public static Optional<GossipResource> getInstance(){
+    @JsonIgnore
+    public static Optional<GossipResource> getInstance() {
         return Optional.of(_r);
     }
 
-    public Optional<MessageManage> receive(){
+    public <T extends Message> Optional<T> receive() {
         //System.out.println("FRONT receive message...");
         try {
             byte[] buf = new byte[_server.getReceiveBufferSize()];
@@ -89,13 +101,15 @@ public class GossipResource extends Node {
                 json_bytes[i] = buf[i + 4];
             }
             String receivedMessage = new String(json_bytes);
-            try {
-                JSONObject json = new JSONObject(receivedMessage);
-                return Optional.of(new MessageManage(json));
-            } catch (JSONException e) {
 
-            }
-        }catch (SocketException e) {
+            ObjectMapper mapper = new ObjectMapper();
+            return Optional.of(mapper.readValue(receivedMessage, new TypeReference<T>() {}));
+
+        } catch (SocketException e) {
+            e.printStackTrace();
+        } catch (JsonParseException e) {
+            e.printStackTrace();
+        } catch (JsonMappingException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();

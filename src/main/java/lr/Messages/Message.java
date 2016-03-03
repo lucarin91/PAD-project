@@ -1,15 +1,16 @@
-package lr;
+package lr.Messages;
 
 /**
  * Created by luca on 02/03/16.
  */
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.NamedType;
+import lr.Node;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.io.IOException;
 
 /***
  * Type of message:
@@ -26,13 +27,22 @@ import java.util.Set;
  * {"type": "DEL", "sender_type": FRONT|BACK, "key": ...., "hash": ... }
  */
 
-enum MSG_TYPE {MANAGEMENT, REQUEST, RESPONSE}
-enum MSG_OPERATION {ADD,DEL,UP,GET, STATUS}
-
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = MessageManage.class, name = "msg_manage"),
+        @JsonSubTypes.Type(value = MessageStatus.class, name = "msg_status")})
 public class Message {
+    public enum MSG_TYPE {MANAGEMENT, REQUEST, RESPONSE}
+    public enum MSG_OPERATION {ADD,DEL,UP,GET, STATUS}
+
     private Node sender;
     private MSG_TYPE type;
     private MSG_OPERATION operation;
+
+    public Message() { }
 
     public Message(MSG_TYPE type, MSG_OPERATION operation, Node sender) {
         this.type = type;
@@ -77,6 +87,5 @@ public class Message {
     public void setSender(Node sender) {
         this.sender = sender;
     }
-
 }
 

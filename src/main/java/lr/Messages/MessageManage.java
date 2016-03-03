@@ -1,12 +1,11 @@
-package lr;
+package lr.Messages;
 
 /**
  * Created by luca on 02/03/16.
  */
 
-import org.json.JSONObject;
-
-import java.util.Map;
+import lr.Data;
+import lr.Node;
 
 /***
  * Type of message:
@@ -23,9 +22,8 @@ import java.util.Map;
  * {"type": "DEL", "sender_type": FRONT|BACK, "key": ...., "hash": ... }
  */
 
-public class MessageStatus extends Message{
-
-    private Map<String, Data<?>> store;
+public class MessageManage extends Message{
+    private Data<?> data;
 
 //    public MessageManage(JSONObject json) {
 //        try {
@@ -52,11 +50,28 @@ public class MessageStatus extends Message{
 //        }
 //    }
 
-    public MessageStatus(MSG_TYPE type, Node sender, Map<String, Data<?>> store) {
-        super(type, MSG_OPERATION.STATUS, sender);
-        this.store = store;
+    public MessageManage(){ }
+    public MessageManage(MSG_TYPE type, MSG_OPERATION oper, Node sender, Data<?> data) {
+        super(type, oper, sender);
+        this.data = data;
     }
-//
+
+    public MessageManage(MSG_TYPE type, Node sender, Data<?> data) {
+        this(type,null,sender,data);
+    }
+
+//    public MessageManage(MSG_TYPE type, SENDER_TYPE sender, Data<?> data) {
+//        this.type = type;
+//        this.sender_type = sender;
+//        this.data = data;
+//    }
+
+//    public MessageManage(Node sender, Data<?> data) {
+//        super(null,sender);
+//        this.data = data;
+//    }
+
+
 //    public JSONObject toJson() {
 //        JSONObject json = new JSONObject();
 //        if (type != null) json.put("type", type.name());
@@ -69,18 +84,18 @@ public class MessageStatus extends Message{
 //        return json;
 //    }
 
-    public Map<String, Data<?>> getStore() {
-        return store;
+    public Data<?> getData() {
+        return data;
     }
 
-    public void setStore(Map<String, Data<?>> store) {
-        this.store = store;
+    public void setData(Data<?> data) {
+        this.data = data;
     }
 
     @Override
     public String toString() {
-        return "MessageStatus{" +
-                "store=" + store +
+        return "MessageManage{" +
+                "data=" + data +
                 "} " + super.toString();
     }
 }

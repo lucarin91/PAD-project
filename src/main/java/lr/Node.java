@@ -1,10 +1,16 @@
 package lr;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.code.gossip.GossipMember;
 import ie.ucd.murmur.MurmurHash;
+import lr.Messages.Message;
+import lr.Messages.MessageManage;
+import lr.Messages.MessageStatus;
+import lr.front_end.GossipResource;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -15,15 +21,15 @@ import java.nio.ByteBuffer;
 /**
  * Created by luca on 29/02/16.
  */
-
-enum NODE_TYPE {FRONT,BACK}
-
 public class Node {
+    public enum NODE_TYPE {FRONT,BACK}
     private NODE_TYPE type;
     protected String id;
     protected String ip;
     protected int portG;
     protected int portM;
+
+    public Node(){ }
 
     public Node(GossipMember m) {
         this.type = NODE_TYPE.BACK;
@@ -106,14 +112,17 @@ public class Node {
         this.portM = portM;
     }
 
+    @JsonIgnore
     public String getHostG() {
         return ip + ":" + portG;
     }
 
+    @JsonIgnore
     public String getHostM() {
         return ip + ":" + portM;
     }
 
+    @JsonIgnore
     public int getHash(){
         return MurmurHash.hash32(toString());
     }

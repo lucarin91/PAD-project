@@ -1,15 +1,13 @@
-package lr;
+package lr.Messages;
 
 /**
  * Created by luca on 02/03/16.
  */
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import lr.Data;
+import lr.Node;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /***
  * Type of message:
@@ -26,8 +24,9 @@ import java.util.Set;
  * {"type": "DEL", "sender_type": FRONT|BACK, "key": ...., "hash": ... }
  */
 
-public class MessageManage extends Message{
-    private Data<?> data;
+public class MessageStatus extends Message{
+
+    private Map<String, Data<?>> store;
 
 //    public MessageManage(JSONObject json) {
 //        try {
@@ -53,28 +52,16 @@ public class MessageManage extends Message{
 //        } catch (JSONException | ClassCastException e) {
 //        }
 //    }
-
-    public MessageManage(MSG_TYPE type, MSG_OPERATION oper, Node sender, Data<?> data) {
-        super(type, oper, sender);
-        this.data = data;
+    public MessageStatus(){ }
+    public MessageStatus(MSG_TYPE type, Node sender, Map<String, Data<?>> store) {
+        super(type, MSG_OPERATION.STATUS, sender);
+        this.store = store;
     }
 
-    public MessageManage(MSG_TYPE type, Node sender, Data<?> data) {
-        this(type,null,sender,data);
+    public MessageStatus(MSG_TYPE type, Node sender) {
+        this(type, sender, null);
     }
-
-//    public MessageManage(MSG_TYPE type, SENDER_TYPE sender, Data<?> data) {
-//        this.type = type;
-//        this.sender_type = sender;
-//        this.data = data;
-//    }
-
-//    public MessageManage(Node sender, Data<?> data) {
-//        super(null,sender);
-//        this.data = data;
-//    }
-
-
+//
 //    public JSONObject toJson() {
 //        JSONObject json = new JSONObject();
 //        if (type != null) json.put("type", type.name());
@@ -87,18 +74,18 @@ public class MessageManage extends Message{
 //        return json;
 //    }
 
-    public Data<?> getData() {
-        return data;
+    public Map<String, Data<?>> getStore() {
+        return store;
     }
 
-    public void setData(Data<?> data) {
-        this.data = data;
+    public void setStore(Map<String, Data<?>> store) {
+        this.store = store;
     }
 
     @Override
     public String toString() {
-        return "MessageManage{" +
-                "data=" + data +
+        return "MessageStatus{" +
+                "store=" + store +
                 "} " + super.toString();
     }
 }
