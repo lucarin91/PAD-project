@@ -1,14 +1,10 @@
 package lr.front_end;
 
 import lr.Data;
-import lr.Message;
+import lr.MessageManage;
 import lr.Node;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.util.Optional;
 
 /**
@@ -24,7 +20,7 @@ public class PublicAPI {
         if (opt_r.isPresent()) {
             GossipResource r = opt_r.get();
             Node n = r.getRandomNode();
-            n.send(new Message(Message.MSG_TYPE.GET, Message.SENDER_TYPE.FRONT, r, new Data(key)));
+            n.send(new MessageManage(MessageManage.MSG_TYPE.GET, MessageManage.SENDER_TYPE.FRONT, r, new Data(key)));
 
             return r.receive().get().getData();
         } else
@@ -36,7 +32,7 @@ public class PublicAPI {
         Optional<GossipResource> r = GossipResource.getInstance();
         if (r.isPresent()) {
             Node n = r.get().getRandomNode();
-            n.send(new Message(Message.MSG_TYPE.ADD, Message.SENDER_TYPE.FRONT, r.get() , data));
+            n.send(new MessageManage(MessageManage.MSG_TYPE.ADD, MessageManage.SENDER_TYPE.FRONT, r.get() , data));
             return "send to "+ n.getId();
         }
         return "error";
@@ -47,7 +43,7 @@ public class PublicAPI {
         Optional<GossipResource> r = GossipResource.getInstance();
         if (r.isPresent()) {
             Node n = r.get().getRandomNode();
-            n.send(new Message(Message.MSG_TYPE.DEL, Message.SENDER_TYPE.FRONT, r.get(), new Data(key)));
+            n.send(new MessageManage(MessageManage.MSG_TYPE.DEL, MessageManage.SENDER_TYPE.FRONT, r.get(), new Data(key)));
             return "send to "+ n.getId();
         }
         return "error";
@@ -58,7 +54,7 @@ public class PublicAPI {
         Optional<GossipResource> r = GossipResource.getInstance();
         if (r.isPresent()) {
             Node n = r.get().getRandomNode();
-            n.send(new Message(Message.MSG_TYPE.UP, Message.SENDER_TYPE.FRONT, r.get(), data));
+            n.send(new MessageManage(MessageManage.MSG_TYPE.UP, MessageManage.SENDER_TYPE.FRONT, r.get(), data));
             return "send to "+ n.getId();
         }
         return "error";

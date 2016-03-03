@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.code.gossip.*;
 import com.google.code.gossip.event.GossipState;
 import com.google.code.gossip.manager.random.RandomGossipManager;
@@ -110,24 +111,27 @@ public class NodeService extends Node {
                 String receivedMessage = new String(json_bytes);
                 try {
 
-                    JSONObject json = new JSONObject(receivedMessage);
-                    Message msg = new Message(json);
+//                    JSONObject json = new JSONObject(receivedMessage);
+//                    MessageManage msg = new MessageManage(json);
+                    ObjectMapper mapper = new ObjectMapper();
+                    Message msg = mapper.readValue(receivedMessage, Message.class);
 
                     System.out.print(id + ".RECEIVE: ");
-                    if (msg.getSender_type().equals(Message.SENDER_TYPE.FRONT)) {
+                    if (msg.getSender().getType().equals(NODE_TYPE.FRONT)) {
                         System.out.println("from FRONT " + msg);
-                        msg.setSender_type(Message.SENDER_TYPE.BACK);
-                        if (msg.getType().equals(Message.MSG_TYPE.STATUS)){
-                            send(msg.getSender().getIp(), msg.getSender().getPortM(), new Message(this, _store));
-                        }else
+                        if (msg.getOperation().equals(MSG_OPERATION.STATUS)) {
+                            send(msg.getSender().getIp(), msg.getSender().getPortM(), new MessageStatus(MSG_TYPE.RESPONSE,this,_store));
+                        } else {
+                            msg.setSender(this);
                             _ch.get(msg.getData().getHash()).send(msg);
+                        }
                     } else {
                         System.out.println("from BACK " + msg);
                         Data data = msg.getData();
                         switch (msg.getType()) {
                             case GET:
                                 // TODO: send back th data to the requestor
-                                send(msg.getSender().getIp(), msg.getSender().getPortM(), new Message(this, _store.get(data.getKey())));
+                                send(msg.getSender().getIp(), msg.getSender().getPortM(), new MessageManage(this, _store.get(data.getKey())));
                                 break;
 
                             case ADD:
@@ -148,7 +152,7 @@ public class NodeService extends Node {
                                 ifMasterSendeUpdate(msg);
                                 break;
                             /*case STATUS:
-                                send(msg.getSender_ip(), msg.getSender_port(), new Message(_store));
+                                send(msg.getSender_ip(), msg.getSender_port(), new MessageManage(_store));
                                 break;*/
                         }
                     }
@@ -165,10 +169,10 @@ public class NodeService extends Node {
         shutdown();
     }
 
-    private void ifMasterSendeUpdate(Message msg) {
-        if (msg.getSender_type().equals(Message.SENDER_TYPE.BACK)) {
+    private void ifMasterSendeUpdate(MessageManage msg) {
+        if (msg.getSender_type().equals(MessageManage.SENDER_TYPE.BACK)) {
             List<Node> list = _ch.getNext(toString(), replica);
-            msg.setSender_type(Message.SENDER_TYPE.MASTER);
+            msg.setSender_type(MessageManage.SENDER_TYPE.MASTER);
             for (Node n : list) {
                 n.send(msg);
             }
@@ -195,11 +199,18 @@ public class NodeService extends Node {
     }
 
     private void callback(GossipMember member, GossipState state) {
-        if (!member.getId().contains("rest"))
-            if (state.equals(GossipState.UP))
-                _ch.add(new Node(member));
-            else
-                _ch.remove(new Node(member));
+        if (!member.getId().contains("rest")) {
+            Node n = new Node(member);
+            if (state.equals(GossipState.UP)) {
+                _ch.add(n);
+                List<Node> list = _ch.getNext(toString(), replica);
+                if (list.stream().anyMatch(node -> node.getId().equals(n.getId())))
+                    _store.forEach((s, data) -> {
+                        n.send(new MessageManage(MessageManage.MSG_TYPE.ADD, MessageManage.SENDER_TYPE.MASTER, this, data));
+                    });
+            } else
+                _ch.remove(n);
+        }
         //System.out.println(id + ". " + member + " " + state);
     }
 

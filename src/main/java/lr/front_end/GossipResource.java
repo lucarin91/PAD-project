@@ -7,7 +7,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -17,7 +16,7 @@ import com.google.code.gossip.GossipSettings;
 import com.google.code.gossip.LocalGossipMember;
 import com.google.code.gossip.manager.GossipManager;
 import com.google.code.gossip.manager.random.RandomGossipManager;
-import lr.Message;
+import lr.MessageManage;
 import lr.Node;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -25,8 +24,6 @@ import org.json.JSONObject;
 /**
  * Created by luca on 01/03/16.
  */
-
-//@SpringBootApplication
 public class GossipResource extends Node {
 
     private static GossipResource _r;
@@ -70,7 +67,7 @@ public class GossipResource extends Node {
         return Optional.of(_r);
     }
 
-    public Optional<Message> receive(){
+    public Optional<MessageManage> receive(){
         //System.out.println("FRONT receive message...");
         try {
             byte[] buf = new byte[_server.getReceiveBufferSize()];
@@ -94,7 +91,7 @@ public class GossipResource extends Node {
             String receivedMessage = new String(json_bytes);
             try {
                 JSONObject json = new JSONObject(receivedMessage);
-                return Optional.of(new Message(json));
+                return Optional.of(new MessageManage(json));
             } catch (JSONException e) {
 
             }
