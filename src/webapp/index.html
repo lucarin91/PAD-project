@@ -20,7 +20,8 @@
                   id="n.id" ax="n.ax" ay="n.ay"
                   bx="n.bx" by="n.by"
                   stroke="n.stroke"
-                  fill="store[n.id].color"></node>
+                  fill="store[n.id].color">
+            </node>
         </svg>
         <div class="graphic-text">
             <div ng-show="select!=null">
@@ -42,7 +43,7 @@
             <div class="form-group">
                 <input ng-model="value" type="text" class="form-control" placeholder="value">
             </div>
-            <button ng-click="addKey(key,value)" type="submit" class="btn btn-default">Add</button>
+            <button ng-click="addKey(key,value)" ng-class="{'disabled': loading}" type="submit" class="btn btn-default">Add</button>
         </form>
     </div>
     <div class="store-div">
@@ -59,12 +60,12 @@
                 <td>{{item.hash}}</td>
                 <td><input ng-model="item.value"/></td>
                 <td>
-                    <button ng-click="removeData(item.key, item.value)" type="button" class="btn btn-default btn-lg">
+                    <button ng-click="removeData(item.key, item.value)" ng-class="{'disabled': loading}" type="button" class="btn btn-default btn-lg">
                         <span class="glyphicon glyphicon-remove-sign" aria-hidden="true"></span>
                     </button>
                 </td>
                 <td>
-                    <button ng-click="updateData(item.key, item.value)" type="button" class="btn btn-default btn-lg">
+                    <button ng-click="updateData(item.key, item.value)" ng-class="{'disabled': loading}" type="button" class="btn btn-default btn-lg">
                         <span class="glyphicon glyphicon-ok-sign" aria-hidden="true"></span>
                     </button>
                 </td>

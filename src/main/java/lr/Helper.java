@@ -7,6 +7,6 @@ import ie.ucd.murmur.MurmurHash;
  */
 public class Helper {
     static int hash(String s){
-        return MurmurHash.hash32(s) % 1000;
+        return MurmurHash.hash32(s) /*% 1000*/;
     }
 }
