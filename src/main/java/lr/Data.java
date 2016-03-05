@@ -18,13 +18,13 @@ public class Data<T> {
 
     public Data(String key) {
         this.key = key;
-        this.hash = MurmurHash.hash32(key);
+        this.hash = Helper.hash(key);
     }
 
 
     public Data(String key, T value) {
         this.key = key;
-        this.hash = MurmurHash.hash32(key);
+        this.hash = Helper.hash(key);
         this.value = value;
     }
 
@@ -37,27 +37,27 @@ public class Data<T> {
                 '}';
     }
 
-    public Data(JSONObject json) {
-        this.key = json.getString("key");
-        this.hash = json.getInt("hash");
-        try {
-            //TODO: improve the cast to T
-            this.value = (T) json.get("value");
-        } catch (JSONException e) {
-        }
-    }
-
-    public JSONObject toJson() {
-        JSONObject obj = new JSONObject();
-        obj.put("key", key);
-        obj.put("hash", hash);
-        obj.put("value", value);
-        return obj;
-    }
+//    public Data(JSONObject json) {
+//        this.key = json.getString("key");
+//        this.hash = json.getInt("hash");
+//        try {
+//            //TODO: improve the cast to T
+//            this.value = (T) json.get("value");
+//        } catch (JSONException e) {
+//        }
+//    }
+//
+//    public JSONObject toJson() {
+//        JSONObject obj = new JSONObject();
+//        obj.put("key", key);
+//        obj.put("hash", hash);
+//        obj.put("value", value);
+//        return obj;
+//    }
 
     public void setKey(String key) {
         this.key = key;
-        this.hash = MurmurHash.hash32(key);
+        this.hash = Helper.hash(key);
     }
 
     public void setHash(int hash) {
@@ -69,7 +69,6 @@ public class Data<T> {
     }
 
     public String getKey() {
-
         return key;
     }
 

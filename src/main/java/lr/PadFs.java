@@ -24,7 +24,7 @@ public class PadFs {
             System.out.println("Hello World!");
 
             GossipSettings settings = new GossipSettings();
-            int seedNodes = 3;
+            int seedNodes = 5;
             List<GossipMember> startupMembers = new ArrayList<>();
             for (int i = 1; i < seedNodes + 1; ++i) {
                 startupMembers.add(new RemoteGossipMember("127.0.0." + i, 2000, i + ""));

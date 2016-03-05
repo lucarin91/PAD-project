@@ -37,7 +37,7 @@ public class ConsistentHash<T> {
     public boolean add(T node) {
         boolean insert = true;
         for (int i = 0; i < _replication; i++) {
-            int hash = MurmurHash.hash32(node.toString() + i);
+            int hash = Helper.hash(node.toString() + i);
             if (!_map.containsKey(hash))
                 _map.put(hash, node);
             else
@@ -54,16 +54,22 @@ public class ConsistentHash<T> {
 //            return false;
 //    }
 
+    public TreeMap<Integer,T> getMap() {
+        System.out.println("MAP " + _map);
+        return _map;
+    }
+
     public void remove(T node) {
         for (int i = 0; i < _replication; i++)
-            _map.remove(MurmurHash.hash32(node.toString() + i));
+            _map.remove(Helper.hash(node.toString() + i));
     }
 
     public T get(int key) {
+        System.out.println("MAP "+_map);
         Integer res = _map.ceilingKey(key);
         if (res != null) {
             T n = _map.get(res);
-            //System.out.println(n);
+            System.out.println("consistent hashtable map "+ key +" to node "+n);
             return n;
         } else {
             return _map.firstEntry().getValue();
@@ -74,7 +80,7 @@ public class ConsistentHash<T> {
         List<T> list = new ArrayList<T>();
         List<Integer> hashs = new ArrayList<>();
         for (int i=0; i<_replication; i++){
-            hashs.add(MurmurHash.hash32(key + i));
+            hashs.add(Helper.hash(key + i));
         }
         int hash = hashs.get(0);
         int i=0;
@@ -88,7 +94,7 @@ public class ConsistentHash<T> {
             }
             hash = entry.getKey()+1;
         }
-        System.out.print("NUM of REPLICA "+list);
+        //System.out.print("NUM of REPLICA "+list);
         return list;
     }
 

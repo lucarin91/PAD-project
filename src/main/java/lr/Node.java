@@ -122,10 +122,10 @@ public class Node {
         return ip + ":" + portM;
     }
 
-    @JsonIgnore
-    public int getHash(){
-        return MurmurHash.hash32(toString());
-    }
+//    @JsonIgnore
+//    public int getHash(){
+//        return Helper.hash(toString());
+//    }
 
     public boolean send(Message msg) {
         return send(ip,portM,msg);

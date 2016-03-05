@@ -33,3 +33,7 @@ proguard/
 .gradle/
 build/
 bin/
+
+#Nodejs
+node_modules
+*.log

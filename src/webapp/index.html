@@ -1,0 +1,34 @@
+<html>
+<head>
+    <title>Status Monitor</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <script src="node_modules/angular/angular.js"></script>
+    <script src="node_modules/jquery/dist/jquery.js"></script>
+    <script src="js/main.js"></script>
+</head>
+<body ng-app="MonitorApp">
+<div ng-controller="StatusCtr">
+
+    <svg ng-mouseenter="overNodeIn()"
+         ng-mouseleave="overNodeOut()">
+        <node ng-mouseenter="clickNode(n)"
+              ng-repeat="n in ch"
+              id="n.id" ax="n.ax" ay="n.ay"
+              bx="n.bx" by="n.by"></node>
+    </svg>
+    <div ng-show="select!=null">Node: {{select.id}}, hash:{{select.hash}}</div>
+    <table>
+        <tr>
+            <th>Key</th>
+            <th>hash</th>
+            <th>value</th>
+        </tr>
+        <tr ng-repeat="item in select.store">
+            <td>{{item.key}}</td>
+            <td>{{item.hash}}</td>
+            <td>{{item.value}}</td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>

@@ -32,6 +32,7 @@ public class NodeService extends Node {
 
     //TODO convert to persistent
     Map<String, Data<?>> _store;
+
 //    private String _ip;
 //    private int _portG;
 //    private int _portM;
@@ -107,37 +108,38 @@ public class NodeService extends Node {
                 // TODO: check the data packet size
 
                 byte[] json_bytes = new byte[packet_length];
-                for (int i = 0; i < packet_length; i++) {
-                    json_bytes[i] = buf[i + 4];
-                }
+                System.arraycopy(buf, 4, json_bytes, 0, packet_length);
                 String receivedMessage = new String(json_bytes);
                 try {
-
 //                    JSONObject json = new JSONObject(receivedMessage);
 //                    MessageManage msg = new MessageManage(json);
                     ObjectMapper mapper = new ObjectMapper();
                     Message msg = mapper.readValue(receivedMessage, Message.class);
 
                     System.out.print(id + ".RECEIVE: ");
+
                     if (msg.getType().equals(MSG_TYPE.REQUEST)) {
-                        System.out.println("REQUEST " + msg);
+                        System.out.println("" + msg);
                         if (msg.getOperation().equals(MSG_OPERATION.STATUS)) {
-                            send(msg.getSender().getIp(), msg.getSender().getPortM(), new MessageStatus(MSG_TYPE.RESPONSE,this,_store));
+                            send(msg.getSender().getIp(), msg.getSender().getPortM(), new MessageStatus(MSG_TYPE.RESPONSE, this, _store, _ch.getMap()));
                         } else {
                             MessageManage msgM = (MessageManage) msg;//mapper.readValue(receivedMessage,MessageManage.class);
-                            msg.setSender(this);
+                            //msg.setSender(this);
                             Node n = _ch.get(msgM.getData().getHash());
-                            if (n.getId().equals(getId())){
-                                doOperation(msgM);
 
-                                List<Node> list = _ch.getNext(toString(), replica);
-                                msgM.setType(MSG_TYPE.MANAGEMENT);
-                                list.stream().map(node -> node.send(msgM));
+                            if (n.getId().equals(getId())) {
+                                doOperation(msgM);
+                                if (!msgM.getOperation().equals(MSG_OPERATION.GET)) {
+                                    System.out.println("propagate.." + msgM);
+                                    propagateRequest(msgM);
+                                }
                             } else {
+                                System.out.println("pass request.." + msgM);
                                 n.send(msg);
                             }
                         }
                     } else {
+                        System.out.println("receive management.."+msg);
                         MessageManage msgM = (MessageManage) msg; //mapper.readValue(receivedMessage,MessageManage.class);
                         doOperation(msgM);
                     }
@@ -154,13 +156,13 @@ public class NodeService extends Node {
         shutdown();
     }
 
-    private void doOperation(MessageManage msg){
+    private void doOperation(MessageManage msg) {
         System.out.println("from BACK " + msg);
         Data data = msg.getData();
         switch (msg.getOperation()) {
             case GET:
                 // TODO: send back th data to the requestor
-                send(msg.getSender().getIp(), msg.getSender().getPortM(), new MessageManage(MSG_TYPE.RESPONSE, this, _store.get(data.getKey())));
+                msg.getSender().send(new MessageManage(MSG_TYPE.RESPONSE, this, _store.get(data.getKey())));
                 break;
 
             case ADD:
@@ -178,6 +180,13 @@ public class NodeService extends Node {
                 _store.replace(data.getKey(), data);
                 break;
         }
+    }
+
+    private void propagateRequest(MessageManage msg) {
+        List<Node> list = _ch.getNext(toString(), replica);
+        System.out.println("send propagate to.."+list);
+        msg.setType(MSG_TYPE.MANAGEMENT);
+        for (Node n : list) n.send(msg);
     }
 
     public void shutdown() {

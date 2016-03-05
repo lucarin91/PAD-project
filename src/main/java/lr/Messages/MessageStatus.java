@@ -4,10 +4,12 @@ package lr.Messages;
  * Created by luca on 02/03/16.
  */
 
+import lr.ConsistentHash;
 import lr.Data;
 import lr.Node;
 
 import java.util.Map;
+import java.util.TreeMap;
 
 /***
  * Type of message:
@@ -27,8 +29,17 @@ import java.util.Map;
 public class MessageStatus extends Message{
 
     private Map<String, Data<?>> store;
+    private TreeMap<Integer,Node> ch;
 
-//    public MessageManage(JSONObject json) {
+    public TreeMap<Integer,Node> getCh() {
+        return ch;
+    }
+
+    public void setCh(TreeMap<Integer,Node> ch) {
+        this.ch = ch;
+    }
+
+    //    public MessageManage(JSONObject json) {
 //        try {
 //            this.type = MSG_TYPE.valueOf(json.getString("type"));
 //            this.sender_type = SENDER_TYPE.valueOf(json.getString("sender_type"));
@@ -53,13 +64,15 @@ public class MessageStatus extends Message{
 //        }
 //    }
     public MessageStatus(){ }
-    public MessageStatus(MSG_TYPE type, Node sender, Map<String, Data<?>> store) {
+
+    public MessageStatus(MSG_TYPE type, Node sender, Map<String, Data<?>> store, TreeMap<Integer,Node> ch) {
         super(type, MSG_OPERATION.STATUS, sender);
         this.store = store;
+        this.ch = ch;
     }
 
     public MessageStatus(MSG_TYPE type, Node sender) {
-        this(type, sender, null);
+        this(type, sender, null, null);
     }
 //
 //    public JSONObject toJson() {
