@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.ListenableFutureReturnValueHandler;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by luca on 02/03/16.
@@ -18,8 +19,8 @@ import java.util.*;
 @RequestMapping("/status")
 public class DebugAPI {
 
-    @RequestMapping(path = "/store", method = RequestMethod.GET)
-    public List<StatusObj> store() {
+    @RequestMapping(method = RequestMethod.GET)
+    public List<StatusObj> status() {
         Optional<GossipResource> opt_r = GossipResource.getInstance();
         if (opt_r.isPresent()) {
             GossipResource r = opt_r.get();
@@ -30,71 +31,66 @@ public class DebugAPI {
             List<StatusObj> res = new ArrayList<>();
             for (Node item : list) {
                 MessageStatus m = r.<MessageStatus>receive().get();
-                StatusObj s = new StatusObj(m.getSender(), m.getStore());
+
+                List<ChNodeChildren> listNode = m.getCh().entrySet().stream().map(i -> new ChNodeChildren(i.getKey(), i.getValue().getId())).collect(Collectors.toList());
+
+                StatusObj s = new StatusObj(m.getSender(), new ArrayList<>(m.getStore().values()), listNode);
                 res.add(s);
             }
             return res;
         } else
             return null;
     }
+//
+//    @RequestMapping(path = "/ch", method = RequestMethod.GET)
+//    public List<ChNode> ch() {
+//        Optional<GossipResource> opt_r = GossipResource.getInstance();
+//        if (opt_r.isPresent()) {
+//            GossipResource r = opt_r.get();
+//            List<Node> list = r.getNode();
+//            for (Node n : list) {
+//                n.send(new MessageStatus(MSG_TYPE.REQUEST, r));
+//            }
+//
+//
+//            return res;
+//        } else
+//            return null;
+//    }
 
-    @RequestMapping(path = "/ch", method = RequestMethod.GET)
-    public List<ChNode> ch() {
-        Optional<GossipResource> opt_r = GossipResource.getInstance();
-        if (opt_r.isPresent()) {
-            GossipResource r = opt_r.get();
-            List<Node> list = r.getNode();
-            for (Node n : list) {
-                n.send(new MessageStatus(MSG_TYPE.REQUEST, r));
-            }
+//    class ChNode {
+//        private String id;
+//        private List<ChNodeChildren> ch;
+//
+//        public ChNode(){ }
+//        public ChNode(String id, List<ChNodeChildren> ch) {
+//            this.id = id;
+//            this.ch = ch;
+//        }
+//
+//        public String getId() {
+//            return id;
+//        }
+//
+//        public void setId(String id) {
+//            this.id = id;
+//        }
+//
+//        public List<ChNodeChildren> getCh() {
+//            return ch;
+//        }
+//
+//        public void setCh(List<ChNodeChildren> ch) {
+//            this.ch = ch;
+//        }
+//    }
 
-            List<ChNode> res = new ArrayList<>();
-            for (Node item : list) {
-                MessageStatus m = r.<MessageStatus>receive().get();
-                TreeMap<Integer,Node> ch = m.getCh();
-                List<ChNodeChildren> listNode = new ArrayList<>();
-                for (Map.Entry<Integer,Node> i : ch.entrySet()){
-                    listNode.add(new ChNodeChildren(i.getKey(),i.getValue().getId()));
-                }
-                res.add(new ChNode(m.getSender().getId(),listNode));
-            }
-            return res;
-        } else
-            return null;
-    }
-
-    class ChNode {
-        private String id;
-        private List<ChNodeChildren> ch;
-
-        public ChNode(){ }
-        public ChNode(String id, List<ChNodeChildren> ch) {
-            this.id = id;
-            this.ch = ch;
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public void setId(String id) {
-            this.id = id;
-        }
-
-        public List<ChNodeChildren> getCh() {
-            return ch;
-        }
-
-        public void setCh(List<ChNodeChildren> ch) {
-            this.ch = ch;
-        }
-    }
-
-   class ChNodeChildren{
+    class ChNodeChildren {
         private int hash;
         private String id;
 
-        public ChNodeChildren(){ }
+        public ChNodeChildren() {
+        }
 
         public int getHash() {
             return hash;
@@ -118,17 +114,28 @@ public class DebugAPI {
         }
     }
 
-    class StatusObj{
+    class StatusObj {
         private String id;
         private String ip;
-        private Map<String, Data<?>> store;
+        private List<Data<?>> store;
+        private List<ChNodeChildren> ch;
 
-        public StatusObj(){ }
+        public StatusObj() {
+        }
 
-        public StatusObj(Node n, Map<String, Data<?>> store){
-            this.store = store;
+        public StatusObj(Node n, List<Data<?>> store, List<ChNodeChildren> ch) {
             this.id = n.getId();
             this.ip = n.getIp();
+            this.store = store;
+            this.ch = ch;
+        }
+
+        public List<ChNodeChildren> getCh() {
+            return ch;
+        }
+
+        public void setCh(List<ChNodeChildren> ch) {
+            this.ch = ch;
         }
 
         public String getId() {
@@ -147,11 +154,11 @@ public class DebugAPI {
             this.ip = ip;
         }
 
-        public Map<String, Data<?>> getStore() {
+        public List<Data<?>> getStore() {
             return store;
         }
 
-        public void setStore(Map<String, Data<?>> store) {
+        public void setStore(List<Data<?>> store) {
             this.store = store;
         }
     }

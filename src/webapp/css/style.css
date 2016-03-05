@@ -1,7 +1,26 @@
-svg{
-    width: 800px;
+.graphic,svg{
+    width: 500px;
     height: 500px;
+    margin: 0 auto;
+    display: block;
 }
 
-.node{
+.graphic-text{
+    position: absolute;
+    top: 230px;
+    right: 400px;
+}
+
+.graphic-loading{
+    margin: 0 auto;
+    display: block;
+}
+
+.refresh-button{
+    margin-right: 10px;
+    width: 80px;
+}
+.store-div{
+    height: 200px !important;
+    overflow: auto;
 }

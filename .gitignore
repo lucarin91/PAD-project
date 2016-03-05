@@ -37,3 +37,6 @@ bin/
 #Nodejs
 node_modules
 *.log
+
+#data
+*.data*

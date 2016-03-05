@@ -1,7 +1,5 @@
 package lr;
 
-import ie.ucd.murmur.MurmurHash;
-
 import java.util.*;
 
 /**
@@ -34,7 +32,7 @@ public class ConsistentHash<T> {
         this(list, default_replication);
     }
 
-    public boolean add(T node) {
+    synchronized public boolean add(T node) {
         boolean insert = true;
         for (int i = 0; i < _replication; i++) {
             int hash = Helper.hash(node.toString() + i);
@@ -54,17 +52,17 @@ public class ConsistentHash<T> {
 //            return false;
 //    }
 
-    public TreeMap<Integer,T> getMap() {
-        System.out.println("MAP " + _map);
+    synchronized public TreeMap<Integer,T> getMap() {
+    //    System.out.println("MAP " + _map);
         return _map;
     }
 
-    public void remove(T node) {
+    synchronized public void remove(T node) {
         for (int i = 0; i < _replication; i++)
             _map.remove(Helper.hash(node.toString() + i));
     }
 
-    public T get(int key) {
+    synchronized public T get(int key) {
         System.out.println("MAP "+_map);
         Integer res = _map.ceilingKey(key);
         if (res != null) {
@@ -76,7 +74,7 @@ public class ConsistentHash<T> {
         }
     }
 
-    public List<T> getNext(String key, int n) {
+    synchronized public List<T> getNext(String key, int n) {
         List<T> list = new ArrayList<T>();
         List<Integer> hashs = new ArrayList<>();
         for (int i=0; i<_replication; i++){
@@ -107,7 +105,7 @@ public class ConsistentHash<T> {
         return res;
     }
 
-    public int size() {
+    synchronized public int size() {
         return _map.size();
     }
 }

@@ -2,33 +2,75 @@
 <head>
     <title>Status Monitor</title>
     <link rel="stylesheet" type="text/css" href="css/style.css">
-    <script src="node_modules/angular/angular.js"></script>
+    <link rel="stylesheet" type="text/css" href="node_modules/bootstrap/dist/css/bootstrap.css">
     <script src="node_modules/jquery/dist/jquery.js"></script>
+    <script src="node_modules/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="node_modules/angular/angular.js"></script>
     <script src="js/main.js"></script>
 </head>
 <body ng-app="MonitorApp">
-<div ng-controller="StatusCtr">
+<!--<h1 class="text-center">DistributedFS - Monitoring tools</h1>-->
+<div class="container" ng-controller="StatusCtr">
+    <div class="graphic">
+        <svg ng-mouseenter="overSvgIn()"
+             ng-mouseleave="overSvgOut()">
+            <node ng-mouseenter="overNodeIn(n)"
+                  ng-mouseleave="overNodeOut(n)"
+                  ng-repeat="n in ch"
+                  id="n.id" ax="n.ax" ay="n.ay"
+                  bx="n.bx" by="n.by"
+                  stroke="n.stroke"
+                  fill="store[n.id].color"></node>
+        </svg>
+        <div class="graphic-text">
+            <div ng-show="select!=null">
+                <p><b>Node</b>: {{select.id}}</p>
+                <p><b>hash</b>: {{select.hash}}</p>
+            </div>
 
-    <svg ng-mouseenter="overNodeIn()"
-         ng-mouseleave="overNodeOut()">
-        <node ng-mouseenter="clickNode(n)"
-              ng-repeat="n in ch"
-              id="n.id" ax="n.ax" ay="n.ay"
-              bx="n.bx" by="n.by"></node>
-    </svg>
-    <div ng-show="select!=null">Node: {{select.id}}, hash:{{select.hash}}</div>
-    <table>
-        <tr>
-            <th>Key</th>
-            <th>hash</th>
-            <th>value</th>
-        </tr>
-        <tr ng-repeat="item in select.store">
-            <td>{{item.key}}</td>
-            <td>{{item.hash}}</td>
-            <td>{{item.value}}</td>
-        </tr>
-    </table>
+        </div>
+    </div>
+    <div class="addkey-div">
+        <form class="form-inline">
+            <div class="form-group refresh-button">
+                <img class="graphic-loading" ng-show="loading" src="img/ajax-loader.gif"/>
+                <button ng-hide="loading" ng-click="refresh()" type="button" class="btn btn-primary">Refresh</button>
+            </div>
+            <div class="form-group">
+                <input ng-model="key" type="text" class="form-control" placeholder="key">
+            </div>
+            <div class="form-group">
+                <input ng-model="value" type="text" class="form-control" placeholder="value">
+            </div>
+            <button ng-click="addKey(key,value)" type="submit" class="btn btn-default">Add</button>
+        </form>
+    </div>
+    <div class="store-div">
+        <table class="table table-striped">
+            <tr>
+                <th>Key</th>
+                <th>hash</th>
+                <th>value</th>
+                <th></th>
+                <th></th>
+            </tr>
+            <tr ng-repeat="item in select.store">
+                <td>{{item.key}}</td>
+                <td>{{item.hash}}</td>
+                <td><input ng-model="item.value"/></td>
+                <td>
+                    <button ng-click="removeData(item.key, item.value)" type="button" class="btn btn-default btn-lg">
+                        <span class="glyphicon glyphicon-remove-sign" aria-hidden="true"></span>
+                    </button>
+                </td>
+                <td>
+                    <button ng-click="updateData(item.key, item.value)" type="button" class="btn btn-default btn-lg">
+                        <span class="glyphicon glyphicon-ok-sign" aria-hidden="true"></span>
+                    </button>
+                </td>
+            </tr>
+        </table>
+    </div>
 </div>
 </body>
 </html>

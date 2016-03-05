@@ -5,10 +5,12 @@ import java.net.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.code.gossip.*;
 import com.google.code.gossip.event.GossipState;
 import com.google.code.gossip.manager.random.RandomGossipManager;
@@ -31,7 +33,7 @@ public class NodeService extends Node {
     private final int replica = 2;
 
     //TODO convert to persistent
-    Map<String, Data<?>> _store;
+    PersistentStorage _store;
 
 //    private String _ip;
 //    private int _portG;
@@ -43,7 +45,7 @@ public class NodeService extends Node {
 //                        .getGossipSettings(), this::callback);
 //    }
 
-    public NodeService(String ipAddress, int port, String id_, int logLevel, List<GossipMember> gossipMembers, GossipSettings settings)
+    public NodeService(String ipAddress, int port, String id_, List<GossipMember> gossipMembers)
             throws InterruptedException, UnknownHostException {
         super(id_, ipAddress, port);
 
@@ -53,7 +55,7 @@ public class NodeService extends Node {
         }
         _ch.add(this);
 
-        _store = new HashMap<>();
+        _store = new PersistentStorage(this);
 
         _toStop = new AtomicBoolean(false);
 //        _ip = ipAddress;
@@ -61,7 +63,7 @@ public class NodeService extends Node {
 //        _portM = port + 1;
 //        _id = id;
 
-        _gossipManager = new RandomGossipManager(ip, portG, id, settings, gossipMembers, this::callback);
+        _gossipManager = new RandomGossipManager(ip, portG, id, new GossipSettings(), gossipMembers, this::callback);
         try {
             _server = new DatagramSocket(new InetSocketAddress(ip, portM));
         } catch (SocketException ex) {
@@ -113,7 +115,7 @@ public class NodeService extends Node {
                 try {
 //                    JSONObject json = new JSONObject(receivedMessage);
 //                    MessageManage msg = new MessageManage(json);
-                    ObjectMapper mapper = new ObjectMapper();
+                    ObjectMapper mapper = new ObjectMapper().registerModule(new Jdk8Module());
                     Message msg = mapper.readValue(receivedMessage, Message.class);
 
                     System.out.print(id + ".RECEIVE: ");
@@ -121,22 +123,24 @@ public class NodeService extends Node {
                     if (msg.getType().equals(MSG_TYPE.REQUEST)) {
                         System.out.println("" + msg);
                         if (msg.getOperation().equals(MSG_OPERATION.STATUS)) {
-                            send(msg.getSender().getIp(), msg.getSender().getPortM(), new MessageStatus(MSG_TYPE.RESPONSE, this, _store, _ch.getMap()));
+                            send(msg.getSender().getIp(), msg.getSender().getPortM(), new MessageStatus(MSG_TYPE.RESPONSE, this, _store.getMap(), _ch.getMap()));
                         } else {
                             MessageManage msgM = (MessageManage) msg;//mapper.readValue(receivedMessage,MessageManage.class);
                             //msg.setSender(this);
-                            Node n = _ch.get(msgM.getData().getHash());
+                            msgM.getData().ifPresent(data -> {
+                                Node n = _ch.get(data.getHash());
 
-                            if (n.getId().equals(getId())) {
-                                doOperation(msgM);
-                                if (!msgM.getOperation().equals(MSG_OPERATION.GET)) {
-                                    System.out.println("propagate.." + msgM);
-                                    propagateRequest(msgM);
+                                if (n.getId().equals(getId())) {
+                                    doOperation(msgM);
+                                    if (!msgM.getOperation().equals(MSG_OPERATION.GET)) {
+                                        System.out.println("propagate.." + msgM);
+                                        propagateRequest(msgM);
+                                    }
+                                } else {
+                                    System.out.println("pass request.." + msgM);
+                                    n.send(msg);
                                 }
-                            } else {
-                                System.out.println("pass request.." + msgM);
-                                n.send(msg);
-                            }
+                            });
                         }
                     } else {
                         System.out.println("receive management.."+msg);
@@ -158,28 +162,29 @@ public class NodeService extends Node {
 
     private void doOperation(MessageManage msg) {
         System.out.println("from BACK " + msg);
-        Data data = msg.getData();
-        switch (msg.getOperation()) {
-            case GET:
-                // TODO: send back th data to the requestor
-                msg.getSender().send(new MessageManage(MSG_TYPE.RESPONSE, this, _store.get(data.getKey())));
-                break;
+        msg.getData().ifPresent(data -> {
+            switch (msg.getOperation()) {
+                case GET:
+                    // TODO: send back th data to the requestor
+                    msg.getSender().send(new MessageManage(MSG_TYPE.RESPONSE, this, _store.get(data.getKey())));
+                    break;
 
-            case ADD:
-                // TODO: save the new data
-                _store.putIfAbsent(data.getKey(), data);
-                break;
+                case ADD:
+                    // TODO: save the new data
+                    _store.put(data);
+                    break;
 
-            case DEL:
-                // TODO: remove the data
-                _store.remove(data.getKey());
-                break;
+                case DEL:
+                    // TODO: remove the data
+                    _store.remove(data.getKey());
+                    break;
 
-            case UP:
-                // TODO: update the data
-                _store.replace(data.getKey(), data);
-                break;
-        }
+                case UP:
+                    // TODO: update the data
+                    _store.update(data);
+                    break;
+            }
+        });
     }
 
     private void propagateRequest(MessageManage msg) {
@@ -192,6 +197,7 @@ public class NodeService extends Node {
     public void shutdown() {
         _gossipManager.shutdown();
         _server.close();
+        _store.close();
         try {
             _passiveThread.wait();
             System.out.println("after join");
@@ -217,8 +223,8 @@ public class NodeService extends Node {
                 _ch.add(n);
                 List<Node> list = _ch.getNext(toString(), replica);
                 if (list.stream().anyMatch(node -> node.getId().equals(n.getId())))
-                    _store.forEach((s, data) -> {
-                        n.send(new MessageManage(MSG_TYPE.MANAGEMENT, MSG_OPERATION.ADD, this, data));
+                    _store.getMap().forEach((s, data) -> {
+                        n.send(new MessageManage(MSG_TYPE.MANAGEMENT, MSG_OPERATION.ADD, this, Optional.of(data)));
                     });
             } else
                 _ch.remove(n);

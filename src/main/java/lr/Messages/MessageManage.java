@@ -7,6 +7,8 @@ package lr.Messages;
 import lr.Data;
 import lr.Node;
 
+import java.util.Optional;
+
 /***
  * Type of message:
  * <p>
@@ -23,7 +25,7 @@ import lr.Node;
  */
 
 public class MessageManage extends Message{
-    private Data<?> data;
+    private Optional<Data<?>> data;
 
 //    public MessageManage(JSONObject json) {
 //        try {
@@ -51,12 +53,13 @@ public class MessageManage extends Message{
 //    }
 
     public MessageManage(){ }
-    public MessageManage(MSG_TYPE type, MSG_OPERATION oper, Node sender, Data<?> data) {
+
+    public MessageManage(MSG_TYPE type, MSG_OPERATION oper, Node sender, Optional<Data<?>> data) {
         super(type, oper, sender);
         this.data = data;
     }
 
-    public MessageManage(MSG_TYPE type, Node sender, Data<?> data) {
+    public MessageManage(MSG_TYPE type, Node sender, Optional<Data<?>> data) {
         this(type,null,sender,data);
     }
 
@@ -84,12 +87,12 @@ public class MessageManage extends Message{
 //        return json;
 //    }
 
-    public Data<?> getData() {
-        return data;
+    public void setData(Optional<Data<?>> data) {
+        this.data = data;
     }
 
-    public void setData(Data<?> data) {
-        this.data = data;
+    public Optional<Data<?>> getData() {
+        return data;
     }
 
     @Override

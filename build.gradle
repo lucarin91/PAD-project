@@ -43,6 +43,9 @@ dependencies {
         exclude group: 'com.sun.jmx'
     }
     compile 'org.springframework.boot:spring-boot-starter-web'
+    compile 'org.mapdb:mapdb:1.0.8'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8'
     //testCompile("junit:junit")
 }
 

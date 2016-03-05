@@ -4,10 +4,12 @@ import ie.ucd.murmur.MurmurHash;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.Serializable;
+
 /**
  * Created by luca on 28/02/16.
  */
-public class Data<T> {
+public class Data<T> implements Serializable {
 
     private String key;
     private int hash;

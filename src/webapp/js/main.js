@@ -1,38 +1,93 @@
 (function () {
     var app = angular.module("MonitorApp", []);
 
-    app.controller("StatusCtr", function ($scope, $http) {
-        getStatusCh(function (data) {
-            $scope.data = data[0];
-            $scope.ch = getSvgCh(data[0], true, 1000);
-        })
+    app.controller("StatusCtr", function ($scope, $http, $timeout) {
 
-        $http.get('http://127.0.0.1:8080/status/store').success(function (data) {
-            console.log(data);
-            $scope.store = {}
-            angular.forEach(data,function(item){
-                $scope.store[item.id] = item.store;
-            });
-        })
+        var colors = ['#ffffff', '#c1f0c1', '#6fdc6f', '#2db92d', '#196719']
+        $scope.refresh = function () {
+            $scope.loading = true;
+            getStatus(function (data, check) {
+                $scope.data = data;
+                $scope.ch = getSvgCh(data[0], true, 1000);
 
-        $scope.clickNode = function (n) {
-            $scope.select = {id: n.id, store:$scope.store[n.id], hash: n.hash};
+                $scope.store = {}
+                angular.forEach(data, function (item) {
+                    $scope.store[item.id] = {
+                        color: colors[item.store.length > colors.length - 1 ? colors.length - 1 : item.store.length],
+                        list: item.store
+                    }
+                    console.log(item.id);
+                });
+                if ($scope.select) $scope.select.store = $scope.store[$scope.select.id].list
+                $scope.loading = false;
+            })
+        }
+        $scope.refresh();
+
+
+        //$http.get('http://127.0.0.1:8080/status/store').success(function (data) {
+        //    console.log(data);
+        //    $scope.store = {}
+        //    angular.forEach(data,function(item){
+        //        $scope.store[item.id] = {color: colors[item.store.length>colors.length-1 ? colors.length-1 : item.store.length], list: item.store}
+        //        console.log(item.id);
+        //    });
+        //    console.log($scope.store)
+        //})
+
+        $scope.addKey = function (key, value) {
+            waitAndRefresh($http.post('http://127.0.0.1:8080/api',{key: key, value: value}))
+        }
+
+        $scope.removeData = function(key){
+            waitAndRefresh($http.delete('http://127.0.0.1:8080/api?key='+key))
+        }
+
+        $scope.updateData = function (key, value) {
+            waitAndRefresh($http.put('http://127.0.0.1:8080/api',{key: key, value: value}))
+        }
+
+        function waitAndRefresh(promis){
+            promis.success(function (data) {
+                console.log(data);
+                $scope.loading = true;
+                $timeout(function () {
+                    $scope.refresh();
+                    //$scope.select.store = $scope.store[$scope.select.id].list
+                }, 1000)
+            })
         }
 
         $scope.overNodeIn = function (n) {
+            angular.forEach($scope.ch, function (item) {
+                item.stroke = "black"
+            });
+            n.stroke = "red";
+            $scope.select = {id: n.id, store: $scope.store[n.id].list, hash: n.hash};
+        }
+
+        $scope.overNodeOut = function (n) {
+            //n.stroke = "black";
+        }
+
+        $scope.clickNode = function (n) {
+            //$scope.select = {id: n.id, store:$scope.store[n.id], hash: n.hash};
+        }
+
+        $scope.overSvgIn = function (n) {
             //console.log("in")
             updateSvgCh(false)
             //$scope.ch = getSvgCh($scope.data, false);
         }
 
-        $scope.overNodeOut = function (n) {
+        $scope.overSvgOut = function (n) {
             //console.log("out")
             updateSvgCh(true, 1000)
-            $scope.select = null;
+            //$scope.select = null;
             //$scope.ch = getSvgCh($scope.data, true, 1000);
         }
 
-        var CX = 800 / 2;
+        var CX = 500 / 2;
         var CY = 500 / 2;
         var R = 220;
 
@@ -44,11 +99,12 @@
             angular.forEach(ch, function (item) {
                 var hash = real ? item.hash + maxhash : i++;
                 res.push({
-                    bx: 0, by: 0,
+                    bx: CX, by: CY,
                     ax: Math.cos(hash * step - Math.PI / 2) * R + CX,
                     ay: Math.sin(hash * step - Math.PI / 2) * R + CY,
                     id: item.id,
-                    hash: item.hash
+                    hash: item.hash,
+                    stroke: "black"
                 });
             });
             console.log(res);
@@ -68,8 +124,8 @@
             //console.log($scope.ch)
         }
 
-        function getStatusCh(callback) {
-            $http.get('http://127.0.0.1:8080/status/ch').success(function (data) {
+        function getStatus(callback) {
+            $http.get('http://127.0.0.1:8080/status').success(function (data) {
                 console.log(data);
                 var check = {};
                 for (var i = 0; i < data.length; i++) {
@@ -82,7 +138,7 @@
                         }
                     }
                 }
-              //  console.log(check);
+                //  console.log(check);
                 callback(data, check);
             })
         }
@@ -97,16 +153,26 @@
                 ay: '=',
                 bx: '=',
                 by: '=',
-                id: '='
+                id: '=',
+                stroke: '=',
+                fill: '='
             },
             templateUrl: 'templates/node.html',
             templateNamespace: 'svg',
             link: function (scope, element, attr) {
-            //    console.log(element);
+                //    console.log(element);
                 scope.$watch('ax', function (newVal, oldVal) {
                     element[0].childNodes[5].beginElement();
                 }, true);
             }
         }
+
     })
+
+
+    //35% 	#239023	rgb(35, 144, 35)	hsl(120, 61%, 35%)
+    //30% 	#1e7b1e	rgb(30, 123, 30)	hsl(120, 61%, 30%)
+    //25% 	#196719	rgb(25, 103, 25)	hsl(120, 61%, 25%)
+    //20% 	#145214
+    //
 })();

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.code.gossip.GossipMember;
 import ie.ucd.murmur.MurmurHash;
 import lr.Messages.Message;
@@ -140,7 +141,7 @@ public class Node {
             //JSONObject json = msg.toJson();
 
             //byte[] json_bytes = json.toString().getBytes();
-            byte[] json_bytes = new ObjectMapper().writeValueAsBytes(msg);
+            byte[] json_bytes = new ObjectMapper().registerModule(new Jdk8Module()).writeValueAsBytes(msg);
             int packet_length = json_bytes.length;
             //TODO check packet size
 
