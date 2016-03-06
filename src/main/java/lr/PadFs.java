@@ -28,8 +28,6 @@ public class PadFs {
         final int seedNodes = 5;
         int clusterMembers = 5;
         try {
-            System.out.println("Hello World!");
-
             for (int i = 1; i < seedNodes + 1; ++i) {
                 startupMembers.add(new RemoteGossipMember("127.0.0." + i, 2000, i + ""));
             }
