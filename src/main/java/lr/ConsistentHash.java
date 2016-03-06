@@ -75,24 +75,46 @@ public class ConsistentHash<T> {
     }
 
     synchronized public List<T> getNext(String key, int n) {
-        List<T> list = new ArrayList<T>();
-        List<Integer> hashs = new ArrayList<>();
-        for (int i=0; i<_replication; i++){
-            hashs.add(Helper.hash(key + i));
-        }
+        List<T> list = new ArrayList<>();
+        List<Integer> hashs = getHashesForKey(key);
         int hash = hashs.get(0);
         int i=0;
         while (i<n) {
             Map.Entry<Integer, T> entry = _map.ceilingEntry(hash);
-            if (entry == null)
-                entry = _map.firstEntry();
+            if (entry == null) entry = _map.firstEntry();
             if (!hashs.contains(entry.getKey()) && !list.contains(entry.getValue())) {
                 list.add(entry.getValue());
                 i++;
             }
             hash = entry.getKey()+1;
         }
-        //System.out.print("NUM of REPLICA "+list);
+        System.out.println("getNext "+list);
+        return list;
+    }
+
+    public List<Integer> getHashesForKey (String key){
+        List<Integer> hashes = new ArrayList<>();
+        for (int i=0; i<_replication; i++){
+            hashes.add(Helper.hash(key + i));
+        }
+        return hashes;
+    }
+
+    synchronized public List<T> getPrev(String key, int n) {
+        List<T> list = new ArrayList<>();
+        List<Integer> hashes = getHashesForKey(key);
+        int hash = hashes.get(0);
+        int i=0;
+        while (i < n) {
+            Map.Entry<Integer, T> entry = _map.floorEntry(hash);
+            if (entry == null) entry = _map.lastEntry();
+            if (!hashes.contains(entry.getKey()) && !list.contains(entry.getValue())) {
+                list.add(entry.getValue());
+                i++;
+            }
+            hash = entry.getKey()-1;
+        }
+        System.out.println("getPrev "+list);
         return list;
     }
 

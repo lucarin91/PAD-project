@@ -1,9 +1,10 @@
 package lr;
 
 
+import com.sun.javafx.collections.MappingChange;
+
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
@@ -11,74 +12,88 @@ import java.util.stream.Stream;
  */
 
 
-public class VectorClock implements Serializable{
+public class VectorClock implements Serializable {
 
-    public static final int DEFAULT_N = 10;
+    //public static final int DEFAULT_N = 10;
 
     public enum COMP_CLOCK {
         BEFORE, AFTER, EQUAL, NOTHING
     }
 
-    private long[] vector;
+    private Map<String, Long> vector;
 
     public VectorClock() {
-        this(DEFAULT_N);
+        vector = new HashMap<>();
     }
 
-    public VectorClock(int n) {
-        this.vector = new long[n];
-        for (int i=0; i<n;i++) vector[i]=0;
-    }
-
-    public VectorClock(long[] n) {
-        this.vector = n;
-    }
-
-    public long[] getVector() {
+    public Map<String, Long> getVector() {
         return vector;
     }
 
-    public void setVector(long[] vector) {
+    public void setVector(Map<String, Long> vector) {
         this.vector = vector;
     }
+    //    public COMP_CLOCK compareTo(VectorClock that) {
+//        if (this == that) return COMP_CLOCK.EQUAL;
+//        if (this.vector.length != that.vector.length) return COMP_CLOCK.NOTHING;
+//
+//        List<COMP_CLOCK> res = new ArrayList<>();
+//        for (int i = 0; i < vector.length; i++) {
+//            if (vector[i] > that.vector[i])
+//                res.add(COMP_CLOCK.AFTER);
+//            else if (vector[i] < that.vector[i])
+//                res.add(COMP_CLOCK.BEFORE);
+//            else
+//                res.add(COMP_CLOCK.EQUAL);
+//        }
+//        return res.stream().allMatch(c -> c.equals(COMP_CLOCK.EQUAL)) ?
+//                COMP_CLOCK.EQUAL :
+//                res.stream().allMatch(c -> c.equals(COMP_CLOCK.BEFORE) || c.equals(COMP_CLOCK.EQUAL)) ?
+//                        COMP_CLOCK.BEFORE :
+//                        res.stream().allMatch(c -> c.equals(COMP_CLOCK.AFTER) || c.equals(COMP_CLOCK.EQUAL)) ?
+//                                COMP_CLOCK.AFTER :
+//                                COMP_CLOCK.NOTHING;
+//    }
 
     public COMP_CLOCK compareTo(VectorClock that) {
         if (this == that) return COMP_CLOCK.EQUAL;
-        if (this.vector.length != that.vector.length) return COMP_CLOCK.NOTHING;
 
-        List<COMP_CLOCK> res = new ArrayList<>();
-        for (int i = 0; i < vector.length; i++) {
-            if (vector[i] > that.vector[i])
-                res.add(COMP_CLOCK.AFTER);
-            else if (vector[i] < that.vector[i])
-                res.add(COMP_CLOCK.BEFORE);
-            else
-                res.add(COMP_CLOCK.EQUAL);
+        Map<String, COMP_CLOCK> res = new HashMap<>();
+        Set<String> set = new HashSet<>();
+        set.addAll(vector.keySet());
+        set.addAll(that.vector.keySet());
+        for (String key : set) {
+            Long v1 = this.vector.getOrDefault(key, (long) 0);
+            Long v2 = that.vector.getOrDefault(key, (long) 0);
+            if (v1 > v2) {
+                res.put(key, COMP_CLOCK.AFTER);
+            } else if (v1 < v2) {
+                res.put(key, COMP_CLOCK.BEFORE);
+            } else
+                res.put(key, COMP_CLOCK.EQUAL);
         }
-        return res.stream().allMatch(c -> c.equals(COMP_CLOCK.EQUAL)) ?
+
+        return res.values().stream().allMatch(c -> c.equals(COMP_CLOCK.EQUAL)) ?
                 COMP_CLOCK.EQUAL :
-                res.stream().allMatch(c -> c.equals(COMP_CLOCK.BEFORE) || c.equals(COMP_CLOCK.EQUAL)) ?
+                res.values().stream().allMatch(c -> c.equals(COMP_CLOCK.BEFORE) || c.equals(COMP_CLOCK.EQUAL)) ?
                         COMP_CLOCK.BEFORE :
-                        res.stream().allMatch(c -> c.equals(COMP_CLOCK.AFTER) || c.equals(COMP_CLOCK.EQUAL)) ?
+                        res.values().stream().allMatch(c -> c.equals(COMP_CLOCK.AFTER) || c.equals(COMP_CLOCK.EQUAL)) ?
                                 COMP_CLOCK.AFTER :
                                 COMP_CLOCK.NOTHING;
     }
 
-    public boolean update(VectorClock that) {
-        if (vector.length != that.vector.length) return false;
-
-        for (int i = 0; i < that.vector.length; i++)
-            vector[i] = Math.max(vector[i], that.vector[i]);
-        return true;
+    public void update(VectorClock that) {
+        for (Map.Entry<String, Long> item : that.vector.entrySet()) {
+            vector.merge(item.getKey(), item.getValue(), (v1, v2) -> v2 > v1 ? v2 : v1);
+        }
     }
 
-    public long increment(int n){
-        if (n >= vector.length) return -1;
-        return ++vector[n];
+    public VectorClock increment(String n) {
+        vector.put(n, vector.getOrDefault(n, (long) 0) + 1);
+        return this;
     }
 
-    public long get(int n){
-        if (n >= vector.length) return -1;
-        return vector[n];
+    public long get(String n) {
+        return vector.getOrDefault(n, (long) 0);
     }
 }

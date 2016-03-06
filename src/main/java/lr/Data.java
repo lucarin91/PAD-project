@@ -1,10 +1,7 @@
 package lr;
 
-import ie.ucd.murmur.MurmurHash;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.Serializable;
+import java.util.Optional;
 
 /**
  * Created by luca on 28/02/16.
@@ -14,24 +11,30 @@ public class Data<T> implements Serializable {
     private String key;
     private int hash;
     private T value;
-    private VectorClock version;
+    private Optional<VectorClock> version;
 
     public Data(String key, int hash, T value) {
-
         this.key = key;
         this.hash = hash;
         this.value = value;
-        this.version = new VectorClock();
+        this.version = Optional.empty();
+    }
+
+    public Data(String key, int hash, T value, VectorClock clock) {
+        this.key = key;
+        this.hash = hash;
+        this.value = value;
+        this.version = clock != null ? Optional.of(clock) : Optional.empty();
     }
 
     public Data() {
     }
 
-    public VectorClock getVersion() {
+    public Optional<VectorClock> getVersion() {
         return version;
     }
 
-    public void setVersion(VectorClock version) {
+    public void setVersion(Optional<VectorClock> version) {
         this.version = version;
     }
 

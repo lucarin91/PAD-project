@@ -25,7 +25,7 @@ public class PadFs {
 
         final Map<String,NodeService> clients = new HashMap<>();
         final List<GossipMember> startupMembers = new ArrayList<>();
-        final int seedNodes = 5;
+        final int seedNodes = 3;
         int clusterMembers = 5;
         try {
             for (int i = 1; i < seedNodes + 1; ++i) {
@@ -89,13 +89,5 @@ public class PadFs {
             }
         }
     }
-
-    /**
-     * Strange, this needs to be here, otherwise the jdk8 module isn't auto loaded by the Jackson auto config?!
-//     */
-//    //@Bean
-//    public Jdk8Module jdk8Module() {
-//        return new Jdk8Module();
-//    }
 }
 

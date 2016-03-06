@@ -1,6 +1,11 @@
 import lr.VectorClock.COMP_CLOCK;
 import lr.VectorClock;
 import org.junit.Test;
+import org.junit.internal.matchers.StringContains;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -9,49 +14,44 @@ import static org.junit.Assert.*;
  */
 public class TestVectorClock {
 
-    VectorClock c = new VectorClock(new long[]{1, 2, 3});
-    VectorClock c_smoll = new VectorClock(new long[]{0, 0, 0});
-    VectorClock c_big = new VectorClock(new long[]{2, 4, 3});
-    VectorClock c_diff = new VectorClock(new long[]{0, 3, 1});
-    VectorClock c_eq = new VectorClock(new long[]{1, 2, 3});
-    VectorClock c_wrong = new VectorClock(new long[]{1, 2, 3, 5});
+
 
     @Test
     public void compare() {
-        assertEquals(c.compareTo(c_smoll), COMP_CLOCK.AFTER);
-        assertEquals(c.compareTo(c_big), COMP_CLOCK.BEFORE);
-        assertEquals(c.compareTo(c_diff), COMP_CLOCK.NOTHING);
-        assertEquals(c.compareTo(c_eq), COMP_CLOCK.EQUAL);
+        VectorClock c1 = new VectorClock();
+        VectorClock c2 = new VectorClock();
 
-        assertEquals(c.compareTo(c_wrong), COMP_CLOCK.NOTHING);
-        assertEquals(c.compareTo(c), COMP_CLOCK.EQUAL);
+        c1.increment("1");
+        c1.increment("2");
+        c2.increment("1");
+        c2.increment("2");
+        assertEquals(c1.compareTo(c2),COMP_CLOCK.EQUAL);
+
+        c1.increment("1");
+        assertEquals(c1.compareTo(c2), COMP_CLOCK.AFTER);
+
+        c2.increment("2");
+        assertEquals(c1.compareTo(c2), COMP_CLOCK.NOTHING);
+
+        c1.increment("2");
+        c2.increment("1");
+        c2.increment("3");
+        assertEquals(c1.compareTo(c2), COMP_CLOCK.BEFORE);
     }
 
     @Test
     public void update() {
-        c.update(c_smoll);
-        assertArrayEquals(c.getVector(), new long[]{1, 2, 3});
+        VectorClock c1 = new VectorClock();
+        VectorClock c2 = new VectorClock();
 
-        c.update(c_big);
-        assertArrayEquals(c.getVector(), new long[]{2, 4, 3});
+        c1.increment("1");
+        c1.increment("2");
+        c2.update(c1);
 
-        c.update(c_diff);
-        assertArrayEquals(c.getVector(), new long[]{2, 4, 3});
+        assertEquals(c1.compareTo(c2),COMP_CLOCK.EQUAL);
 
-        assertEquals(c.update(c_wrong), false);
-    }
-
-    @Test
-    public void increment() {
-        c.increment(0);
-        assertArrayEquals(c.getVector(), new long[]{2, 2, 3});
-
-        c.increment(1);
-        assertArrayEquals(c.getVector(), new long[]{2, 3, 3});
-
-        c.increment(2);
-        assertArrayEquals(c.getVector(), new long[]{2, 3, 4});
-
-        assertEquals(c.increment(3), -1);
+        c2.increment("3");
+        c1.update(c2);
+        assertEquals(c1.compareTo(c2),COMP_CLOCK.EQUAL);
     }
 }

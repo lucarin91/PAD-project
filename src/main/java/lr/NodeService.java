@@ -2,10 +2,7 @@ package lr;
 
 import java.io.IOException;
 import java.net.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -19,6 +16,7 @@ import lr.Messages.Message.*;
 import org.apache.log4j.Logger;
 
 import com.google.code.gossip.manager.GossipManager;
+import org.apache.log4j.net.SyslogAppender;
 import org.json.JSONException;
 
 public class NodeService extends Node {
@@ -30,7 +28,8 @@ public class NodeService extends Node {
     private Thread _passiveThread;
     private AtomicBoolean _toStop;
     private DatagramSocket _server;
-    private final int replica = 2;
+    private final int replica = 1;
+    private VectorClock _clock;
 
     //TODO convert to persistent
     PersistentStorage _store;
@@ -56,6 +55,7 @@ public class NodeService extends Node {
         _ch.add(this);
         _store = new PersistentStorage(this);
 
+        _clock = new VectorClock();
         _toStop = new AtomicBoolean(false);
 //        _ip = ipAddress;
 //        _portG = port;
@@ -111,6 +111,8 @@ public class NodeService extends Node {
                 byte[] json_bytes = new byte[packet_length];
                 System.arraycopy(buf, 4, json_bytes, 0, packet_length);
                 String receivedMessage = new String(json_bytes);
+
+                _clock.increment(getId());
                 try {
 //                    JSONObject json = new JSONObject(receivedMessage);
 //                    MessageManage msg = new MessageManage(json);
@@ -120,7 +122,7 @@ public class NodeService extends Node {
                     System.out.print(id + ".RECEIVE: ");
 
                     if (msg.getType().equals(MSG_TYPE.REQUEST)) {
-                        System.out.println("" + msg);
+                        //System.out.println("" + msg);
                         if (msg.getOperation().equals(MSG_OPERATION.STATUS)) {
                             send(msg.getSender().getIp(), msg.getSender().getPortM(), new MessageStatus(MSG_TYPE.RESPONSE, this, _store.getMap(), _ch.getMap()));
                         } else {
@@ -142,9 +144,9 @@ public class NodeService extends Node {
                             });
                         }
                     } else {
-                        System.out.println("receive management.."+msg);
+                        System.out.println("receive management.." + msg);
                         MessageManage msgM = (MessageManage) msg; //mapper.readValue(receivedMessage,MessageManage.class);
-                        doOperation(msgM);
+                        doManageOperation(msgM);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -159,27 +161,48 @@ public class NodeService extends Node {
         shutdown();
     }
 
+    private void doManageOperation(MessageManage msg) {
+        msg.getData().ifPresent(data -> {
+            data.getVersion().ifPresent(vectorClock -> {
+                if (_clock.compareTo(vectorClock).equals(VectorClock.COMP_CLOCK.BEFORE)) {
+                    _clock.update(vectorClock);
+                    switch (msg.getOperation()) {
+                        case ADD:
+                            _store.put(data);
+                            break;
+                        case UP:
+                            _store.get(data.getKey()).ifPresent(data1 -> {
+                                data1.getVersion().ifPresent(vectorClock1 -> {
+                                    if (vectorClock1.compareTo(vectorClock).equals(VectorClock.COMP_CLOCK.BEFORE))
+                                        _store.update(data);
+                                });
+                            });
+                            break;
+                    }
+                }
+            });
+        });
+    }
+
     private void doOperation(MessageManage msg) {
         System.out.println("from BACK " + msg);
         msg.getData().ifPresent(data -> {
             switch (msg.getOperation()) {
                 case GET:
-                    // TODO: send back th data to the requestor
                     msg.getSender().send(new MessageManage(MSG_TYPE.RESPONSE, this, _store.get(data.getKey())));
                     break;
 
                 case ADD:
-                    // TODO: save the new data
+                    data.setVersion(Optional.of(_clock));
                     _store.put(data);
                     break;
 
                 case DEL:
-                    // TODO: remove the data
                     _store.remove(data.getKey());
                     break;
 
                 case UP:
-                    // TODO: update the data
+                    data.setVersion(Optional.of(_clock));
                     _store.update(data);
                     break;
             }
@@ -188,7 +211,7 @@ public class NodeService extends Node {
 
     private void propagateRequest(MessageManage msg) {
         List<Node> list = _ch.getNext(toString(), replica);
-        System.out.println("send propagate to.."+list);
+        System.out.println("send propagate to.." + list);
         msg.setType(MSG_TYPE.MANAGEMENT);
         for (Node n : list) n.send(msg);
     }
@@ -219,16 +242,31 @@ public class NodeService extends Node {
         if (!member.getId().contains("rest")) {
             Node n = new Node(member);
             if (state.equals(GossipState.UP)) {
+                String info = getId()+". NEW MEMBER ["+ n +"] up ...";
                 _ch.add(n);
-                List<Node> list = _ch.getNext(toString(), replica);
-                if (list.stream().anyMatch(node -> node.getId().equals(n.getId())))
+                List<Node> next = _ch.getNext(toString(), replica);
+                if (next.stream().anyMatch(node -> node.getId().equals(n.getId()))) {
+                    System.out.println(info+"SEND backup data ["+next+"]");
                     _store.getMap().forEach((s, data) -> {
                         n.send(new MessageManage(MSG_TYPE.MANAGEMENT, MSG_OPERATION.ADD, this, Optional.of(data)));
                     });
+                }
+                List<Node> prev = _ch.getPrev(toString(), replica);
+                if (prev.stream().anyMatch(node -> node.getId().equals(n.getId()))) {
+                    System.out.println(info+"SEND his data ["+prev+"]");
+                    List<Integer> hashList = _ch.getHashesForKey(n.toString());
+
+                    _store.getMap().entrySet().parallelStream().filter(stringDataEntry -> {
+                        return hashList.stream().anyMatch(integer -> {
+                            return stringDataEntry.getValue().getHash() < integer;
+                        });
+                    }).forEach(stringDataEntry1 -> {
+                        n.send(new MessageManage(MSG_TYPE.MANAGEMENT, MSG_OPERATION.ADD, this, Optional.of(stringDataEntry1.getValue())));
+                    });
+                }
             } else
                 _ch.remove(n);
         }
-        //System.out.println(id + ". " + member + " " + state);
     }
 
     public void printStatus() {
