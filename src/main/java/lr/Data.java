@@ -14,8 +14,25 @@ public class Data<T> implements Serializable {
     private String key;
     private int hash;
     private T value;
+    private VectorClock version;
+
+    public Data(String key, int hash, T value) {
+
+        this.key = key;
+        this.hash = hash;
+        this.value = value;
+        this.version = new VectorClock();
+    }
 
     public Data() {
+    }
+
+    public VectorClock getVersion() {
+        return version;
+    }
+
+    public void setVersion(VectorClock version) {
+        this.version = version;
     }
 
     public Data(String key) {

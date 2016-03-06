@@ -54,7 +54,6 @@ public class NodeService extends Node {
             _ch.add(new Node(m));
         }
         _ch.add(this);
-
         _store = new PersistentStorage(this);
 
         _toStop = new AtomicBoolean(false);
