@@ -63,7 +63,7 @@ public class PadFs {
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             System.out.print("\nEnter command: ");
             String s = br.readLine();
-            String[] cmd = s.split("\\s+");
+            String[] cmd = s!=null ? s.split("\\s+") : new String[]{"quit"};
             switch (cmd[0]) {
                 case "quit":
                     System.exit(0);

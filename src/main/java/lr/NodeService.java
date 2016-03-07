@@ -24,7 +24,7 @@ public class NodeService extends Node {
 
     private GossipManager _gossipManager;
     private ConsistentHash<Node> _ch;
-    private Thread _passiveThread;
+    private final Thread _passiveThread;
     private AtomicBoolean _toStop;
     private DatagramSocket _server;
     private final int replica = 2;
@@ -180,6 +180,7 @@ public class NodeService extends Node {
 
                 case ADD:
                     data.setVersion(new VectorClock().increment(getId()));
+                    data.setHash(_ch.doHash(data.getKey()));
                     _store.add(data);
                     break;
 
@@ -221,7 +222,9 @@ public class NodeService extends Node {
         _server.close();
         _store.close();
         try {
-            _passiveThread.wait();
+            synchronized (_passiveThread) {
+                _passiveThread.wait();
+            }
             System.out.println("after join");
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -258,7 +261,7 @@ public class NodeService extends Node {
 
                     _store.getMap().entrySet().parallelStream().filter(dataEntry -> {
                         return hashList.stream().anyMatch(hash -> {
-                            return dataEntry.getValue().getHash() < hash;
+                            return _ch.doHash(dataEntry.getValue().getKey()) < hash;
                         });
                     }).forEach(dataEntry -> {
                         n.send(new MessageManage(MSG_TYPE.MANAGEMENT, MSG_OPERATION.ADD, this, Optional.of(dataEntry.getValue())));

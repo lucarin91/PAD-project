@@ -53,6 +53,10 @@ public class ConsistentHash<T> {
         return true;
     }
 
+    public Long doHash(String key){
+        return _hash.apply(key);
+    }
+
 //    public boolean add(String key, T node) {
 //        if (!_map.containsKey(MurmurHash.hash32(key))) {
 //            _map.add(MurmurHash.hash32(key), node);

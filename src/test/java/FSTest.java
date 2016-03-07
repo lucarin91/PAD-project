@@ -49,8 +49,9 @@ public class FSTest {
 
     @Test
     public void testAll() {
+        Node n = null;
         try {
-            NodeService n = new NodeService("127.0.0.1", 2000, "1", new ArrayList<>());
+            n = new NodeService("127.0.0.1", 2000, "1", new ArrayList<>());
 
             rm(n);
 
@@ -79,9 +80,11 @@ public class FSTest {
             Thread.sleep(1000);
 
             get(n, value + 2);
-
         } catch (InterruptedException | UnknownHostException e) {
             e.printStackTrace();
+        }finally {
+            if (n!= null) n.shutdown();
+            GossipResource.getInstance().ifPresent(GossipResource::shutdown);
         }
     }
 }
