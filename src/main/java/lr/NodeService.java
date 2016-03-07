@@ -193,7 +193,6 @@ public class NodeService extends Node {
                         _store.update(data);
                     });
                     break;
-
             }
 
             if (!msg.getOperation().equals(MSG_OPERATION.GET)) {
