@@ -26,16 +26,16 @@ import java.util.TreeMap;
  * {"type": "DEL", "sender_type": FRONT|BACK, "key": ...., "hash": ... }
  */
 
-public class MessageStatus extends Message{
+public class MessageStatus extends Message {
 
     private Map<String, Data<?>> store;
-    private TreeMap<Integer,Node> ch;
+    private TreeMap<Long, Node> ch;
 
-    public TreeMap<Integer,Node> getCh() {
+    public TreeMap<Long, Node> getCh() {
         return ch;
     }
 
-    public void setCh(TreeMap<Integer,Node> ch) {
+    public void setCh(TreeMap<Long, Node> ch) {
         this.ch = ch;
     }
 
@@ -58,32 +58,33 @@ public class MessageStatus extends Message{
 //            JSONObject obj = json.getJSONObject("store");
 //            Set<String> set = obj.keySet();
 //            for (String s : set) {
-//                store.put(s, new Data(obj.getJSONObject(s)));
+//                store.add(s, new Data(obj.getJSONObject(s)));
 //            }
 //        } catch (JSONException | ClassCastException e) {
 //        }
 //    }
-    public MessageStatus(){ }
+    public MessageStatus() {
+    }
 
-    public MessageStatus(MSG_TYPE type, Node sender, Map<String, Data<?>> store, TreeMap<Integer,Node> ch) {
-        super(type, MSG_OPERATION.STATUS, sender);
+    public MessageStatus(Node sender, Map<String, Data<?>> store, TreeMap<Long, Node> ch) {
+        super(MSG_TYPE.STATUS, sender);
         this.store = store;
         this.ch = ch;
     }
 
-    public MessageStatus(MSG_TYPE type, Node sender) {
-        this(type, sender, null, null);
+    public MessageStatus(Node sender) {
+        this(sender, null, null);
     }
 //
 //    public JSONObject toJson() {
 //        JSONObject json = new JSONObject();
-//        if (type != null) json.put("type", type.name());
-//        if (sender_type != null) json.put("sender_type", sender_type.name());
+//        if (type != null) json.add("type", type.name());
+//        if (sender_type != null) json.add("sender_type", sender_type.name());
 //        if (sender != null)
-//            json.put("sender", sender.toJson());
+//            json.add("sender", sender.toJson());
 //        if (data != null)
-//            json.put("data", data.toJson());
-//        json.put("store", store);
+//            json.add("data", data.toJson());
+//        json.add("store", store);
 //        return json;
 //    }
 

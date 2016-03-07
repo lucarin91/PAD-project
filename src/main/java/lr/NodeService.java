@@ -16,7 +16,6 @@ import lr.Messages.Message.*;
 import org.apache.log4j.Logger;
 
 import com.google.code.gossip.manager.GossipManager;
-import org.apache.log4j.net.SyslogAppender;
 import org.json.JSONException;
 
 public class NodeService extends Node {
@@ -28,10 +27,9 @@ public class NodeService extends Node {
     private Thread _passiveThread;
     private AtomicBoolean _toStop;
     private DatagramSocket _server;
-    private final int replica = 1;
-    private VectorClock _clock;
+    private final int replica = 2;
+    //private VectorClock _clock;
 
-    //TODO convert to persistent
     PersistentStorage _store;
 
 //    private String _ip;
@@ -49,13 +47,15 @@ public class NodeService extends Node {
         super(id_, ipAddress, port);
 
         _ch = new ConsistentHash<>();
-        for (GossipMember m : gossipMembers) {
-            _ch.add(new Node(m));
-        }
+        gossipMembers.forEach(gossipMember -> _ch.add(new Node(gossipMember)));
+//        for (GossipMember m : gossipMembers) {
+//            _ch.add(new Node(m));
+//        }
+
         _ch.add(this);
         _store = new PersistentStorage(this);
 
-        _clock = new VectorClock();
+        //_clock = new VectorClock();
         _toStop = new AtomicBoolean(false);
 //        _ip = ipAddress;
 //        _portG = port;
@@ -79,20 +79,6 @@ public class NodeService extends Node {
 
     }*/
 
-    /***
-     * Type of message:
-     * <p>
-     * GET
-     * {"type": "GET", "sender": FRONT|BACK, "key": ..., "hash": ... }
-     * <p>
-     * ADD
-     * {"type": "ADD", "sender": FRONT|BACK, "key": ..., "hash": ..., "value": ....}
-     * UP
-     * {"type": "UP", "sender": FRONT|BACK, "key": ..., "hash": ..., "value": ....}
-     * <p>
-     * DEL
-     * {"type": "DEL", "sender": FRONT|BACK, "key": ...., "hash": ... }
-     */
     private void passiveRequest() {
         while (!_toStop.get()) {
             try {
@@ -112,7 +98,7 @@ public class NodeService extends Node {
                 System.arraycopy(buf, 4, json_bytes, 0, packet_length);
                 String receivedMessage = new String(json_bytes);
 
-                _clock.increment(getId());
+                //_clock.increment(getId());
                 try {
 //                    JSONObject json = new JSONObject(receivedMessage);
 //                    MessageManage msg = new MessageManage(json);
@@ -123,26 +109,22 @@ public class NodeService extends Node {
 
                     if (msg.getType().equals(MSG_TYPE.REQUEST)) {
                         //System.out.println("" + msg);
-                        if (msg.getOperation().equals(MSG_OPERATION.STATUS)) {
-                            send(msg.getSender().getIp(), msg.getSender().getPortM(), new MessageStatus(MSG_TYPE.RESPONSE, this, _store.getMap(), _ch.getMap()));
-                        } else {
-                            MessageManage msgM = (MessageManage) msg;//mapper.readValue(receivedMessage,MessageManage.class);
-                            //msg.setSender(this);
-                            msgM.getData().ifPresent(data -> {
-                                Node n = _ch.get(data.getHash());
 
-                                if (n.getId().equals(getId())) {
-                                    doOperation(msgM);
-                                    if (!msgM.getOperation().equals(MSG_OPERATION.GET)) {
-                                        System.out.println("propagate.." + msgM);
-                                        propagateRequest(msgM);
-                                    }
-                                } else {
-                                    System.out.println("pass request.." + msgM);
-                                    n.send(msg);
-                                }
-                            });
-                        }
+                        MessageManage msgM = (MessageManage) msg;//mapper.readValue(receivedMessage,MessageManage.class);
+                        //msg.setSender(this);
+                        msgM.getData().ifPresent(data -> {
+                            Node n = _ch.get(data.getKey());
+
+                            if (n.getId().equals(getId())) {
+                                doOperation(msgM);
+                            } else {
+                                System.out.println("pass request.." + msgM);
+                                n.send(msg);
+                            }
+                        });
+
+                    } else if (msg.getType().equals(MSG_TYPE.STATUS)) {
+                        send(msg.getSender().getIp(), msg.getSender().getPortM(), new MessageStatus(this, _store.getMap(), _ch.getMap()));
                     } else {
                         System.out.println("receive management.." + msg);
                         MessageManage msgM = (MessageManage) msg; //mapper.readValue(receivedMessage,MessageManage.class);
@@ -162,39 +144,43 @@ public class NodeService extends Node {
     }
 
     private void doManageOperation(MessageManage msg) {
-        msg.getData().ifPresent(data -> {
-            data.getVersion().ifPresent(vectorClock -> {
-                if (_clock.compareTo(vectorClock).equals(VectorClock.COMP_CLOCK.BEFORE)) {
-                    _clock.update(vectorClock);
-                    switch (msg.getOperation()) {
-                        case ADD:
-                            _store.put(data);
-                            break;
-                        case UP:
-                            _store.get(data.getKey()).ifPresent(data1 -> {
-                                data1.getVersion().ifPresent(vectorClock1 -> {
-                                    if (vectorClock1.compareTo(vectorClock).equals(VectorClock.COMP_CLOCK.BEFORE))
-                                        _store.update(data);
-                                });
-                            });
-                            break;
-                    }
+        System.out.println("do Management Operation... " + msg);
+        msg.getData().ifPresent(thatData -> {
+            VectorClock thatClock = thatData.getVersion();
+            if (null != thatClock) {
+//                if (_clock.compareTo(vectorClock).equals(VectorClock.COMP_CLOCK.BEFORE)) {
+//                    _clock.update(vectorClock);
+                switch (msg.getOperation()) {
+                    case ADD:
+                        _store.add(thatData);
+                        break;
+                    case UP:
+                        _store.get(thatData.getKey()).ifPresent(thisData -> {
+                            VectorClock thisClock = thisData.getVersion();
+                            if (thisClock.compareTo(thatClock).equals(VectorClock.COMP_CLOCK.BEFORE))
+                                _store.update(thatData);
+                        });
+                        break;
                 }
-            });
+                //}
+            }
         });
     }
 
     private void doOperation(MessageManage msg) {
-        System.out.println("from BACK " + msg);
+        System.out.println("do Operation... " + msg);
         msg.getData().ifPresent(data -> {
             switch (msg.getOperation()) {
                 case GET:
-                    msg.getSender().send(new MessageManage(MSG_TYPE.RESPONSE, this, _store.get(data.getKey())));
+                    _store.get(data.getKey()).ifPresent(data1 -> {
+                        msg.getSender().send(new MessageManage(MSG_TYPE.RESPONSE, this, Optional.of(data1)));
+                    });
+                    //TODO: else, send an error
                     break;
 
                 case ADD:
-                    data.setVersion(Optional.of(_clock));
-                    _store.put(data);
+                    data.setVersion(new VectorClock().increment(getId()));
+                    _store.add(data);
                     break;
 
                 case DEL:
@@ -202,10 +188,25 @@ public class NodeService extends Node {
                     break;
 
                 case UP:
-                    data.setVersion(Optional.of(_clock));
-                    _store.update(data);
+                    _store.get(data.getKey()).ifPresent(thisData -> {
+                        data.setVersion(thisData.getVersion().increment(getId()));
+                        _store.update(data);
+                    });
                     break;
+
             }
+
+            if (!msg.getOperation().equals(MSG_OPERATION.GET)) {
+                msg.setData(Optional.of(data));
+                System.out.println("propagate.." + msg);
+                propagateRequest(msg);
+            }
+
+//            if (!msg.getOperation().equals(MSG_OPERATION.GET)) {
+//                msg.setData(Optional.of(data));
+//                System.out.println("propagate.." + msg);
+//                propagateRequest(msg);
+//            }
         });
     }
 
@@ -242,26 +243,26 @@ public class NodeService extends Node {
         if (!member.getId().contains("rest")) {
             Node n = new Node(member);
             if (state.equals(GossipState.UP)) {
-                String info = getId()+". NEW MEMBER ["+ n +"] up ...";
+                String info = getId() + ". NEW MEMBER [" + n + "] up ...";
                 _ch.add(n);
                 List<Node> next = _ch.getNext(toString(), replica);
-                if (next.stream().anyMatch(node -> node.getId().equals(n.getId()))) {
-                    System.out.println(info+"SEND backup data ["+next+"]");
+                if (next.stream().anyMatch(node -> node.equals(n))) {
+                    System.out.println(info + "SEND backup data [" + next + "]");
                     _store.getMap().forEach((s, data) -> {
                         n.send(new MessageManage(MSG_TYPE.MANAGEMENT, MSG_OPERATION.ADD, this, Optional.of(data)));
                     });
                 }
-                List<Node> prev = _ch.getPrev(toString(), replica);
-                if (prev.stream().anyMatch(node -> node.getId().equals(n.getId()))) {
-                    System.out.println(info+"SEND his data ["+prev+"]");
-                    List<Integer> hashList = _ch.getHashesForKey(n.toString());
+                Node prev = _ch.getPrev(toString());
+                if (prev.equals(n)) {
+                    System.out.println(info + "SEND his data [" + prev + "]");
+                    List<Long> hashList = _ch.getHashesForKey(n.toString());
 
-                    _store.getMap().entrySet().parallelStream().filter(stringDataEntry -> {
-                        return hashList.stream().anyMatch(integer -> {
-                            return stringDataEntry.getValue().getHash() < integer;
+                    _store.getMap().entrySet().parallelStream().filter(dataEntry -> {
+                        return hashList.stream().anyMatch(hash -> {
+                            return dataEntry.getValue().getHash() < hash;
                         });
-                    }).forEach(stringDataEntry1 -> {
-                        n.send(new MessageManage(MSG_TYPE.MANAGEMENT, MSG_OPERATION.ADD, this, Optional.of(stringDataEntry1.getValue())));
+                    }).forEach(dataEntry -> {
+                        n.send(new MessageManage(MSG_TYPE.MANAGEMENT, MSG_OPERATION.ADD, this, Optional.of(dataEntry.getValue())));
                     });
                 }
             } else

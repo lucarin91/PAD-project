@@ -7,7 +7,7 @@ import javax.management.timer.Timer;
 
 /**
  * This object represents a timer for a gossip member. When the timer has elapsed without being
- * reset in the meantime, it will inform the GossipService about this who in turn will put the
+ * reset in the meantime, it will inform the GossipService about this who in turn will add the
  * gossip member on the dead list, because it is apparantly not alive anymore.
  *
  * @author joshclemm, harmenw

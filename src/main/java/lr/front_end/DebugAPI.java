@@ -26,7 +26,7 @@ public class DebugAPI {
             GossipResource r = opt_r.get();
             List<Node> list = r.getNode();
             for (Node n : list) {
-                n.send(new MessageStatus(MSG_TYPE.REQUEST, r));
+                n.send(new MessageStatus(r));
             }
             List<StatusObj> res = new ArrayList<>();
             for (Node item : list) {
@@ -86,17 +86,17 @@ public class DebugAPI {
 //    }
 
     class ChNodeChildren {
-        private int hash;
+        private Long hash;
         private String id;
 
         public ChNodeChildren() {
         }
 
-        public int getHash() {
+        public Long getHash() {
             return hash;
         }
 
-        public void setHash(int hash) {
+        public void setHash(Long hash) {
             this.hash = hash;
         }
 
@@ -108,7 +108,7 @@ public class DebugAPI {
             this.id = id;
         }
 
-        public ChNodeChildren(int hash, String id) {
+        public ChNodeChildren(Long hash, String id) {
             this.hash = hash;
             this.id = id;
         }

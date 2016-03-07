@@ -65,10 +65,10 @@ public class Node {
 //
 //    public JSONObject toJson(){
 //        JSONObject json = new JSONObject();
-//        json.put("id", id);
-//        json.put("ip", ip);
-//        json.put("port_g", portG);
-//        json.put("port_m", portM);
+//        json.add("id", id);
+//        json.add("ip", ip);
+//        json.add("port_g", portG);
+//        json.add("port_m", portM);
 //        return json;
 //    }
 
@@ -171,6 +171,31 @@ public class Node {
 
 
     public void shutdown() {
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Node node = (Node) o;
+
+        if (portG != node.portG) return false;
+        if (portM != node.portM) return false;
+        if (type != node.type) return false;
+        if (!id.equals(node.id)) return false;
+        return ip.equals(node.ip);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = type.hashCode();
+        result = 31 * result + id.hashCode();
+        result = 31 * result + ip.hashCode();
+        result = 31 * result + portG;
+        result = 31 * result + portM;
+        return result;
     }
 
     @Override

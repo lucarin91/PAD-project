@@ -100,7 +100,7 @@
         })
         .value("CONST", {
             URL: 'http://127.0.0.1:8080',
-            MAX_HASH: Math.pow(2, 32),
+            MAX_HASH: Math.pow(2, 64),
             CX: 500 / 2,
             CY: 500 / 2,
             R: 220,

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.code.gossip.GossipMember;
 
 import java.io.IOException;
@@ -102,7 +103,7 @@ public class GossipResource extends Node {
             }
             String receivedMessage = new String(json_bytes);
 
-            ObjectMapper mapper = new ObjectMapper();
+            ObjectMapper mapper = new ObjectMapper().registerModule(new Jdk8Module());
             return Optional.of(mapper.readValue(receivedMessage, new TypeReference<T>() {}));
 
         } catch (IOException e) {

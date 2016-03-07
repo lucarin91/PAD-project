@@ -9,45 +9,62 @@ import java.util.Optional;
 public class Data<T> implements Serializable {
 
     private String key;
-    private int hash;
+    private Long hash;
     private T value;
-    private Optional<VectorClock> version;
+    private VectorClock version;
 
-    public Data(String key, int hash, T value) {
+    public Data(String key, Long hash, T value) {
+        this(key, hash, value, null);
+    }
+
+    public Data(String key, Long hash, T value, VectorClock clock) {
         this.key = key;
         this.hash = hash;
         this.value = value;
-        this.version = Optional.empty();
-    }
-
-    public Data(String key, int hash, T value, VectorClock clock) {
-        this.key = key;
-        this.hash = hash;
-        this.value = value;
-        this.version = clock != null ? Optional.of(clock) : Optional.empty();
-    }
-
-    public Data() {
-    }
-
-    public Optional<VectorClock> getVersion() {
-        return version;
-    }
-
-    public void setVersion(Optional<VectorClock> version) {
-        this.version = version;
+        this.version = clock;
     }
 
     public Data(String key) {
         this.key = key;
-        this.hash = Helper.hash(key);
     }
 
 
     public Data(String key, T value) {
         this.key = key;
-        this.hash = Helper.hash(key);
         this.value = value;
+    }
+
+    public Data() {
+    }
+
+    public VectorClock getVersion() {
+        return version;
+    }
+
+    public void setVersion(VectorClock version) {
+        this.version = version;
+    }
+
+    //    public Data(JSONObject json) {
+//        this.key = json.getString("key");
+//        this.hash = json.getInt("hash");
+//        try {
+//
+//            this.value = (T) json.get("value");
+//        } catch (JSONException e) {
+//        }
+//    }
+//
+//    public JSONObject toJson() {
+//        JSONObject obj = new JSONObject();
+//        obj.add("key", key);
+//        obj.add("hash", hash);
+//        obj.add("value", value);
+//        return obj;
+//    }
+
+    public void setKey(String key) {
+        this.key = key;
     }
 
     @Override
@@ -56,33 +73,11 @@ public class Data<T> implements Serializable {
                 "key='" + key + '\'' +
                 ", hash=" + hash +
                 ", value=" + value +
+                ", version=" + version +
                 '}';
     }
 
-//    public Data(JSONObject json) {
-//        this.key = json.getString("key");
-//        this.hash = json.getInt("hash");
-//        try {
-//            //TODO: improve the cast to T
-//            this.value = (T) json.get("value");
-//        } catch (JSONException e) {
-//        }
-//    }
-//
-//    public JSONObject toJson() {
-//        JSONObject obj = new JSONObject();
-//        obj.put("key", key);
-//        obj.put("hash", hash);
-//        obj.put("value", value);
-//        return obj;
-//    }
-
-    public void setKey(String key) {
-        this.key = key;
-        this.hash = Helper.hash(key);
-    }
-
-    public void setHash(int hash) {
+    public void setHash(Long hash) {
         this.hash = hash;
     }
 
@@ -94,7 +89,7 @@ public class Data<T> implements Serializable {
         return key;
     }
 
-    public int getHash() {
+    public Long getHash() {
         return hash;
     }
 

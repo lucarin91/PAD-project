@@ -47,7 +47,7 @@ public class GossipExample extends Thread {
       // Get my ip address.
       String myIpAddress = InetAddress.getLocalHost().getHostAddress();
 
-      // Create the gossip members and put them in a list and give them a port number starting with
+      // Create the gossip members and add them in a list and give them a port number starting with
       // 2000.
       List<GossipMember> startupMembers = new ArrayList<>();
       for (int i = 0; i < NUMBER_OF_CLIENTS; ++i) {

@@ -30,7 +30,7 @@ public class PersistentStorage {
         _db.close();
     }
 
-    synchronized public void put(Data<?> data) {
+    synchronized public void add(Data<?> data) {
         _map.putIfAbsent(data.getKey(), data);
         _db.commit();
     }

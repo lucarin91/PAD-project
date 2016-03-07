@@ -46,7 +46,7 @@ public class MessageManage extends Message{
 //            JSONObject obj = json.getJSONObject("store");
 //            Set<String> set = obj.keySet();
 //            for (String s : set) {
-//                store.put(s, new Data(obj.getJSONObject(s)));
+//                store.add(s, new Data(obj.getJSONObject(s)));
 //            }
 //        } catch (JSONException | ClassCastException e) {
 //        }
@@ -77,13 +77,13 @@ public class MessageManage extends Message{
 
 //    public JSONObject toJson() {
 //        JSONObject json = new JSONObject();
-//        if (type != null) json.put("type", type.name());
-//        if (sender_type != null) json.put("sender_type", sender_type.name());
+//        if (type != null) json.add("type", type.name());
+//        if (sender_type != null) json.add("sender_type", sender_type.name());
 //        if (sender != null)
-//            json.put("sender", sender.toJson());
+//            json.add("sender", sender.toJson());
 //        if (data != null)
-//            json.put("data", data.toJson());
-//        json.put("store", store);
+//            json.add("data", data.toJson());
+//        json.add("store", store);
 //        return json;
 //    }
 
