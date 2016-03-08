@@ -29,25 +29,17 @@ import lr.Node;
         property = "type")
 @JsonSubTypes({
         @JsonSubTypes.Type(value = MessageManage.class, name = "msg_manage"),
+        @JsonSubTypes.Type(value = MessageRequest.class, name = "msg_request"),
+        @JsonSubTypes.Type(value = MessageResponse.class, name = "msg_response"),
         @JsonSubTypes.Type(value = MessageStatus.class, name = "msg_status")})
 public class Message {
-    public enum MSG_TYPE {MANAGEMENT, REQUEST, RESPONSE, STATUS}
-    public enum MSG_OPERATION {ADD,DEL,UP,GET}
+    //public enum MSG_TYPE {MANAGEMENT, STATUS}
+    public enum MSG_OPERATION {ADD, DEL, UP, GET, STATUS}
 
     private Node sender;
-    private MSG_TYPE type;
-    private MSG_OPERATION operation;
-
     public Message() { }
 
-    public Message(MSG_TYPE type, MSG_OPERATION operation, Node sender) {
-        this.type = type;
-        this.operation = operation;
-        this.sender = sender;
-    }
-
-    public Message(MSG_TYPE type, Node sender) {
-        this.type = type;
+    public Message(Node sender) {
         this.sender = sender;
     }
 
@@ -55,25 +47,7 @@ public class Message {
     public String toString() {
         return "Message{" +
                 "sender=" + sender +
-                ", type=" + type +
-                ", operation=" + operation +
                 '}';
-    }
-
-    public MSG_OPERATION getOperation() {
-        return operation;
-    }
-
-    public void setOperation(MSG_OPERATION operation) {
-        this.operation = operation;
-    }
-
-    public MSG_TYPE getType() {
-        return type;
-    }
-
-    public void setType(MSG_TYPE type) {
-        this.type = type;
     }
 
     public Node getSender() {

@@ -107,25 +107,25 @@ public class NodeService extends Node {
 
                     System.out.print(id + ".RECEIVE: ");
 
-                    if (msg.getType().equals(MSG_TYPE.REQUEST)) {
+                    if (msg instanceof MessageRequest<?>) {
                         //System.out.println("" + msg);
 
-                        MessageManage msgM = (MessageManage) msg;//mapper.readValue(receivedMessage,MessageManage.class);
-                        //msg.setSender(this);
-                        msgM.getData().ifPresent(data -> {
-                            Node n = _ch.get(data.getKey());
+                        MessageRequest msgR = (MessageRequest) msg;
+                        if (msgR.getOperation() != MSG_OPERATION.STATUS) {
+                            //msg.setSender(this);
+                            Node n = _ch.get(msgR.getKey());
 
                             if (n.getId().equals(getId())) {
-                                doOperation(msgM);
+                                doOperation(msgR);
                             } else {
-                                System.out.println("pass request.." + msgM);
+                                System.out.println("pass request.." + msgR);
                                 n.send(msg);
                             }
-                        });
 
-                    } else if (msg.getType().equals(MSG_TYPE.STATUS)) {
-                        send(msg.getSender().getIp(), msg.getSender().getPortM(), new MessageStatus(this, _store.getMap(), _ch.getMap()));
-                    } else {
+                        } else {
+                            send(msg.getSender().getIp(), msg.getSender().getPortM(), new MessageStatus(this, _store.getMap(), _ch.getMap()));
+                        }
+                    } else if (msg instanceof MessageManage) {
                         System.out.println("receive management.." + msg);
                         MessageManage msgM = (MessageManage) msg; //mapper.readValue(receivedMessage,MessageManage.class);
                         doManageOperation(msgM);
@@ -145,75 +145,70 @@ public class NodeService extends Node {
 
     private void doManageOperation(MessageManage msg) {
         System.out.println("do Management Operation... " + msg);
-        msg.getData().ifPresent(thatData -> {
-            VectorClock thatClock = thatData.getVersion();
-            if (null != thatClock) {
-//                if (_clock.compareTo(vectorClock).equals(VectorClock.COMP_CLOCK.BEFORE)) {
-//                    _clock.update(vectorClock);
-                switch (msg.getOperation()) {
-                    case ADD:
-                        _store.add(thatData);
-                        break;
-                    case UP:
-                        _store.get(thatData.getKey()).ifPresent(thisData -> {
-                            VectorClock thisClock = thisData.getVersion();
-                            if (thisClock.compareTo(thatClock).equals(VectorClock.COMP_CLOCK.BEFORE))
-                                _store.update(thatData);
-                        });
-                        break;
-                }
-                //}
+        VectorClock thatClock = msg.getData().getVersion();
+        if (null != thatClock) {
+            switch (msg.getOperation()) {
+                case ADD:
+                    _store.add(msg.getData());
+                    break;
+                case UP:
+                    _store.get(msg.getData().getKey()).ifPresent(thisData -> {
+                        VectorClock thisClock = thisData.getVersion();
+                        if (thisClock.compareTo(thatClock).equals(VectorClock.COMP_CLOCK.BEFORE))
+                            _store.update(msg.getData());
+                    });
+                    break;
             }
-        });
+        }
     }
 
-    private void doOperation(MessageManage msg) {
+    private void doOperation(MessageRequest<?> msg) {
         System.out.println("do Operation... " + msg);
-        msg.getData().ifPresent(data -> {
-            switch (msg.getOperation()) {
-                case GET:
-                    _store.get(data.getKey()).ifPresent(data1 -> {
-                        msg.getSender().send(new MessageManage(MSG_TYPE.RESPONSE, this, Optional.of(data1)));
-                    });
-                    //TODO: else, send an error
-                    break;
+        switch (msg.getOperation()) {
+            case GET:
+                _store.get(msg.getKey()).ifPresent(data1 -> {
+                    msg.getSender().send(new MessageResponse<Data<?>>(this, MessageResponse.MSG_STATUS.OK, data1));
+                });
+                //TODO: else, send an error
+                break;
 
-                case ADD:
-                    data.setVersion(new VectorClock().increment(getId()));
-                    data.setHash(_ch.doHash(data.getKey()));
-                    _store.add(data);
-                    break;
+            case ADD:
+                Data data = new Data<>(msg.getKey(),
+                        _ch.doHash(msg.getKey()),
+                        msg.getValue(),
+                        new VectorClock().increment(getId()));
+                _store.add(data);
+                sendBackup(new MessageManage(this, MSG_OPERATION.ADD, data));
+                break;
 
-                case DEL:
-                    _store.remove(data.getKey());
-                    break;
+            case DEL:
+                _store.remove(msg.getKey());
+                sendBackup(new MessageManage(this, MSG_OPERATION.DEL, msg.getKey()));
+                break;
 
-                case UP:
-                    _store.get(data.getKey()).ifPresent(thisData -> {
-                        data.setVersion(thisData.getVersion().increment(getId()));
-                        _store.update(data);
-                    });
-                    break;
-            }
-
-            if (!msg.getOperation().equals(MSG_OPERATION.GET)) {
-                msg.setData(Optional.of(data));
-                System.out.println("propagate.." + msg);
-                propagateRequest(msg);
-            }
+            case UP:
+                _store.get(msg.getKey()).ifPresent(thisData -> {
+                    Data data1 = new Data<>(msg.getKey(),
+                            _ch.doHash(msg.getKey()),
+                            msg.getValue(),
+                            thisData.getVersion().increment(getId()));
+                    _store.update(data1);
+                    sendBackup(new MessageManage(this, MSG_OPERATION.UP, data1));
+                });
+                break;
+        }
 
 //            if (!msg.getOperation().equals(MSG_OPERATION.GET)) {
 //                msg.setData(Optional.of(data));
 //                System.out.println("propagate.." + msg);
-//                propagateRequest(msg);
+//                sendBackup(msg);
 //            }
-        });
     }
 
-    private void propagateRequest(MessageManage msg) {
+
+    private void sendBackup(MessageManage msg) {
         List<Node> list = _ch.getNext(toString(), replica);
         System.out.println("send propagate to.." + list);
-        msg.setType(MSG_TYPE.MANAGEMENT);
         for (Node n : list) n.send(msg);
     }
 
@@ -251,7 +246,7 @@ public class NodeService extends Node {
                 if (next.stream().anyMatch(node -> node.equals(n))) {
                     System.out.println(info + "SEND backup data [" + next + "]");
                     _store.getMap().forEach((s, data) -> {
-                        n.send(new MessageManage(MSG_TYPE.MANAGEMENT, MSG_OPERATION.ADD, this, Optional.of(data)));
+                        n.send(new MessageManage(this, MSG_OPERATION.ADD, data));
                     });
                 }
                 Node prev = _ch.getPrev(toString());
@@ -264,7 +259,7 @@ public class NodeService extends Node {
                             return _ch.doHash(dataEntry.getValue().getKey()) < hash;
                         });
                     }).forEach(dataEntry -> {
-                        n.send(new MessageManage(MSG_TYPE.MANAGEMENT, MSG_OPERATION.ADD, this, Optional.of(dataEntry.getValue())));
+                        n.send(new MessageManage(this, MSG_OPERATION.ADD, dataEntry.getValue()));
                     });
                 }
             } else

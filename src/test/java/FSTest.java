@@ -3,6 +3,8 @@ import com.google.code.gossip.GossipService;
 import lr.Data;
 import lr.Messages.Message;
 import lr.Messages.MessageManage;
+import lr.Messages.MessageRequest;
+import lr.Messages.MessageResponse;
 import lr.Node;
 import lr.NodeService;
 import lr.front_end.GossipResource;
@@ -23,27 +25,28 @@ public class FSTest {
     final String value = "lkjdsalkjdsakjldsalkjlkjdsalkjdsa";
 
     public void add(Node n, String value) {
-        n.send(new MessageManage(Message.MSG_TYPE.REQUEST, Message.MSG_OPERATION.ADD, null, Optional.of(new Data<>(key, value))));
+        n.send(new MessageRequest<>(null, Message.MSG_OPERATION.ADD, key, value));
     }
 
     public void get(Node n, String value) {
         GossipResource g = GossipResource.getInstance("rest", "127.0.0.2", 2000, new ArrayList<>());
-        n.send(new MessageManage(Message.MSG_TYPE.REQUEST, Message.MSG_OPERATION.GET, g, Optional.of(new Data<>(key))));
-        g.<MessageManage>receive().ifPresent(message -> {
-            message.getData().ifPresent(data -> {
-                Assert.assertEquals(value, data.getValue());
-            });
+        n.send(new MessageRequest<>(g, Message.MSG_OPERATION.GET, key));
+        g.<MessageResponse<Data<?>>>receive().ifPresent(message -> {
+            Assert.assertEquals(message.getStatus(), MessageResponse.MSG_STATUS.OK);
+            if (message.getStatus() == MessageResponse.MSG_STATUS.OK)
+
+                Assert.assertEquals(value, ((Data<?>) message.getData()).getValue());
         });
     }
 
     public void rm(Node n) {
-        n.send(new MessageManage(Message.MSG_TYPE.REQUEST, Message.MSG_OPERATION.DEL, null, Optional.of(new Data<>(key))));
+        n.send(new MessageRequest<>(null, Message.MSG_OPERATION.DEL, key));
 
     }
 
 
     public void up(Node n, String v) {
-        n.send(new MessageManage(Message.MSG_TYPE.REQUEST, Message.MSG_OPERATION.UP, null, Optional.of(new Data<>(key, v))));
+        n.send(new MessageRequest<>(null, Message.MSG_OPERATION.UP, key, v));
 
     }
 
@@ -51,7 +54,7 @@ public class FSTest {
     public void testAll() {
         Node n = null;
         try {
-            n = new NodeService("127.0.0.1", 2000, "1", new ArrayList<>());
+            n = new NodeService("127.0.0.1", 2000, "TEST", new ArrayList<>());
 
             rm(n);
 
@@ -82,9 +85,9 @@ public class FSTest {
             get(n, value + 2);
         } catch (InterruptedException | UnknownHostException e) {
             e.printStackTrace();
-        }finally {
-            if (n!= null) n.shutdown();
-            GossipResource.getInstance().ifPresent(GossipResource::shutdown);
+        } finally {
+//            if (n != null) n.shutdown();
+//            GossipResource.getInstance().ifPresent(GossipResource::shutdown);
         }
     }
 }

@@ -3,6 +3,7 @@ package lr.front_end;
 import lr.Data;
 import lr.Messages.MessageManage;
 import lr.Messages.Message.*;
+import lr.Messages.MessageRequest;
 import lr.Node;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,7 @@ public class PublicAPI {
         if (opt_r.isPresent()) {
             GossipResource r = opt_r.get();
             Node n = r.getRandomNode();
-            n.send(new MessageManage(MSG_TYPE.REQUEST, MSG_OPERATION.GET, r, Optional.of(new Data(key))));
+            n.send(new MessageRequest<>(r, MSG_OPERATION.GET, key));
 
             return new Response<>(RESPONSE_STATUS.ok, r.<MessageManage>receive().get().getData());
         } else
@@ -33,7 +34,7 @@ public class PublicAPI {
         Optional<GossipResource> r = GossipResource.getInstance();
         if (r.isPresent()) {
             Node n = r.get().getRandomNode();
-            n.send(new MessageManage(MSG_TYPE.REQUEST, MSG_OPERATION.ADD, r.get() , Optional.of(data)));
+            n.send(new MessageRequest<>(r.get(), MSG_OPERATION.ADD, data.getKey(), data.getValue()));
             return new Response<>(RESPONSE_STATUS.ok, "send to "+ n.getId());
         }
         return new Response<>(RESPONSE_STATUS.error, "error");
@@ -44,7 +45,7 @@ public class PublicAPI {
         Optional<GossipResource> r = GossipResource.getInstance();
         if (r.isPresent()) {
             Node n = r.get().getRandomNode();
-            n.send(new MessageManage(MSG_TYPE.REQUEST, MSG_OPERATION.DEL, r.get(), Optional.of(new Data(key))));
+            n.send(new MessageRequest<>(r.get(), MSG_OPERATION.DEL, key));
             return new Response<>(RESPONSE_STATUS.ok, "send to "+ n.getId());
         }
         return new Response<>(RESPONSE_STATUS.error, "error");
@@ -55,7 +56,7 @@ public class PublicAPI {
         Optional<GossipResource> r = GossipResource.getInstance();
         if (r.isPresent()) {
             Node n = r.get().getRandomNode();
-            n.send(new MessageManage(MSG_TYPE.REQUEST, MSG_OPERATION.UP, r.get(), Optional.of(data)));
+            n.send(new MessageRequest<>(r.get(), MSG_OPERATION.UP, data.getKey(), data.getValue()));
             return new Response<>(RESPONSE_STATUS.ok, "send to "+ n.getId());
         }
         return new Response<>(RESPONSE_STATUS.error, "error");
