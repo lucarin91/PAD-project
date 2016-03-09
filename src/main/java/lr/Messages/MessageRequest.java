@@ -25,6 +25,22 @@ public class MessageRequest<T> extends Message {
         this.operation = operation;
     }
 
+    public MessageRequest(Node sender, MSG_OPERATION operation) {
+        super(sender);
+        this.operation = operation;
+    }
+
+    public MessageRequest(MSG_OPERATION operation, String key, T value) {
+        this.key = key;
+        this.value = value;
+        this.operation = operation;
+    }
+
+    public MessageRequest(MSG_OPERATION operation, String key) {
+        this.key = key;
+        this.operation = operation;
+    }
+
     public String getKey() {
         return key;
     }

@@ -3,6 +3,7 @@ package lr.front_end;
 import lr.Data;
 import lr.Messages.MessageManage;
 import lr.Messages.Message.*;
+import lr.Messages.MessageRequest;
 import lr.Messages.MessageStatus;
 import lr.Node;
 import org.springframework.core.env.SystemEnvironmentPropertySource;
@@ -26,7 +27,7 @@ public class StatusAPI {
             GossipResource r = opt_r.get();
             List<Node> list = r.getNode();
             for (Node n : list) {
-                n.send(new MessageStatus(r));
+                n.send(new MessageRequest<>(r,MSG_OPERATION.STATUS));
             }
             List<StatusObj> res = new ArrayList<>();
             for (Node item : list) {

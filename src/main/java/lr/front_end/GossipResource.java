@@ -36,7 +36,7 @@ import org.json.JSONObject;
  * Created by luca on 01/03/16.
  */
 public class GossipResource extends Node {
-
+    public final static String FRONT_ID = "[REST-FRONT]";
     private static GossipResource _r;
     @JsonIgnore
     private GossipManager _gossipManager;
@@ -67,7 +67,7 @@ public class GossipResource extends Node {
         }
 
 
-        _gossipManager = new RandomGossipManager(ip, port, id, new GossipSettings(), gossipMembers, null);
+        _gossipManager = new RandomGossipManager(ip, port, FRONT_ID + " " + id, new GossipSettings(), gossipMembers, null);
         _gossipManager.start();
         _random = new Random();
     }
@@ -104,7 +104,7 @@ public class GossipResource extends Node {
             System.arraycopy(buf, 4, json_bytes, 0, packet_length);
             String receivedMessage = new String(json_bytes);
 
-            System.out.println(receivedMessage);
+            //System.out.println(receivedMessage);
             ObjectMapper mapper = new ObjectMapper().registerModule(new Jdk8Module());
             return Optional.of(mapper.readValue(receivedMessage, new TypeReference<T>() {}));
 
@@ -117,5 +117,7 @@ public class GossipResource extends Node {
     @Override
     public void shutdown() {
         _gossipManager.shutdown();
+        _server.close();
+        _r = null;
     }
 }

@@ -13,6 +13,7 @@ import com.google.code.gossip.event.GossipState;
 import com.google.code.gossip.manager.random.RandomGossipManager;
 import lr.Messages.*;
 import lr.Messages.Message.*;
+import lr.front_end.GossipResource;
 import org.apache.log4j.Logger;
 
 import com.google.code.gossip.manager.GossipManager;
@@ -42,18 +43,23 @@ public class NodeService extends Node {
 //                        .getGossipSettings(), this::callback);
 //    }
 
-    public NodeService(String ipAddress, int port, String id_, List<GossipMember> gossipMembers)
+    public NodeService(String ipAddress, int port, String id_, List<GossipMember> gossipMembers) throws UnknownHostException, InterruptedException {
+        this(ipAddress, port, id_, gossipMembers, false);
+    }
+
+    public NodeService(String ipAddress, int port, String id_, List<GossipMember> gossipMembers, boolean clearStorage)
             throws InterruptedException, UnknownHostException {
         super(id_, ipAddress, port);
 
         _ch = new ConsistentHash<>();
-        gossipMembers.forEach(gossipMember -> _ch.add(new Node(gossipMember)));
+        gossipMembers.stream().filter(member -> !member.getId().contains(GossipResource.FRONT_ID))
+                .forEach(gossipMember -> _ch.add(new Node(gossipMember)));
 //        for (GossipMember m : gossipMembers) {
 //            _ch.add(new Node(m));
 //        }
 
         _ch.add(this);
-        _store = new PersistentStorage(this);
+        _store = new PersistentStorage(getId(), clearStorage);
 
         //_clock = new VectorClock();
         _toStop = new AtomicBoolean(false);
@@ -133,32 +139,34 @@ public class NodeService extends Node {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-
-
+            } catch (SocketException e) {
+                //e.printStackTrace();
+                _toStop.set(true);
             } catch (IOException e) {
                 e.printStackTrace();
-                _toStop.set(true);
             }
         }
-        shutdown();
+        //shutdown();
     }
 
     private void doManageOperation(MessageManage msg) {
         System.out.println("do Management Operation... " + msg);
-        VectorClock thatClock = msg.getData().getVersion();
-        if (null != thatClock) {
-            switch (msg.getOperation()) {
-                case ADD:
-                    _store.add(msg.getData());
-                    break;
-                case UP:
-                    _store.get(msg.getData().getKey()).ifPresent(thisData -> {
-                        VectorClock thisClock = thisData.getVersion();
-                        if (thisClock.compareTo(thatClock).equals(VectorClock.COMP_CLOCK.BEFORE))
-                            _store.update(msg.getData());
-                    });
-                    break;
-            }
+        switch (msg.getOperation()) {
+            case ADD:
+                _store.add(msg.getData());
+                break;
+
+            case UP:
+                VectorClock thatClock = msg.getData().getVersion();
+                _store.get(msg.getData().getKey()).ifPresent(thisData -> {
+                    VectorClock thisClock = thisData.getVersion();
+                    if (thisClock.compareTo(thatClock).equals(VectorClock.COMP_CLOCK.BEFORE))
+                        _store.update(msg.getData());
+                });
+                break;
+            case DEL:
+                _store.remove(msg.getKey());
+                break;
         }
     }
 
@@ -229,44 +237,46 @@ public class NodeService extends Node {
         _gossipManager.shutdown();
         _server.close();
         _store.close();
-        try {
-            synchronized (_passiveThread) {
-                _passiveThread.wait();
-            }
-            System.out.println("after join");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            synchronized (_passiveThread) {
+                //_passiveThread.wait();
+//            }
+//            System.out.println("after join");
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
     }
 
     private void callback(GossipMember member, GossipState state) {
-        if (!member.getId().contains("rest")) {
-            Node n = new Node(member);
-            if (state.equals(GossipState.UP)) {
-                String info = getId() + ". NEW MEMBER [" + n + "] up ...";
-                _ch.add(n);
-                List<Node> next = _ch.getNext(toString(), replica);
-                if (next.stream().anyMatch(node -> node.equals(n))) {
-                    System.out.println(info + "SEND backup data [" + next + "]");
-                    _store.getMap().forEach((s, data) -> {
-                        n.send(new MessageManage(this, MSG_OPERATION.ADD, data));
-                    });
-                }
-                Node prev = _ch.getPrev(toString());
-                if (prev.equals(n)) {
-                    System.out.println(info + "SEND his data [" + prev + "]");
-                    List<Long> hashList = _ch.getHashesForKey(n.toString());
-
-                    _store.getMap().entrySet().parallelStream().filter(dataEntry -> {
-                        return hashList.stream().anyMatch(hash -> {
-                            return _ch.doHash(dataEntry.getValue().getKey()) < hash;
+        if (!_toStop.get()) {
+            if (!member.getId().contains(GossipResource.FRONT_ID)) {
+                Node n = new Node(member);
+                if (state.equals(GossipState.UP)) {
+                    String info = getId() + ". NEW MEMBER [" + n + "] up ...";
+                    _ch.add(n);
+                    List<Node> next = _ch.getNext(toString(), replica);
+                    if (next.stream().anyMatch(node -> node.equals(n))) {
+                        System.out.println(info + "SEND backup data [" + next + "]");
+                        _store.getMap().forEach((s, data) -> {
+                            n.send(new MessageManage(this, MSG_OPERATION.ADD, data));
                         });
-                    }).forEach(dataEntry -> {
-                        n.send(new MessageManage(this, MSG_OPERATION.ADD, dataEntry.getValue()));
-                    });
-                }
-            } else
-                _ch.remove(n);
+                    }
+                    Node prev = _ch.getPrev(toString());
+                    if (prev.equals(n)) {
+                        System.out.println(info + "SEND his data [" + prev + "]");
+                        List<Long> hashList = _ch.getHashesForKey(n.toString());
+
+                        _store.getMap().entrySet().parallelStream().filter(dataEntry -> {
+                            return hashList.stream().anyMatch(hash -> {
+                                return _ch.doHash(dataEntry.getValue().getKey()) < hash;
+                            });
+                        }).forEach(dataEntry -> {
+                            n.send(new MessageManage(this, MSG_OPERATION.ADD, dataEntry.getValue()));
+                        });
+                    }
+                } else
+                    _ch.remove(n);
+            }
         }
     }
 //
