@@ -164,37 +164,50 @@ public class NodeService extends Node {
 
     private void doOperation(MessageRequest<?> msg) {
         System.out.println("do Operation... " + msg);
+        Node sender = msg.getSender();
         switch (msg.getOperation()) {
             case GET:
-                _store.get(msg.getKey()).ifPresent(data1 -> {
-                    msg.getSender().send(new MessageResponse<Data<?>>(this, MessageResponse.MSG_STATUS.OK, data1));
-                });
-                //TODO: else, send an error
+                Optional<Data<?>> data = _store.get(msg.getKey());
+                if (data.isPresent()) {
+                    sender.send(new MessageResponse<>(this, MessageResponse.MSG_STATUS.OK, data.get()));
+                } else {
+                    sender.send(new MessageResponse<>(this, MessageResponse.MSG_STATUS.ERROR, MessageResponse.KEY_NOT_FOUND));
+                }
                 break;
 
             case ADD:
-                Data data = new Data<>(msg.getKey(),
+                Data data1 = new Data<>(msg.getKey(),
                         _ch.doHash(msg.getKey()),
                         msg.getValue(),
                         new VectorClock().increment(getId()));
-                _store.add(data);
-                sendBackup(new MessageManage(this, MSG_OPERATION.ADD, data));
+                if (_store.add(data1)) {
+                    sender.send(new MessageResponse<>(this, MessageResponse.MSG_STATUS.OK));
+                    sendBackup(new MessageManage(this, MSG_OPERATION.ADD, data1));
+                } else
+                    sender.send(new MessageResponse<>(this, MessageResponse.MSG_STATUS.ERROR, MessageResponse.KEY_ALREADY));
                 break;
 
             case DEL:
-                _store.remove(msg.getKey());
-                sendBackup(new MessageManage(this, MSG_OPERATION.DEL, msg.getKey()));
+                if (_store.remove(msg.getKey())) {
+                    sendBackup(new MessageManage(this, MSG_OPERATION.DEL, msg.getKey()));
+                    sender.send(new MessageResponse<>(this, MessageResponse.MSG_STATUS.OK));
+                } else {
+                    sender.send(new MessageResponse<>(this, MessageResponse.MSG_STATUS.ERROR, MessageResponse.KEY_NOT_FOUND));
+                }
                 break;
 
             case UP:
-                _store.get(msg.getKey()).ifPresent(thisData -> {
-                    Data data1 = new Data<>(msg.getKey(),
+                Optional<Data<?>> data2 = _store.get(msg.getKey());
+                if (data2.isPresent()) {
+                    Data dataUp = new Data<>(msg.getKey(),
                             _ch.doHash(msg.getKey()),
                             msg.getValue(),
-                            thisData.getVersion().increment(getId()));
-                    _store.update(data1);
-                    sendBackup(new MessageManage(this, MSG_OPERATION.UP, data1));
-                });
+                            data2.get().getVersion().increment(getId()));
+                    _store.update(dataUp);
+                    sendBackup(new MessageManage(this, MSG_OPERATION.UP, dataUp));
+                    sender.send(new MessageResponse<>(this, MessageResponse.MSG_STATUS.OK));
+                } else
+                    sender.send(new MessageResponse<>(this, MessageResponse.MSG_STATUS.ERROR, MessageResponse.KEY_NOT_FOUND));
                 break;
         }
 
@@ -224,16 +237,6 @@ public class NodeService extends Node {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
-
-    @JsonIgnore
-    public GossipManager get_gossipManager() {
-        return _gossipManager;
-    }
-
-    @JsonIgnore
-    public void set_gossipManager(GossipManager _gossipManager) {
-        this._gossipManager = _gossipManager;
     }
 
     private void callback(GossipMember member, GossipState state) {
@@ -266,9 +269,13 @@ public class NodeService extends Node {
                 _ch.remove(n);
         }
     }
-
-    public void printStatus() {
-        System.out.println("ID: " + id + " IP: " + ip + " list: " + _gossipManager.getMemberList().size() + " ch: " + _ch.size() + "\n" +
-                "CH: " + _ch + "\n");
-    }
+//
+//    @Override
+//    public String toString() {
+//        return "NodeService{" +
+//                "_ch=" + _ch +
+//                ", replica=" + replica +
+//                ", _store=" + _store +
+//                "} " + super.toString();
+//    }
 }

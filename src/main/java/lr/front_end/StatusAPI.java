@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/status")
-public class DebugAPI {
+public class StatusAPI {
 
     @RequestMapping(method = RequestMethod.GET)
     public List<StatusObj> status() {

@@ -1,15 +1,24 @@
 package lr;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import lr.Messages.MessageManage;
+import lr.Messages.MessageRequest;
+import lr.Messages.MessageResponse;
+import lr.Messages.MessageStatus;
+
 import java.io.Serializable;
 import java.util.Optional;
 
 /**
  * Created by luca on 28/02/16.
  */
+
+@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class")
 public class Data<T> implements Serializable {
 
     private String key;
     private Long hash;
+    @JsonTypeInfo( use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY )
     private T value;
     private VectorClock version;
 

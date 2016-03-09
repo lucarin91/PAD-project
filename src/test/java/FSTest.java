@@ -21,33 +21,28 @@ import java.util.Optional;
  */
 public class FSTest {
 
-    final String key = "test";
-    final String value = "lkjdsalkjdsakjldsalkjlkjdsalkjdsa";
+    final GossipResource g = GossipResource.getInstance("rest", "127.0.0.2", 2000, new ArrayList<>());
 
-    public void add(Node n, String value) {
-        n.send(new MessageRequest<>(null, Message.MSG_OPERATION.ADD, key, value));
+
+    public MessageResponse<?> add(Node n, String key, String value) {
+        n.send(new MessageRequest<>(g, Message.MSG_OPERATION.ADD, key, value));
+        return g.<MessageResponse>receive().get();
     }
 
-    public void get(Node n, String value) {
-        GossipResource g = GossipResource.getInstance("rest", "127.0.0.2", 2000, new ArrayList<>());
+    public MessageResponse<?> get(Node n, String key) {
         n.send(new MessageRequest<>(g, Message.MSG_OPERATION.GET, key));
-        g.<MessageResponse<Data<?>>>receive().ifPresent(message -> {
-            Assert.assertEquals(message.getStatus(), MessageResponse.MSG_STATUS.OK);
-            if (message.getStatus() == MessageResponse.MSG_STATUS.OK)
-
-                Assert.assertEquals(value, ((Data<?>) message.getData()).getValue());
-        });
+        return g.<MessageResponse<?>>receive().get();
     }
 
-    public void rm(Node n) {
-        n.send(new MessageRequest<>(null, Message.MSG_OPERATION.DEL, key));
-
+    public MessageResponse<?> rm(Node n, String key) {
+        n.send(new MessageRequest<>(g, Message.MSG_OPERATION.DEL, key));
+        return g.<MessageResponse<?>>receive().get();
     }
 
 
-    public void up(Node n, String v) {
-        n.send(new MessageRequest<>(null, Message.MSG_OPERATION.UP, key, v));
-
+    public MessageResponse<?> up(Node n, String key, String value) {
+        n.send(new MessageRequest<>(g, Message.MSG_OPERATION.UP, key, value));
+        return g.<MessageResponse<?>>receive().get();
     }
 
     @Test
@@ -56,38 +51,51 @@ public class FSTest {
         try {
             n = new NodeService("127.0.0.1", 2000, "TEST", new ArrayList<>());
 
-            rm(n);
-
-            add(n, value);
-
-            Thread.sleep(1000);
-
-            get(n, value);
+            MessageResponse<?> m = rm(n, "test");
+            Assert.assertEquals(m.getStatus(), MessageResponse.MSG_STATUS.OK);
 
             Thread.sleep(1000);
 
-            rm(n);
-
-            Thread.sleep(1000);
-//
-//            get(n,value);
-//
-//            Thread.sleep(1000);
-
-            add(n, value);
+            m = add(n, "test", "prova");
+            Assert.assertEquals(m.getStatus(), MessageResponse.MSG_STATUS.OK);
 
             Thread.sleep(1000);
 
-            up(n, value + 2);
+            m = get(n, "test");
+            Assert.assertEquals(m.getStatus(), MessageResponse.MSG_STATUS.OK);
+            Assert.assertEquals(((Data<?>)m.getData()).getValue(), "prova");
 
             Thread.sleep(1000);
 
-            get(n, value + 2);
+            m = rm(n, "test");
+            Assert.assertEquals(m.getStatus(), MessageResponse.MSG_STATUS.OK);
+
+            Thread.sleep(1000);
+
+            m = get(n, "test");
+            Assert.assertEquals(m.getStatus(), MessageResponse.MSG_STATUS.ERROR);
+
+            Thread.sleep(1000);
+
+            m = add(n, "test", "value");
+            Assert.assertEquals(m.getStatus(), MessageResponse.MSG_STATUS.OK);
+
+            Thread.sleep(1000);
+
+            m = up(n, "test", "value2");
+            Assert.assertEquals(m.getStatus(), MessageResponse.MSG_STATUS.OK);
+
+            Thread.sleep(1000);
+
+            m = get(n, "test");
+            Assert.assertEquals(m.getStatus(), MessageResponse.MSG_STATUS.OK);
+            Assert.assertEquals(((Data<?>)m.getData()).getValue(), "value2");
+
         } catch (InterruptedException | UnknownHostException e) {
             e.printStackTrace();
         } finally {
-//            if (n != null) n.shutdown();
-//            GossipResource.getInstance().ifPresent(GossipResource::shutdown);
+            if (n != null) n.shutdown();
+            GossipResource.getInstance().ifPresent(GossipResource::shutdown);
         }
     }
 }

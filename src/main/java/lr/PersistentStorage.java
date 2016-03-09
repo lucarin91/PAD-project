@@ -26,13 +26,17 @@ public class PersistentStorage {
         _db.commit();
     }
 
-    public void close() {
+    synchronized public void close() {
         _db.close();
     }
 
-    synchronized public void add(Data<?> data) {
-        _map.putIfAbsent(data.getKey(), data);
-        _db.commit();
+    synchronized public boolean add(Data<?> data) {
+        if (!_map.containsKey(data.getKey())) {
+            _map.put(data.getKey(), data);
+            _db.commit();
+            return true;
+        }
+        return false;
     }
 
     synchronized public Optional<Data<?>> get(String key) {
@@ -40,16 +44,21 @@ public class PersistentStorage {
         return d != null ? Optional.of(d) : Optional.empty();
     }
 
-    synchronized public void update(Data<?> data) {
+    synchronized public boolean update(Data<?> data) {
         if (_map.containsKey(data.getKey())) {
             _map.put(data.getKey(), data);
             _db.commit();
-        }
+            return true;
+        } else
+            return false;
     }
 
-    synchronized public void remove(String key) {
-        _map.remove(key);
-        _db.commit();
+    synchronized public boolean remove(String key) {
+        if (_map.containsKey(key)) {
+            _map.remove(key);
+            _db.commit();
+            return true;
+        } else return false;
     }
 
     synchronized public Map<String, Data<?>> getMap() {

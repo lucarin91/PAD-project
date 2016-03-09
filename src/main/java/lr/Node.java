@@ -23,14 +23,16 @@ import java.nio.ByteBuffer;
  * Created by luca on 29/02/16.
  */
 public class Node {
-    public enum NODE_TYPE {FRONT,BACK}
+    public enum NODE_TYPE {FRONT, BACK}
+
     private NODE_TYPE type;
     protected String id;
     protected String ip;
     protected int portG;
     protected int portM;
 
-    public Node(){ }
+    public Node() {
+    }
 
     public Node(GossipMember m) {
         this.type = NODE_TYPE.BACK;
@@ -56,11 +58,11 @@ public class Node {
     }
 
     public Node(NODE_TYPE type, String id, String ip, int port) {
-        this(type,id,ip,port,port+1);
+        this(type, id, ip, port, port + 1);
     }
 
     public Node(String id, String ip, int port) {
-        this(NODE_TYPE.BACK,id,ip,port);
+        this(NODE_TYPE.BACK, id, ip, port);
     }
 //
 //    public JSONObject toJson(){
@@ -129,11 +131,11 @@ public class Node {
 //    }
 
     public boolean send(Message msg) {
-        return send(ip,portM,msg);
+        return send(ip, portM, msg);
     }
 
     protected boolean send(String ip, int port, Message msg) {
-        System.out.println("SEND to "+ id +"("+ip+":"+port+ ") - "+ msg);
+        System.out.println("SEND to " + id + "(" + ip + ":" + port + ") - " + msg);
         try {
             //Node n = _ch.get(data.getHash());
             //if (n != null) {

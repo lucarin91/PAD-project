@@ -37,7 +37,10 @@ sourceSets {
 
 dependencies {
     compile 'junit:junit:4.8.2'
-    compile 'com.fasterxml.jackson:jackson-datatype-json-org:1.8.0'
+//    compile 'com.fasterxml.jackson:jackson-datatype-json-org:1.8.0'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.7.2'
+    compile 'com.fasterxml.jackson.core:jackson-annotations:2.7.2'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.7.2'
     compile('log4j:log4j:1.2.15') {
         exclude group: 'javax.jms'
         exclude group: 'com.sun.jdmk'
