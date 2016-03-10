@@ -160,7 +160,7 @@ public class NodeService extends Node {
                 VectorClock thatClock = msg.getData().getVersion();
                 _store.get(msg.getData().getKey()).ifPresent(thisData -> {
                     VectorClock thisClock = thisData.getVersion();
-                    if (thisClock.compareTo(thatClock).equals(VectorClock.COMP_CLOCK.BEFORE))
+                    if (thisClock.compareTo(thatClock) == VectorClock.COMP_CLOCK.BEFORE)
                         _store.update(msg.getData());
                 });
                 break;
