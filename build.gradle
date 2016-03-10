@@ -1,5 +1,8 @@
-group 'PAD-FS'
-version '1.0-SNAPSHOT'
+subprojects {
+
+
+    group 'PAD-FS'
+    version '1.0-SNAPSHOT'
 
 /*
 apply plugin: 'java'
@@ -13,67 +16,36 @@ dependencies {
 }
 */
 
-apply plugin: 'application'
-apply plugin: 'spring-boot'
-
-repositories {
-    mavenCentral()
-    jcenter()
-}
-
-mainClassName = "lr.PadFs"
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-//
-sourceSets {
-    main {
-        java {
-            srcDir 'src/main/libs'
-        }
-    }
-}
+    apply plugin: 'application'
 
 
-dependencies {
-    compile 'junit:junit:4.8.2'
-//    compile 'com.fasterxml.jackson:jackson-datatype-json-org:1.8.0'
-    compile 'com.fasterxml.jackson.core:jackson-core:2.7.2'
-    compile 'com.fasterxml.jackson.core:jackson-annotations:2.7.2'
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.7.2'
-    compile('log4j:log4j:1.2.15') {
-        exclude group: 'javax.jms'
-        exclude group: 'com.sun.jdmk'
-        exclude group: 'com.sun.jmx'
-    }
-    compile 'org.springframework.boot:spring-boot-starter-web'
-    compile 'org.mapdb:mapdb:1.0.8'
-    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8'
-    //testCompile("junit:junit")
-    compile 'io.teknek:gossip:0.0.3'
-
-//    <dependency>
-//    <groupId>io.teknek</groupId>
-//      <artifactId>gossip</artifactId>
-//    <version>${pick_the_latest_version}</version>
-//  </dependency>
-}
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.7'
-}
-
-run {
-    standardInput = System.in
-}
-
-buildscript {
     repositories {
         mavenCentral()
-        jcenter()
     }
+
+
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+
     dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.3.3.RELEASE")
+        compile 'junit:junit:4.8.2'
+        compile 'com.fasterxml.jackson.core:jackson-core:2.7.2'
+        compile 'com.fasterxml.jackson.core:jackson-annotations:2.7.2'
+        compile 'com.fasterxml.jackson.core:jackson-databind:2.7.2'
+        compile('log4j:log4j:1.2.15') {
+            exclude group: 'javax.jms'
+            exclude group: 'com.sun.jdmk'
+            exclude group: 'com.sun.jmx'
+        }
+        compile 'org.mapdb:mapdb:1.0.8'
+        compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.7.2'
+        compile 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.7.2'
+        compile 'io.teknek:gossip:0.0.3'
+    }
+
+    task wrapper(type: Wrapper) {
+        gradleVersion = '2.7'
     }
 }

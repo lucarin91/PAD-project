@@ -1,0 +1,18 @@
+mainClassName = "lr.core.PadFs"
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/libs'
+        }
+    }
+}
+
+
+dependencies {
+    //compile project(':api')
+}
+
+run {
+    standardInput = System.in
+}

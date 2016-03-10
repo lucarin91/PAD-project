@@ -1,2 +1,2 @@
-rootProject.name = 'PAD-FS'
-
+//rootProject.name = 'PAD-FS'
+include ":core", ":app", ":api"
