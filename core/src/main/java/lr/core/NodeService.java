@@ -109,7 +109,7 @@ public class NodeService extends Node {
                     ObjectMapper mapper = new ObjectMapper().registerModule(new Jdk8Module());
                     Message msg = mapper.readValue(receivedMessage, Message.class);
 
-                    System.out.print(id + ".RECEIVE: ");
+                    System.out.print(id + ".RECEIVE: " + msg);
 
                     if (msg instanceof MessageRequest<?>) {
                         //System.out.println("" + msg);
@@ -122,7 +122,7 @@ public class NodeService extends Node {
                             if (n.getId().equals(getId())) {
                                 doOperation(msgR);
                             } else {
-                                System.out.println("pass request.." + msgR);
+                                System.out.println("pass request..");
                                 n.send(msg);
                             }
 
@@ -130,7 +130,7 @@ public class NodeService extends Node {
                             send(msg.getSender().getIp(), msg.getSender().getPortM(), new MessageStatus(this, _store.getMap(), _ch.getMap()));
                         }
                     } else if (msg instanceof MessageManage) {
-                        System.out.println("receive management.." + msg);
+                        System.out.println("receive management..");
                         MessageManage msgM = (MessageManage) msg; //mapper.readValue(receivedMessage,MessageManage.class);
                         doManageOperation(msgM);
                     }
@@ -145,7 +145,7 @@ public class NodeService extends Node {
     }
 
     private void doManageOperation(MessageManage msg) {
-        System.out.println("do Management Operation... " + msg);
+        System.out.println("do Management Operation... ");
         switch (msg.getOperation()) {
             case ADD:
                 _store.add(msg.getData());
@@ -166,7 +166,7 @@ public class NodeService extends Node {
     }
 
     private void doOperation(MessageRequest<?> msg) {
-        System.out.println("do Operation... " + msg);
+        System.out.println("do Operation... ");
         Node sender = msg.getSender();
         switch (msg.getOperation()) {
             case GET:
@@ -275,12 +275,12 @@ public class NodeService extends Node {
         }
     }
 //
-//    @Override
-//    public String toString() {
-//        return "NodeService{" +
-//                "_ch=" + _ch +
-//                ", replica=" + replica +
-//                ", _store=" + _store +
-//                "} " + super.toString();
-//    }
+    @Override
+    public String toString() {
+        return "NodeService{" +
+                //"_ch=" + _ch +
+                ", replica=" + replica +
+                //", _store=" + _store +
+                "} " + super.toString();
+    }
 }

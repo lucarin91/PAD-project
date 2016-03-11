@@ -8,6 +8,7 @@ import org.mapdb.HTreeMap;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 
@@ -15,13 +16,11 @@ import java.util.Optional;
  * Created by luca on 05/03/16.
  */
 public class PersistentStorage {
-    private static final String PATH = "src/main/resources/storage/";
     private HTreeMap<String, Data<?>> _map;
     private DB _db;
 
-
     public PersistentStorage(String fileName, boolean clear) {
-        File f = new File("src/main/resources/storage/" + fileName + ".data");
+        File f = new File("/tmp/" + fileName + ".data");
 
         if (clear) {
             try {

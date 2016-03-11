@@ -77,12 +77,12 @@ public class ConsistentHash<T> {
     }
 
     synchronized public T get(String key) {
-        System.out.println("MAP "+_map);
+        //System.out.println("MAP "+_map);
         long hash = _hash.apply(key);
         Long res = _map.ceilingKey(hash);
         if (res != null) {
             T n = _map.get(res);
-            System.out.println("consistent hashtable map "+ key +" to node "+n);
+            //System.out.println("consistent hashtable map "+ key +" to node "+n);
             return n;
         } else {
             return _map.firstEntry().getValue();
@@ -145,14 +145,15 @@ public class ConsistentHash<T> {
 
     @Override
     public String toString() {
-        String res = "";
-        for (long key : _map.descendingKeySet()) {
-            res += "\tkey: " + key + " value: " + _map.get(key) + "\n\t";
-        }
-        return res;
+        return "ConsistentHash{" +
+                "_map=" + _map +
+                ", _replication=" + _replication +
+                ", _hash=" + _hash +
+                '}';
     }
 
     synchronized public int size() {
         return _map.size();
     }
+
 }

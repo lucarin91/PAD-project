@@ -1,4 +1,4 @@
-package lr.api;
+package lr.core;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -20,10 +20,7 @@ import com.google.code.gossip.GossipSettings;
 import com.google.code.gossip.LocalGossipMember;
 import com.google.code.gossip.manager.GossipManager;
 import com.google.code.gossip.manager.random.RandomGossipManager;
-import lr.core.Data;
 import lr.core.Messages.Message;
-import lr.core.Messages.MessageManage;
-import lr.core.Node;
 
 /**
  * Created by luca on 01/03/16.

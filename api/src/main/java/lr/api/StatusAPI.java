@@ -1,6 +1,7 @@
 package lr.api;
 
 import lr.core.Data;
+import lr.core.GossipResource;
 import lr.core.Messages.Message.*;
 import lr.core.Messages.MessageRequest;
 import lr.core.Messages.MessageStatus;
