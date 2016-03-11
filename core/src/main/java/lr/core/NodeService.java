@@ -15,7 +15,6 @@ import lr.core.Messages.Message.*;
 import org.apache.log4j.Logger;
 
 import com.google.code.gossip.manager.GossipManager;
-import org.json.JSONException;
 
 public class NodeService extends Node {
 
@@ -41,16 +40,16 @@ public class NodeService extends Node {
 //                        .getGossipSettings(), this::callback);
 //    }
 
-    public NodeService(String ipAddress, int port, String id_, List<GossipMember> gossipMembers) throws UnknownHostException, InterruptedException {
-        this(ipAddress, port, id_, gossipMembers, false);
+    public NodeService(String id_, String ipAddress, int port, List<GossipMember> gossipMembers) throws UnknownHostException, InterruptedException {
+        this(id_, ipAddress, port, gossipMembers, false);
     }
 
-    public NodeService(String ipAddress, int port, String id_, List<GossipMember> gossipMembers, boolean clearStorage)
+    public NodeService(String id_, String ipAddress, int port, List<GossipMember> gossipMembers, boolean clearStorage)
             throws InterruptedException, UnknownHostException {
         super(id_, ipAddress, port);
 
         _ch = new ConsistentHash<>();
-        gossipMembers.stream().filter(member -> !member.getId().contains(Node.FRONT_ID))
+        gossipMembers.stream().filter(member -> !member.getId().contains(GossipResource.FRONT_ID))
                 .forEach(gossipMember -> _ch.add(new Node(gossipMember)));
 //        for (GossipMember m : gossipMembers) {
 //            _ch.add(new Node(m));
@@ -244,7 +243,7 @@ public class NodeService extends Node {
 
     private void callback(GossipMember member, GossipState state) {
         if (!_toStop.get()) {
-            if (!member.getId().contains(Node.FRONT_ID)) {
+            if (!member.getId().contains(GossipResource.FRONT_ID)) {
                 Node n = new Node(member);
                 if (state.equals(GossipState.UP)) {
                     String info = getId() + ". NEW MEMBER [" + n + "] up ...";
@@ -275,12 +274,12 @@ public class NodeService extends Node {
         }
     }
 //
-    @Override
-    public String toString() {
-        return "NodeService{" +
-                //"_ch=" + _ch +
-                ", replica=" + replica +
-                //", _store=" + _store +
-                "} " + super.toString();
-    }
+//    @Override
+//    public String toString() {
+//        return "NodeService{" +
+//                //"_ch=" + _ch +
+//                ", replica=" + replica +
+//                //", _store=" + _store +
+//                "} " + super.toString();
+//    }
 }

@@ -13,7 +13,7 @@ import java.util.Optional;
 /**
  * Created by luca on 10/03/16.
  */
-public class CommandArgs {
+public class CmdArgs {
 
     @Parameter(names = "-id", description = "the port of the server")
     private String id = "single";

@@ -26,6 +26,8 @@ import lr.core.Messages.Message;
  * Created by luca on 01/03/16.
  */
 public class GossipResource extends Node {
+    public final static String FRONT_ID = "[REST-FRONT]";
+
     private static GossipResource _r;
     @JsonIgnore
     private GossipManager _gossipManager;
@@ -44,9 +46,12 @@ public class GossipResource extends Node {
         List<Node> res = list.stream().map(Node::new).collect(Collectors.toList());
         return res;
     }
-
     private GossipResource(String id, String ip, int port, List<GossipMember> gossipMembers) {
-        super(id, ip, port);
+        this(id, ip, port, port+1, gossipMembers);
+    }
+
+    private GossipResource(String id, String ip, int portG,int portM, List<GossipMember> gossipMembers) {
+        super(id, ip, portG, portM);
 
         try {
             _server = new DatagramSocket(new InetSocketAddress(ip, portM));
@@ -55,18 +60,20 @@ public class GossipResource extends Node {
             //throw new RuntimeException(ex);
         }
 
-
-        _gossipManager = new RandomGossipManager(ip, port, FRONT_ID + " " + id, new GossipSettings(), gossipMembers, null);
+        _gossipManager = new RandomGossipManager(ip, portG, FRONT_ID + " " + id, new GossipSettings(), gossipMembers, null);
         _gossipManager.start();
         _random = new Random();
     }
 
     @JsonIgnore
     public static GossipResource getInstance(String id, String ip, int port, List<GossipMember> gossipMembers) {
-        if (_r == null) _r = new GossipResource(id, ip, port, gossipMembers);
-        return _r;
+        return getInstance(id,ip,port,port+1,gossipMembers);
     }
 
+    public static GossipResource getInstance(String id, String ip, int portG, int portM, List<GossipMember> gossipMembers) {
+        if (_r == null) _r = new GossipResource(id, ip, portG, portM, gossipMembers);
+        return _r;
+    }
     @JsonIgnore
     public static Optional<GossipResource> getInstance() {
         return Optional.of(_r);

@@ -45,7 +45,14 @@ dependencies {
     task wrapper(type: Wrapper) {
         gradleVersion = '2.7'
     }
+}
 
+task webapp(type: Exec) {
+    executable "sh"
+    args "-c", "cd webapp && npm start &"
+}
 
-
+task clean(type: Exec) {
+    executable "sh"
+    args "-c", "rm /tmp/*.data*"
 }

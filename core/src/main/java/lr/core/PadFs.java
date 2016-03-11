@@ -1,14 +1,9 @@
 package lr.core;
 
 import com.beust.jcommander.JCommander;
-import com.google.code.gossip.*;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by luca on 24/02/16.
@@ -16,14 +11,14 @@ import java.util.List;
 public class PadFs {
     public static void main(String[] args) throws IOException {
 
-        CommandArgs s = new CommandArgs();
+        CmdArgs s = new CmdArgs();
         new JCommander(s, args);
 
         NodeService n = null;
         try {
-            n = new NodeService(s.getIp(), s.getPort(), s.getId(), s.getMembers());
+            n = new NodeService(s.getId(), s.getIp(), s.getPort(), s.getMembers());
             System.out.print(n);
-            while (true){}
+            while (true) { }
 //            while (true) {
 //                BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 //                System.out.print("\nEnter command: ");

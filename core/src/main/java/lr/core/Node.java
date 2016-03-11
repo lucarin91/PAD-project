@@ -17,10 +17,6 @@ import java.nio.ByteBuffer;
  * Created by luca on 29/02/16.
  */
 public class Node {
-    public final static String FRONT_ID = "[REST-FRONT]";
-    public enum NODE_TYPE {FRONT, BACK}
-
-    private NODE_TYPE type;
     protected String id;
     protected String ip;
     protected int portG;
@@ -30,7 +26,6 @@ public class Node {
     }
 
     public Node(GossipMember m) {
-        this.type = NODE_TYPE.BACK;
         this.id = m.getId();
         this.ip = m.getHost();
         this.portG = m.getPort();
@@ -44,22 +39,22 @@ public class Node {
 //        this.portM = obj.getInt("port_m");
 //    }
 
-    public Node(NODE_TYPE type, String id, String ip, int portG, int portM) {
-        this.type = type;
+    public Node(String id, String ip, int portG, int portM) {
         this.id = id;
         this.ip = ip;
         this.portG = portG;
         this.portM = portM;
     }
 
-    public Node(NODE_TYPE type, String id, String ip, int port) {
-        this(type, id, ip, port, port + 1);
+    public Node(String id, String ip, int port) {
+        this.id = id;
+        this.ip = ip;
+        this.portG = port;
+        this.portM = port+1;
     }
 
-    public Node(String id, String ip, int port) {
-        this(NODE_TYPE.BACK, id, ip, port);
-    }
-//
+
+
 //    public JSONObject toJson(){
 //        JSONObject json = new JSONObject();
 //        json.add("id", id);
@@ -69,14 +64,6 @@ public class Node {
 //        return json;
 //    }
 
-
-    public NODE_TYPE getType() {
-        return type;
-    }
-
-    public void setType(NODE_TYPE type) {
-        this.type = type;
-    }
 
     public String getId() {
         return id;
@@ -179,17 +166,15 @@ public class Node {
 
         if (portG != node.portG) return false;
         if (portM != node.portM) return false;
-        if (type != node.type) return false;
-        if (!id.equals(node.id)) return false;
-        return ip.equals(node.ip);
+        if (id != null ? !id.equals(node.id) : node.id != null) return false;
+        return ip != null ? ip.equals(node.ip) : node.ip == null;
 
     }
 
     @Override
     public int hashCode() {
-        int result = type.hashCode();
-        result = 31 * result + id.hashCode();
-        result = 31 * result + ip.hashCode();
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (ip != null ? ip.hashCode() : 0);
         result = 31 * result + portG;
         result = 31 * result + portM;
         return result;

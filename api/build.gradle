@@ -1,6 +1,7 @@
+apply plugin: 'docker'
 apply plugin: 'spring-boot'
 
-mainClassName = "lr.api.Start"
+mainClassName = "lr.api.FrontAPI"
 
 buildscript {
     repositories {
@@ -16,15 +17,55 @@ repositories {
     mavenCentral()
 }
 
-
-
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-
 dependencies {
     compile 'org.springframework.boot:spring-boot-starter-web'
+    compile 'com.beust:jcommander:1.48'
     compile project(':core')
 }
 
 
+jar {
+    baseName = 'api'
+    manifest {
+        attributes("Implementation-Title": project.name,
+                "Implementation-Version": version,
+                "Main-Class": mainClassName)
+    }
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath('se.transmode.gradle:gradle-docker:1.2')
+    }
+}
+
+run {
+    /* Can pass all the properties: */
+    systemProperties System.getProperties()
+
+    /* Need to split the space-delimited value in the exec.args */
+    if(System.getProperty("exec.args") != null) {
+        args System.getProperty("exec.args").split()
+    }
+}
+
+task docker(type: Docker) {
+    push = false
+    applicationName = "${jar.baseName}"
+    dockerfile = file('src/docker/Dockerfile')
+    doFirst {
+        copy {
+            from jar
+            into stageDir
+        }
+    }
+}

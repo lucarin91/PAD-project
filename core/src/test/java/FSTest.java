@@ -78,8 +78,8 @@ public class FSTest {
     public Collection<Node> initMultipleServer() throws UnknownHostException, InterruptedException {
         final Map<String, Node> clients = new HashMap<>();
         final List<GossipMember> startupMembers = new ArrayList<>();
-        final int seedNodes = 5;
-        int clusterMembers = 5;
+        final int seedNodes = 3;
+        int clusterMembers = 10;
 
         for (int i = 1; i < seedNodes + 1; ++i) {
             startupMembers.add(new RemoteGossipMember("127.0.0." + i, 2000, i + ""));
@@ -101,38 +101,38 @@ public class FSTest {
         MessageResponse<?> m = rm(r.getRandomNode(), "test");
         Assert.assertEquals(m.getStatus(), MessageResponse.MSG_STATUS.ERROR);
 
-        Thread.sleep(1000);
+//        Thread.sleep(1000);
 
         m = add(r.getRandomNode(), "test", "prova");
         Assert.assertEquals(m.getStatus(), MessageResponse.MSG_STATUS.OK);
 
-        Thread.sleep(1000);
+//        Thread.sleep(1000);
 
         m = get(r.getRandomNode(), "test");
         Assert.assertEquals(m.getStatus(), MessageResponse.MSG_STATUS.OK);
         Assert.assertEquals(((Data<?>) m.getData()).getValue(), "prova");
 
-        Thread.sleep(1000);
+//        Thread.sleep(1000);
 
         m = rm(r.getRandomNode(), "test");
         Assert.assertEquals(m.getStatus(), MessageResponse.MSG_STATUS.OK);
 
-        Thread.sleep(1000);
+//        Thread.sleep(1000);
 
         m = get(r.getRandomNode(), "test");
         Assert.assertEquals(m.getStatus(), MessageResponse.MSG_STATUS.ERROR);
 
-        Thread.sleep(1000);
+//        Thread.sleep(1000);
 
         m = add(r.getRandomNode(), "test", "value");
         Assert.assertEquals(m.getStatus(), MessageResponse.MSG_STATUS.OK);
 
-        Thread.sleep(1000);
+//        Thread.sleep(1000);
 
         m = up(r.getRandomNode(), "test", "value2");
         Assert.assertEquals(MessageResponse.MSG_STATUS.OK, m.getStatus());
 
-        Thread.sleep(1000);
+//        Thread.sleep(1000);
 
         m = get(r.getRandomNode(), "test");
         Assert.assertEquals(m.getStatus(), MessageResponse.MSG_STATUS.OK);

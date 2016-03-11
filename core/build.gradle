@@ -45,7 +45,7 @@ run {
     }
 }
 
-task buildDocker(type: Docker) {
+task docker(type: Docker) {
     push = false
     applicationName = "${jar.baseName}"
     dockerfile = file('src/docker/Dockerfile')
