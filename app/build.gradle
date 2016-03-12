@@ -11,17 +11,11 @@ buildscript {
     }
 }
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     compile 'org.springframework.boot:spring-boot-starter-web'
     compile project(':api'), project(':core')
 
 }
-
-
 
 run {
     standardInput = System.in

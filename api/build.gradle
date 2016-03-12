@@ -13,13 +13,6 @@ buildscript {
     }
 }
 
-repositories {
-    mavenCentral()
-}
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
 dependencies {
     compile 'org.springframework.boot:spring-boot-starter-web'
     compile 'com.beust:jcommander:1.48'

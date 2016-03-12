@@ -38,7 +38,6 @@ public class App {
             for (int i = 2; i <= lastServerID; i++) {
                 clients.put(i + "", new NodeService(i + "", "127.0.0." + i, 2000, startupMembers)
                         .setNBackup(1)
-                        .precisionMode(false)
                         .start());
             }
 
@@ -59,7 +58,6 @@ public class App {
                             try {
                                 NodeService n = new NodeService("" + id, "127.0.0." + id, 2000, startupMembers)
                                         .setNBackup(1)
-                                        .precisionMode(false)
                                         .start();
                                 clients.put("" + id, n);
                                 System.out.println(n);
