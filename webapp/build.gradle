@@ -1,0 +1,9 @@
+task run(type: Exec) {
+    executable "sh"
+    args "-c", "npm install && (npm start &)"
+}
+
+task install(type: Exec) {
+    executable "sh"
+    args "-c", "npm install"
+}

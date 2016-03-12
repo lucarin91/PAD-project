@@ -1,5 +1,4 @@
-subprojects {
-
+configure(subprojects.findAll {it.name != 'webapp'}) {
 
     group = 'pad-fs'
     version '0.1'
@@ -34,11 +33,6 @@ subprojects {
     task wrapper(type: Wrapper) {
         gradleVersion = '2.7'
     }
-}
-
-task webapp(type: Exec) {
-    executable "sh"
-    args "-c", "cd webapp && npm start &"
 }
 
 task clean(type: Exec) {
