@@ -4,16 +4,20 @@
   "version": "0.0.1",
   "main": "index.html",
   "window": {
-    "toolbar": true,
-    "width": 900,
+    "toolbar": false,
+    "width": 850,
     "height": 800
   },
   "scripts": {
-    "start": "nw ."
+    "start": "node_modules/nw/bin/nw ."
   },
   "dependencies": {
     "angular": "^1.5.0",
     "bootstrap": "^3.3.6",
-    "jquery": "^2.2.1"
+    "jquery": "^2.2.1",
+    "nw": "^0.12.3"
+  },
+  "config": {
+    "url": "127.0.0.1:8080"
   }
 }

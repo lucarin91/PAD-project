@@ -3,7 +3,6 @@ package lr.app;
 import com.beust.jcommander.JCommander;
 import com.google.code.gossip.GossipMember;
 import com.google.code.gossip.RemoteGossipMember;
-import lr.core.CmdArgs;
 import lr.core.GossipResource;
 import lr.api.FrontAPI;
 import lr.core.NodeService;
@@ -11,8 +10,6 @@ import lr.core.NodeService;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.Inet4Address;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,7 +36,10 @@ public class App {
             FrontAPI.start("rest", "127.0.0.1", s.getPortG(), s.getPortM(), startupMembers);
 
             for (int i = 2; i <= lastServerID; i++) {
-                clients.put(i + "", new NodeService(i + "", "127.0.0." + i, 2000, startupMembers));
+                clients.put(i + "", new NodeService(i + "", "127.0.0." + i, 2000, startupMembers)
+                        .setNBackup(1)
+                        .precisionMode(false)
+                        .start());
             }
 
             Thread.sleep(10000);
@@ -57,7 +57,10 @@ public class App {
                         case "add":
                             int id = cmd.length == 1 ? ++lastServerID : Integer.parseInt(cmd[1]);
                             try {
-                                NodeService n = new NodeService("" + id, "127.0.0." + id, 2000, startupMembers);
+                                NodeService n = new NodeService("" + id, "127.0.0." + id, 2000, startupMembers)
+                                        .setNBackup(1)
+                                        .precisionMode(false)
+                                        .start();
                                 clients.put("" + id, n);
                                 System.out.println(n);
                             } catch (InterruptedException e) {
@@ -67,6 +70,7 @@ public class App {
                         case "rm":
                             if (cmd.length > 1) {
                                 clients.get(cmd[1]).shutdown();
+                                clients.remove(cmd[1]);
                                 System.out.print(clients);
                             } else {
                                 System.out.print("not founded");

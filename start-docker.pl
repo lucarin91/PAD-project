@@ -1,4 +1,3 @@
-#!/bin/perl
 use strict;
 use warnings;
 my $N = shift || 5;
@@ -22,3 +21,5 @@ $res = `docker rm api`;
 print $res;
 $res = `docker run -d --name api -p 8080:8080 --net fs-net --ip $IP.20 pad-fs/api:0.1 -h rest:$IP.20:2000 -m server3:$IP.3:2000`;
 print $res;
+
+`./gradlew webapp`;

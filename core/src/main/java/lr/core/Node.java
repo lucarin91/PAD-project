@@ -166,9 +166,8 @@ public class Node {
 
         if (portG != node.portG) return false;
         if (portM != node.portM) return false;
-        if (id != null ? !id.equals(node.id) : node.id != null) return false;
-        return ip != null ? ip.equals(node.ip) : node.ip == null;
-
+        if (!id.equals(node.id)) return false;
+        return ip.equals(node.ip);
     }
 
     @Override

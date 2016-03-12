@@ -41,7 +41,7 @@
     <div class="addkey-div">
         <form class="form-inline">
             <div class="form-group refresh-button">
-                <img class="graphic-loading" ng-show="loading" src="img/ajax-loader.gif"/>
+                <img class="graphic-loading" ng-click="refresh()" ng-show="loading" src="img/ajax-loader.gif"/>
                 <button ng-hide="loading" ng-click="refresh()" type="button" class="btn btn-primary">Refresh</button>
             </div>
             <div class="form-group">
@@ -52,6 +52,7 @@
             </div>
             <button ng-click="addKey(key,value)" ng-class="{'disabled': loading}" type="submit" class="btn btn-default">Add</button>
         </form>
+        <div class="text-danger">{{error}}</div>
     </div>
     <div class="store-div">
         <table class="table table-striped">
@@ -59,6 +60,7 @@
                 <th>Key</th>
                 <th>hash</th>
                 <th>value</th>
+                <th>version</th>
                 <th></th>
                 <th></th>
             </tr>
@@ -66,6 +68,7 @@
                 <td>{{item.key}}</td>
                 <td>{{item.hash}}</td>
                 <td><input ng-model="item.value"/></td>
+                <td><span ng-repeat="(node, v) in item.version.vector"><b>{{node}}</b>:{{v}} </span></td>
                 <td>
                     <button ng-click="removeData(item.key, item.value)" ng-class="{'disabled': loading}" type="button" class="btn btn-default btn-lg">
                         <span class="glyphicon glyphicon-remove-sign" aria-hidden="true"></span>
@@ -80,7 +83,5 @@
         </table>
     </div>
 </div>
-
-
 </body>
 </html>

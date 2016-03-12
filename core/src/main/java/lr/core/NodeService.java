@@ -5,6 +5,7 @@ import java.net.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.code.gossip.*;
@@ -22,65 +23,52 @@ public class NodeService extends Node {
 
     private GossipManager _gossipManager;
     private ConsistentHash<Node> _ch;
+    private PersistentStorage _store;
     private final Thread _passiveThread;
     private AtomicBoolean _toStop;
     private DatagramSocket _server;
-    private final int replica = 2;
-    //private VectorClock _clock;
+    private int _replica = 2;
 
-    PersistentStorage _store;
-
-//    private String _ip;
-//    private int _portG;
-//    private int _portM;
-//    private String _id;
-//    public NodeService(StartupSettings startupSettings) throws InterruptedException, UnknownHostException {
-//        this(InetAddress.getLocalHost().getHostAddress(), startupSettings.getPort(), "",
-//                startupSettings.getLogLevel(), startupSettings.getGossipMembers(), startupSettings
-//                        .getGossipSettings(), this::callback);
-//    }
-
-    public NodeService(String id_, String ipAddress, int port, List<GossipMember> gossipMembers) throws UnknownHostException, InterruptedException {
-        this(id_, ipAddress, port, gossipMembers, false);
+    public NodeService clearStorage(){
+        _store.close();
+        _store = new PersistentStorage(getId(), true);
+        return this;
     }
 
-    public NodeService(String id_, String ipAddress, int port, List<GossipMember> gossipMembers, boolean clearStorage)
+    @JsonIgnore
+    public NodeService setNBackup(int replica){
+        _replica = replica;
+        return this;
+    }
+
+    public NodeService(String id_, String ipAddress, int port, List<GossipMember> gossipMembers)
             throws InterruptedException, UnknownHostException {
         super(id_, ipAddress, port);
 
         _ch = new ConsistentHash<>();
         gossipMembers.stream().filter(member -> !member.getId().contains(GossipResource.FRONT_ID))
                 .forEach(gossipMember -> _ch.add(new Node(gossipMember)));
-//        for (GossipMember m : gossipMembers) {
-//            _ch.add(new Node(m));
-//        }
-
         _ch.add(this);
-        _store = new PersistentStorage(getId(), clearStorage);
 
-        //_clock = new VectorClock();
+        _store = new PersistentStorage(getId());
+
         _toStop = new AtomicBoolean(false);
-//        _ip = ipAddress;
-//        _portG = port;
-//        _portM = port + 1;
-//        _id = id;
 
         _gossipManager = new RandomGossipManager(ip, portG, id, new GossipSettings(), gossipMembers, this::callback);
         try {
             _server = new DatagramSocket(new InetSocketAddress(ip, portM));
         } catch (SocketException ex) {
             ex.printStackTrace();
-            //throw new RuntimeException(ex);
         }
-
         _passiveThread = new Thread(this::passiveRequest);
+    }
+
+
+    public NodeService start() {
         _passiveThread.start();
         _gossipManager.start();
+        return this;
     }
-    /*
-    public void start() {
-
-    }*/
 
     private void passiveRequest() {
         while (!_toStop.get()) {
@@ -222,7 +210,7 @@ public class NodeService extends Node {
 
 
     private void sendBackup(MessageManage msg) {
-        List<Node> list = _ch.getNext(toString(), replica);
+        List<Node> list = _ch.getNext(toString(), _replica);
         System.out.println("send propagate to.." + list);
         for (Node n : list) n.send(msg);
     }
@@ -242,22 +230,22 @@ public class NodeService extends Node {
     }
 
     private void callback(GossipMember member, GossipState state) {
+        //System.out.println(member + " " + state);
         if (!_toStop.get()) {
             if (!member.getId().contains(GossipResource.FRONT_ID)) {
                 Node n = new Node(member);
                 if (state.equals(GossipState.UP)) {
                     String info = getId() + ". NEW MEMBER [" + n + "] up ...";
                     _ch.add(n);
-                    List<Node> next = _ch.getNext(toString(), replica);
+                    List<Node> next = _ch.getNext(toString(), _replica);
                     if (next.stream().anyMatch(node -> node.equals(n))) {
                         System.out.println(info + "SEND backup data [" + next + "]");
                         _store.getMap().forEach((s, data) -> {
                             n.send(new MessageManage(this, MSG_OPERATION.ADD, data));
                         });
                     }
-                    Node prev = _ch.getPrev(toString());
-                    if (prev.equals(n)) {
-                        System.out.println(info + "SEND his data [" + prev + "]");
+//                    Node prev = _ch.getPrev(toString());
+//                    if (prev.equals(n)) {
                         List<Long> hashList = _ch.getHashesForKey(n.toString());
 
                         _store.getMap().entrySet().parallelStream().filter(dataEntry -> {
@@ -265,9 +253,10 @@ public class NodeService extends Node {
                                 return _ch.doHash(dataEntry.getValue().getKey()) < hash;
                             });
                         }).forEach(dataEntry -> {
+                            System.out.println(info + "SEND his data: " + dataEntry.getKey() + "-" +  dataEntry.getValue());
                             n.send(new MessageManage(this, MSG_OPERATION.ADD, dataEntry.getValue()));
                         });
-                    }
+                   //}
                 } else
                     _ch.remove(n);
             }
@@ -278,7 +267,7 @@ public class NodeService extends Node {
 //    public String toString() {
 //        return "NodeService{" +
 //                //"_ch=" + _ch +
-//                ", replica=" + replica +
+//                ", _replica=" + _replica +
 //                //", _store=" + _store +
 //                "} " + super.toString();
 //    }

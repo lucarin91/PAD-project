@@ -16,7 +16,7 @@ public class PadFs {
 
         NodeService n = null;
         try {
-            n = new NodeService(s.getId(), s.getIp(), s.getPort(), s.getMembers());
+            n = new NodeService(s.getId(), s.getIp(), s.getPort(), s.getMembers()).start();
             System.out.print(n);
             while (true) { }
 //            while (true) {

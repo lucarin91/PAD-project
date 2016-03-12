@@ -61,6 +61,7 @@
                     var me = this;
                     var res = {}
                     angular.forEach(data, function (item) {
+                        console.log(item.store)
                         res[item.id] = {
                             color: me.heatMapColorforValue(item.store.length > CONST.MAX_STORE ?
                                 1 : item.store.length / CONST.MAX_STORE),
@@ -97,13 +98,5 @@
                     return r/N;
                 }
             }
-        })
-        .value("CONST", {
-            URL: 'http://127.0.0.1:8080',
-            MAX_HASH: Math.pow(2, 64),
-            CX: 500 / 2,
-            CY: 500 / 2,
-            R: 220,
-            MAX_STORE: 10
         })
 })();

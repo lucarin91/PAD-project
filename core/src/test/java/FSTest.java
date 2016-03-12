@@ -62,7 +62,7 @@ public class FSTest {
         try {
             List<GossipMember> members = new ArrayList<>();
             members.add(new RemoteGossipMember("127.0.0.1", 2000, "test-back"));
-            n = new NodeService("127.0.0.1", 2000, "test-back", members, true);
+            n = new NodeService("test-back", "127.0.0.1", 2000, members).clearStorage().start();
             GossipResource.getInstance("test-rest", "127.0.0.20", 2000, members);
             Thread.sleep(2000);
             test();
@@ -86,7 +86,7 @@ public class FSTest {
         }
 
         for (int i = 1; i < clusterMembers + 1; ++i) {
-            clients.put(i + "", new NodeService("127.0.0." + i, 2000, i + "", startupMembers, true));
+            clients.put(i + "", new NodeService(i+"", "127.0.0." + i, 2000, startupMembers).clearStorage().start());
         }
 
         GossipResource r = GossipResource.getInstance("rest", "127.0.0.20", 2000, startupMembers);

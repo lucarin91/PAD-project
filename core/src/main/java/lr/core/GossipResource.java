@@ -55,6 +55,7 @@ public class GossipResource extends Node {
 
         try {
             _server = new DatagramSocket(new InetSocketAddress(ip, portM));
+            _server.setSoTimeout(5000);
         } catch (SocketException ex) {
             ex.printStackTrace();
             //throw new RuntimeException(ex);
@@ -105,7 +106,7 @@ public class GossipResource extends Node {
             return Optional.of(mapper.readValue(receivedMessage, new TypeReference<T>() {}));
 
         } catch (IOException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         return Optional.empty();
     }

@@ -8,6 +8,7 @@ import lr.core.Messages.MessageStatus;
 import lr.core.Node;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.SocketTimeoutException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,16 +26,15 @@ public class StatusAPI {
             GossipResource r = opt_r.get();
             List<Node> list = r.getNode();
             for (Node n : list) {
-                n.send(new MessageRequest<>(r,MSG_OPERATION.STATUS));
+                n.send(new MessageRequest<>(r, MSG_OPERATION.STATUS));
             }
             List<StatusObj> res = new ArrayList<>();
             for (Node item : list) {
-                MessageStatus m = r.<MessageStatus>receive().get();
-
-                List<ChNodeChildren> listNode = m.getCh().entrySet().stream().map(i -> new ChNodeChildren(i.getKey(), i.getValue().getId())).collect(Collectors.toList());
-
-                StatusObj s = new StatusObj(m.getSender(), new ArrayList<>(m.getStore().values()), listNode);
-                res.add(s);
+                r.<MessageStatus>receive().ifPresent(m -> {
+                    List<ChNodeChildren> listNode = m.getCh().entrySet().stream().map(i -> new ChNodeChildren(i.getKey(), i.getValue().getId())).collect(Collectors.toList());
+                    StatusObj s = new StatusObj(m.getSender(), new ArrayList<>(m.getStore().values()), listNode);
+                    res.add(s);
+                });
             }
             return res;
         } else
