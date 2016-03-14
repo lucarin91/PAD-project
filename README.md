@@ -17,7 +17,7 @@ git clone git@github.com:lucarin91/PAD-project.git
 ```
 il you want also to start the management tools run
 ```
-./graadlew webapp:run app:run
+./gradlew webapp:run app:run
 ```
 
 ### Single server
