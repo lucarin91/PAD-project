@@ -1,9 +1,9 @@
 package lr.api;
 
-import com.beust.jcommander.JCommander;
 import com.google.code.gossip.GossipMember;
 import lr.core.CmdArgs;
 import lr.core.GossipResource;
+import lr.core.Helper;
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -17,7 +17,8 @@ import java.util.List;
 public class FrontAPI {
     public static void main(String[] args) {
         CmdArgs s = new CmdArgs();
-        new JCommander(s, args);
+        Helper.parseArgs(s,args);
+
         start(s.getId(), s.getIp(), s.getPort(), s.getMembers());
     }
 

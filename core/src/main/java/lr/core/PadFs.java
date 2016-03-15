@@ -1,7 +1,5 @@
 package lr.core;
 
-import com.beust.jcommander.JCommander;
-
 import java.io.IOException;
 import java.net.UnknownHostException;
 
@@ -10,9 +8,8 @@ import java.net.UnknownHostException;
  */
 public class PadFs {
     public static void main(String[] args) throws IOException {
-
         CmdArgs s = new CmdArgs();
-        new JCommander(s, args);
+        Helper.parseArgs(s,args);
 
         NodeService n = null;
         try {
@@ -24,7 +21,6 @@ public class PadFs {
         }
 
         if (n != null) n.shutdown();
-
     }
 }
 

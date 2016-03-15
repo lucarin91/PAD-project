@@ -1,10 +1,10 @@
 package lr.app;
 
-import com.beust.jcommander.JCommander;
 import com.google.code.gossip.GossipMember;
 import com.google.code.gossip.RemoteGossipMember;
 import lr.core.GossipResource;
 import lr.api.FrontAPI;
+import lr.core.Helper;
 import lr.core.NodeService;
 
 import java.io.BufferedReader;
@@ -23,7 +23,7 @@ import java.util.Map;
 public class App {
     public static void main(String[] args) throws IOException {
         CmdArgsApp s = new CmdArgsApp();
-        new JCommander(s, args);
+        Helper.parseArgs(s, args);
 
         final Map<String, NodeService> clients = new HashMap<>();
         final List<GossipMember> startupMembers = new ArrayList<>();

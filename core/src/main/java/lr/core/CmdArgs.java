@@ -15,6 +15,9 @@ import java.util.Optional;
  */
 public class CmdArgs {
 
+    @Parameter(names = "-help", help = true)
+    private boolean help;
+
     @Parameter(names = "-id", description = "the id of the server")
     private String id = "single";
 
@@ -29,6 +32,10 @@ public class CmdArgs {
 
     @Parameter(names = "-h", description = "all the configuration of the server as <id>:<ip>:<port>")
     private String host = "";
+
+    public boolean isHelp() {
+        return help;
+    }
 
     private Optional<String[]> parseHost(){
         String[] hs = host.split(":");

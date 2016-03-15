@@ -1,5 +1,7 @@
 package lr.core;
 
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.ParameterException;
 import ie.ucd.murmur.MurmurHash;
 
 import java.math.BigInteger;
@@ -46,5 +48,18 @@ public class Helper {
         byte[] digest = MD5(s);
         BigInteger bigInt = new BigInteger(1, digest);
         return bigInt.longValue();
+    }
+
+    public static void parseArgs(CmdArgs s, String[] args){
+        try {
+            JCommander jcom = new JCommander(s, args);
+            if (s.isHelp()){
+                jcom.usage();
+                System.exit(0);
+            }
+        } catch (ParameterException e) {
+            new JCommander(s).usage();
+            System.exit(-1);
+        }
     }
 }
