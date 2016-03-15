@@ -22,7 +22,7 @@ git clone git@github.com:lucarin91/PAD-project.git
 ```
 if you want also to start also the management tools run
 ```
-./graadlew webapp:run app:run
+./gradlew webapp:run app:run
 ```
 
 optional parameters (you can pass to gradle by `-Dexec.args="<parameters>"`):
