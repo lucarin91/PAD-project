@@ -45,12 +45,19 @@ public class App {
 
             while (true) {
                 BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-                System.out.print("\nEnter command: ");
+                System.out.println("\nEnter a command (h for help):");
                 String read = br.readLine();
                 if (read != null) {
                     String[] cmd = read.split("\\s+");
                     switch (cmd[0]) {
-                        case "quit":
+                        case "h":
+                            System.out.println("COMMANDS:\n" +
+                                    "\tadd <id>\tadd a new node\n" +
+                                    "\trm <id>\t\tremove a node\n" +
+                                    "\tq\t\tquit\n" +
+                                    "\th\t\tfor this help");
+                            break;
+                        case "q":
                             System.exit(0);
                             break;
                         case "add":
@@ -69,9 +76,9 @@ public class App {
                             if (cmd.length > 1) {
                                 clients.get(cmd[1]).shutdown();
                                 clients.remove(cmd[1]);
-                                System.out.print(clients);
+                                System.out.println(clients);
                             } else {
-                                System.out.print("not founded");
+                                System.out.println("not founded");
                             }
                             break;
                     }

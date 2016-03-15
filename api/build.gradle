@@ -41,16 +41,6 @@ buildscript {
     }
 }
 
-run {
-    /* Can pass all the properties: */
-    systemProperties System.getProperties()
-
-    /* Need to split the space-delimited value in the exec.args */
-    if(System.getProperty("exec.args") != null) {
-        args System.getProperty("exec.args").split()
-    }
-}
-
 task docker(type: Docker) {
     push = false
     applicationName = "${jar.baseName}"

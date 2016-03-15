@@ -37,17 +37,15 @@ public class GossipResource extends Node {
     @JsonIgnore
     public Node getRandomNode() {
         List<LocalGossipMember> list = _gossipManager.getMemberList();
+        //TODO: this function have to return only a storage node
         return new Node(list.get(_random.nextInt(list.size())));
     }
 
     @JsonIgnore
-    public List<Node> getNode() {
+    public List<Node> getNodes() {
         List<LocalGossipMember> list = _gossipManager.getMemberList();
         List<Node> res = list.stream().map(Node::new).collect(Collectors.toList());
         return res;
-    }
-    private GossipResource(String id, String ip, int port, List<GossipMember> gossipMembers) {
-        this(id, ip, port, port+1, gossipMembers);
     }
 
     private GossipResource(String id, String ip, int portG,int portM, List<GossipMember> gossipMembers) {
@@ -71,10 +69,12 @@ public class GossipResource extends Node {
         return getInstance(id,ip,port,port+1,gossipMembers);
     }
 
+    @JsonIgnore
     public static GossipResource getInstance(String id, String ip, int portG, int portM, List<GossipMember> gossipMembers) {
         if (_r == null) _r = new GossipResource(id, ip, portG, portM, gossipMembers);
         return _r;
     }
+
     @JsonIgnore
     public static Optional<GossipResource> getInstance() {
         return Optional.of(_r);

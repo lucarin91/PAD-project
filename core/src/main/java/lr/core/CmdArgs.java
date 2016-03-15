@@ -15,7 +15,7 @@ import java.util.Optional;
  */
 public class CmdArgs {
 
-    @Parameter(names = "-id", description = "the port of the server")
+    @Parameter(names = "-id", description = "the id of the server")
     private String id = "single";
 
     @Parameter(names = "-ip", description = "the ip of the server")

@@ -18,23 +18,13 @@ public class PadFs {
         try {
             n = new NodeService(s.getId(), s.getIp(), s.getPort(), s.getMembers()).start();
             System.out.print(n);
-            while (true) { }
-//            while (true) {
-//                BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-//                System.out.print("\nEnter command: ");
-//                String s = br.readLine();
-//                String[] cmd = s != null ? s.split("\\s+") : new String[]{"quit"};
-//                switch (cmd[0]) {
-//                    case "quit":
-//                        System.exit(0);
-//                        break;
-//                }
-//            }
-        } catch (InterruptedException | UnknownHostException e) {
-            e.printStackTrace();
-        }finally {
-            if (n != null) n.shutdown();
+            while (true) {
+            }
+        } catch (InterruptedException | UnknownHostException ignored) {
         }
+
+        if (n != null) n.shutdown();
+
     }
 }
 

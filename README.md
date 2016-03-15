@@ -11,17 +11,33 @@ First of all download the last version of the project with github
 git clone git@github.com:lucarin91/PAD-project.git
 ```
 
+### Requirements
+- **java8**
+- nodejs/npm (optional only for the management tools)
+- docker>=10 (optional only for the docker version of the file-system)
+
 ### Thread version
 ```
 ./gradlew app:run
 ```
-il you want also to start the management tools run
+if you want also to start also the management tools run
 ```
 ./graadlew webapp:run app:run
 ```
 
+optional parameters (you can pass to gradle by `-Dexec.args="<parameters>"`):
+- `-N <number>` number of servers to start
+- `-n <number>` number of seeds servers
+- `-gport <number>` the port number used by the gossip protocol
+- `-mport <number>` the port number of the management server
+
+example:
+```
+./gradlew webapp:run app:run -Dexec.args="-N 10 -n 2 -gport 3000 -mport 2000"
+```
+
 ### Single server
-to start a sotage server run
+to start a storage server run
 ```
 ./gradlew core:run
 ```
@@ -30,13 +46,25 @@ to start a front server run
 ./gradlew api:run
 ```
 
+optional parameters (you can pass to gradle by `-Dexec.args="<parameters>"`):
+- `-id <string>` the port of the server
+- `-ip <string>` the ip of the server
+- `-p <number>` the port of the server (two successive port are used)
+- `-m <id>:<ip>:<port>` a seed server to start the gossip protocol (use this parameters for each seed server)
+- `-h <id>:<ip>:<port>` all the server configuration as a single string
+
+example:
+```
+./gradlew core:run -Dexec.args="-h server1:192.0.0.5:2000 -m server2:192.0.0.2 -m server3:192.0.0.3"
+```
+
 ### Docker version
-to build the docker iimage for the front node and the storage node run
+to build the docker image of the front node and the storage node run
 ```
 ./gradlew core:build core:docker api:build api:docker
 ```
 
-Now iis possible to execute a demo by run the following perl script:
+Now is possible to execute a demo by run the following perl script:
 ```
 perl start-docker.pl <number of storage node :default 5>
 ```

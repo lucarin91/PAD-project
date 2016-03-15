@@ -29,14 +29,14 @@ public class NodeService extends Node {
     private DatagramSocket _server;
     private int _replica = 2;
 
-    public NodeService clearStorage(){
+    public NodeService clearStorage() {
         _store.close();
         _store = new PersistentStorage(getId(), true);
         return this;
     }
 
     @JsonIgnore
-    public NodeService setNBackup(int replica){
+    public NodeService setNBackup(int replica) {
         _replica = replica;
         return this;
     }
@@ -89,38 +89,33 @@ public class NodeService extends Node {
                 System.arraycopy(buf, 4, json_bytes, 0, packet_length);
                 String receivedMessage = new String(json_bytes);
 
-                //_clock.increment(getId());
-                //try {
-//                    JSONObject json = new JSONObject(receivedMessage);
-//                    MessageManage msg = new MessageManage(json);
-                    ObjectMapper mapper = new ObjectMapper().registerModule(new Jdk8Module());
-                    Message msg = mapper.readValue(receivedMessage, Message.class);
+                ObjectMapper mapper = new ObjectMapper().registerModule(new Jdk8Module());
+                Message msg = mapper.readValue(receivedMessage, Message.class);
 
-                    System.out.print(id + ".RECEIVE: " + msg);
+                System.out.print(id + ".RECEIVE: " + msg);
 
-                    if (msg instanceof MessageRequest<?>) {
-                        //System.out.println("" + msg);
+                if (msg instanceof MessageRequest<?>) {
 
-                        MessageRequest msgR = (MessageRequest) msg;
-                        if (msgR.getOperation() != MSG_OPERATION.STATUS) {
-                            //msg.setSender(this);
-                            Node n = _ch.get(msgR.getKey());
+                    MessageRequest msgR = (MessageRequest) msg;
+                    if (msgR.getOperation() != MSG_OPERATION.STATUS) {
+                        //msg.setSender(this);
+                        Node n = _ch.get(msgR.getKey());
 
-                            if (n.getId().equals(getId())) {
-                                doOperation(msgR);
-                            } else {
-                                System.out.println("pass request..");
-                                n.send(msg);
-                            }
-
+                        if (n.getId().equals(getId())) {
+                            doOperation(msgR);
                         } else {
-                            send(msg.getSender().getIp(), msg.getSender().getPortM(), new MessageStatus(this, _store.getMap(), _ch.getMap()));
+                            System.out.println("pass request..");
+                            n.send(msg);
                         }
-                    } else if (msg instanceof MessageManage) {
-                        System.out.println("receive management..");
-                        MessageManage msgM = (MessageManage) msg; //mapper.readValue(receivedMessage,MessageManage.class);
-                        doManageOperation(msgM);
+
+                    } else {
+                        send(msg.getSender().getIp(), msg.getSender().getPortM(), new MessageStatus(this, _store.getMap(), _ch.getMap()));
                     }
+                } else if (msg instanceof MessageManage) {
+                    System.out.println("receive management..");
+                    MessageManage msgM = (MessageManage) msg;
+                    doManageOperation(msgM);
+                }
             } catch (SocketException e) {
                 //e.printStackTrace();
                 _toStop.set(true);
@@ -128,7 +123,6 @@ public class NodeService extends Node {
                 e.printStackTrace();
             }
         }
-        //shutdown();
     }
 
     private void doManageOperation(MessageManage msg) {
@@ -142,10 +136,19 @@ public class NodeService extends Node {
                 VectorClock thatClock = msg.getData().getVersion();
                 _store.get(msg.getData().getKey()).ifPresent(thisData -> {
                     VectorClock thisClock = thisData.getVersion();
-                    if (thisClock.compareTo(thatClock) == VectorClock.COMP_CLOCK.BEFORE)
-                        _store.update(msg.getData());
+                    switch (thisClock.compareTo(thatClock)) {
+                        case BEFORE:
+                            _store.update(msg.getData());
+                            break;
+                        case NOTHING:
+                            //TODO: found two uncomfortable version
+                            break;
+                        case AFTER:
+                        case EQUAL:
+                    }
                 });
                 break;
+
             case DEL:
                 _store.remove(msg.getKey());
                 break;
@@ -221,7 +224,7 @@ public class NodeService extends Node {
         _store.close();
 //        try {
 //            synchronized (_passiveThread) {
-                //_passiveThread.wait();
+        //_passiveThread.wait();
 //            }
 //            System.out.println("after join");
 //        } catch (InterruptedException e) {
@@ -244,19 +247,14 @@ public class NodeService extends Node {
                             n.send(new MessageManage(this, MSG_OPERATION.ADD, data));
                         });
                     }
-//                    Node prev = _ch.getPrev(toString());
-//                    if (prev.equals(n)) {
-                        List<Long> hashList = _ch.getHashesForKey(n.toString());
 
-                        _store.getMap().entrySet().parallelStream().filter(dataEntry -> {
-                            return hashList.stream().anyMatch(hash -> {
-                                return _ch.doHash(dataEntry.getValue().getKey()) < hash;
+                    List<Long> hashList = _ch.getHashesForKey(n.toString());
+                    _store.getMap().entrySet().parallelStream()
+                            .filter(dataEntry -> hashList.stream().anyMatch(hash -> _ch.doHash(dataEntry.getValue().getKey()) < hash))
+                            .forEach(dataEntry -> {
+                                System.out.println(info + "SEND his data: " + dataEntry.getKey() + "-" + dataEntry.getValue());
+                                n.send(new MessageManage(this, MSG_OPERATION.ADD, dataEntry.getValue()));
                             });
-                        }).forEach(dataEntry -> {
-                            System.out.println(info + "SEND his data: " + dataEntry.getKey() + "-" +  dataEntry.getValue());
-                            n.send(new MessageManage(this, MSG_OPERATION.ADD, dataEntry.getValue()));
-                        });
-                   //}
                 } else
                     _ch.remove(n);
             }

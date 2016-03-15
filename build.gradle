@@ -33,7 +33,18 @@ configure(subprojects.findAll {it.name != 'webapp'}) {
     task wrapper(type: Wrapper) {
         gradleVersion = '2.7'
     }
+
+    run {
+        /* Can pass all the properties: */
+        systemProperties System.getProperties()
+
+        /* Need to split the space-delimited value in the exec.args */
+        if(System.getProperty("exec.args") != null) {
+            args System.getProperty("exec.args").split()
+        }
+    }
 }
+
 
 task clean(type: Exec) {
     executable "sh"

@@ -32,13 +32,6 @@ public class Node {
         this.portM = m.getPort() + 1;
     }
 
-//    public Node(JSONObject obj) {
-//        this.id = obj.getString("id");
-//        this.ip = obj.getString("ip");
-//        this.portG = obj.getInt("port_g");
-//        this.portM = obj.getInt("port_m");
-//    }
-
     public Node(String id, String ip, int portG, int portM) {
         this.id = id;
         this.ip = ip;
@@ -52,17 +45,6 @@ public class Node {
         this.portG = port;
         this.portM = port+1;
     }
-
-
-
-//    public JSONObject toJson(){
-//        JSONObject json = new JSONObject();
-//        json.add("id", id);
-//        json.add("ip", ip);
-//        json.add("port_g", portG);
-//        json.add("port_m", portM);
-//        return json;
-//    }
 
 
     public String getId() {
@@ -97,20 +79,6 @@ public class Node {
         this.portM = portM;
     }
 
-    @JsonIgnore
-    public String getHostG() {
-        return ip + ":" + portG;
-    }
-
-    @JsonIgnore
-    public String getHostM() {
-        return ip + ":" + portM;
-    }
-
-//    @JsonIgnore
-//    public int getHash(){
-//        return Helper.hash(toString());
-//    }
 
     public boolean send(Message msg) {
         return send(ip, portM, msg);
@@ -147,15 +115,13 @@ public class Node {
             socket.close();
             return true;
 
-        } catch (IOException e2) {
-            e2.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return false;
     }
 
-
-    public void shutdown() {
-    }
+    public void shutdown() {};
 
     @Override
     public boolean equals(Object o) {
