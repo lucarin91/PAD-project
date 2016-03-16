@@ -3,6 +3,7 @@ package lr.core.Nodes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.code.gossip.GossipMember;
+import lr.core.Exception.SendException;
 import lr.core.Messages.Message;
 
 import java.io.IOException;
@@ -77,46 +78,23 @@ public class Node {
         this.portM = portM;
     }
 
-
-    public boolean send(Message msg) {
-        return send(ip, portM, msg);
-    }
-
-    protected boolean send(String ip, int port, Message msg) {
-        System.out.println("SEND to " + id + "(" + ip + ":" + port + ") - " + msg);
+    public void send(Message msg) throws SendException {
+        System.out.println("SEND to " + id + "(" + ip + ":" + portM + ") - " + msg);
         try {
-            //Node n = _ch.get(data.getHash());
-            //if (n != null) {
             InetAddress dest = InetAddress.getByName(ip);
-            //JSONObject json = msg.toJson();
 
-            //byte[] json_bytes = json.toString().getBytes();
             byte[] json_bytes = new ObjectMapper().registerModule(new Jdk8Module()).writeValueAsBytes(msg);
-            int packet_length = json_bytes.length;
-            //TODO check packet size
 
-            // Convert the packet length to the byte representation of the int.
-            byte[] length_bytes = new byte[4];
-            length_bytes[0] = (byte) (packet_length >> 24);
-            length_bytes[1] = (byte) ((packet_length << 8) >> 24);
-            length_bytes[2] = (byte) ((packet_length << 16) >> 24);
-            length_bytes[3] = (byte) ((packet_length << 24) >> 24);
-
-            ByteBuffer byteBuffer = ByteBuffer.allocate(4 + json_bytes.length);
-            byteBuffer.put(length_bytes);
-            byteBuffer.put(json_bytes);
-            byte[] buf = byteBuffer.array();
+            if (json_bytes.length > 1000){
+                throw new SendException("json message too long");
+            }
 
             DatagramSocket socket = new DatagramSocket();
-            DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, dest, port);
-            socket.send(datagramPacket);
+            socket.send(new DatagramPacket(json_bytes, json_bytes.length, dest, portM));
             socket.close();
-            return true;
-
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new SendException(e.getMessage());
         }
-        return false;
     }
 
     public void shutdown() {};

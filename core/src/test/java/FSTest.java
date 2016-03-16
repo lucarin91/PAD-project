@@ -1,7 +1,7 @@
 import com.google.code.gossip.GossipMember;
 import com.google.code.gossip.RemoteGossipMember;
 import lr.core.*;
-import lr.core.Exception.SendRequestError;
+import lr.core.Exception.SendException;
 import lr.core.Messages.Message;
 import lr.core.Messages.MessageRequest;
 import lr.core.Messages.MessageResponse;
@@ -22,7 +22,7 @@ public class FSTest {
     public MessageResponse<?> sendRequest(MessageRequest<?> msg) {
         try {
             return GossipResource.sendRequestToRandomNode(msg);
-        } catch (SendRequestError sendRequestError) {
+        } catch (SendException sendException) {
             throw new AssertionError();
         }
     }
@@ -30,7 +30,6 @@ public class FSTest {
     public MessageResponse<?> add(String key, String value) {
         return sendRequest(new MessageRequest<>(Message.MSG_OPERATION.ADD, key, value));
     }
-
 
     public MessageResponse<?> get(String key) {
         return sendRequest(new MessageRequest<>(Message.MSG_OPERATION.GET, key));

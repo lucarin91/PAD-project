@@ -42,28 +42,13 @@ public class ConsistentHash<T> {
         boolean insert = true;
 
         getHashesForKey(node.toString()).forEach(aLong -> _map.put(aLong,node));
-//        for (int i = 0; i < _replication; i++) {
-//            long hash = _hash.apply(node.toString() + i);
-//            if (!_map.containsKey(hash))
-//                _map.put(hash, node);
-//            else
-//                insert = false;
-//        }
-//        return insert;
+
         return true;
     }
 
     public Long doHash(String key){
         return _hash.apply(key);
     }
-
-//    public boolean add(String key, T node) {
-//        if (!_map.containsKey(MurmurHash.hash32(key))) {
-//            _map.add(MurmurHash.hash32(key), node);
-//            return true;
-//        } else
-//            return false;
-//    }
 
     synchronized public TreeMap<Long,T> getMap() {
     //    System.out.println("MAP " + _map);
@@ -72,17 +57,13 @@ public class ConsistentHash<T> {
 
     synchronized public void remove(T node) {
         getHashesForKey(node.toString()).forEach(aLong -> _map.remove(aLong));
-//        for (int i = 0; i < _replication; i++)
-//            _map.remove(_hash.apply(node.toString() + i));
     }
 
     synchronized public T get(String key) {
-        //System.out.println("MAP "+_map);
         long hash = _hash.apply(key);
         Long res = _map.ceilingKey(hash);
         if (res != null) {
             T n = _map.get(res);
-            //System.out.println("consistent hashtable map "+ key +" to node "+n);
             return n;
         } else {
             return _map.firstEntry().getValue();

@@ -1,7 +1,7 @@
 package lr.api;
 
 import lr.core.Data;
-import lr.core.Exception.SendRequestError;
+import lr.core.Exception.SendException;
 import lr.core.Nodes.GossipResource;
 import lr.core.Messages.Message.*;
 import lr.core.Messages.MessageRequest;
@@ -18,7 +18,7 @@ public class PublicAPI {
     private MessageResponse<?> sendRequest(MessageRequest<?> req){
         try {
             return GossipResource.sendRequestToRandomNode(req);
-        } catch (SendRequestError e) {
+        } catch (SendException e) {
             return new MessageResponse<>(MessageResponse.MSG_STATUS.ERROR, "error");
         }
     }

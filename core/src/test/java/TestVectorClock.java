@@ -9,8 +9,6 @@ import static org.junit.Assert.*;
  */
 public class TestVectorClock {
 
-
-
     @Test
     public void compare() {
         VectorClock c1 = new VectorClock();

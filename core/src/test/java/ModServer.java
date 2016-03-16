@@ -1,7 +1,7 @@
 import com.google.code.gossip.GossipMember;
 import com.google.code.gossip.RemoteGossipMember;
 import lr.core.*;
-import lr.core.Exception.SendRequestError;
+import lr.core.Exception.SendException;
 import lr.core.Messages.Message;
 import lr.core.Messages.MessageRequest;
 import lr.core.Messages.MessageResponse;
@@ -44,8 +44,8 @@ public class ModServer {
         try {
             MessageResponse<?> msg = GossipResource.sendRequestToRandomNode(new MessageRequest<>(r, Message.MSG_OPERATION.ADD, "hkjasdjkhdsahjkasdsad", "PROVA"));
             Assert.assertEquals(MessageResponse.MSG_STATUS.OK, msg.getStatus());
-        } catch (SendRequestError sendRequestError) {
-            sendRequestError.printStackTrace();
+        } catch (SendException sendException) {
+            sendException.printStackTrace();
         }
 
         try {
@@ -60,8 +60,8 @@ public class ModServer {
             try {
                 MessageResponse<?> msg = GossipResource.sendRequestToRandomNode(new MessageRequest<>(r, Message.MSG_OPERATION.DEL, "hkjasdjkhdsahjkasdsad"));
                 Assert.assertEquals(MessageResponse.MSG_STATUS.OK, msg.getStatus());
-            } catch (SendRequestError sendRequestError) {
-                sendRequestError.printStackTrace();
+            } catch (SendException e) {
+                e.printStackTrace();
             }
 
             StorageNode n = clients.get(2);
@@ -81,45 +81,8 @@ public class ModServer {
             }
 
 
-        } catch (UnknownHostException |
-                InterruptedException e
-                )
-
-        {
+        } catch (UnknownHostException | InterruptedException e) {
             e.printStackTrace();
         }
-
-
-//        while (true) {
-//            System.out.print("\n...");
-//            Thread.sleep(2000);
-//            System.out.println();
-//            for (StorageNode n : clients) {
-//                try {
-//                    Field privateField = StorageNode.class.getDeclaredField("_ch");
-//                    privateField.setAccessible(true);
-//                    ConsistentHash<Node> ch = (ConsistentHash<Node>) privateField.get(n);
-//
-//                    Map<Long, Node> map = ch.getMap();
-//                    System.out.print("CH of " + n.getId() + "(" + ch.getHashesForKey(n.toString()) + "): ");
-//                    for (Map.Entry<Long, Node> i : map.entrySet()) {
-//                        System.out.print(i.getValue().getId() + ", ");
-//                    }
-//
-//                    Field storeField = StorageNode.class.getDeclaredField("_store");
-//                    storeField.setAccessible(true);
-//                    PersistentStorage store = (PersistentStorage) storeField.get(n);
-//
-//                    System.out.print("\t STORE of " + n.getId() + ": ");
-//                    for (Map.Entry<String, Data<?>> i : store.getMap().entrySet()) {
-//                        System.out.print(i.getValue() + ", ");
-//                    }
-//                    System.out.println();
-//                } catch (NoSuchFieldException | IllegalAccessException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }
-
     }
 }

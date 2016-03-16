@@ -20,7 +20,7 @@ import com.google.code.gossip.GossipSettings;
 import com.google.code.gossip.LocalGossipMember;
 import com.google.code.gossip.manager.GossipManager;
 import com.google.code.gossip.manager.random.RandomGossipManager;
-import lr.core.Exception.SendRequestError;
+import lr.core.Exception.SendException;
 import lr.core.Messages.Message;
 import lr.core.Messages.MessageRequest;
 import lr.core.Messages.MessageResponse;
@@ -40,12 +40,12 @@ public class GossipResource extends Node {
     @JsonIgnore
     public Optional<Node> getRandomNode() {
         List<LocalGossipMember> list = _gossipManager.getMemberList();
-        if (list.size()>0) {
+        if (list.size() > 0) {
             LocalGossipMember member;
             while ((member = list.get(_random.nextInt(list.size()))).getId().contains(GossipResource.FRONT_ID)) {
             }
             return Optional.of(new Node(member));
-        }else
+        } else
             return Optional.empty();
     }
 
@@ -89,27 +89,13 @@ public class GossipResource extends Node {
     }
 
     public <T extends Message> Optional<T> receive() {
-        //System.out.println("FRONT receive message...");
         try {
             byte[] buf = new byte[_server.getReceiveBufferSize()];
 
-            DatagramPacket p = new DatagramPacket(buf, buf.length);
-            _server.receive(p);
+            _server.receive(new DatagramPacket(buf, buf.length));
 
-            System.out.println("FRONT get message..");
-            int packet_length = 0;
-            for (int i = 0; i < 4; i++) {
-                int shift = (4 - 1 - i) * 8;
-                packet_length += (buf[i] & 0x000000FF) << shift;
-            }
+            String receivedMessage = new String(buf);
 
-            // TODO: check the data packet size
-
-            byte[] json_bytes = new byte[packet_length];
-            System.arraycopy(buf, 4, json_bytes, 0, packet_length);
-            String receivedMessage = new String(json_bytes);
-
-            //System.out.println(receivedMessage);
             ObjectMapper mapper = new ObjectMapper().registerModule(new Jdk8Module());
             return Optional.of(mapper.readValue(receivedMessage, new TypeReference<T>() {
             }));
@@ -120,24 +106,23 @@ public class GossipResource extends Node {
         return Optional.empty();
     }
 
-    public static MessageResponse<?> sendRequestToRandomNode(MessageRequest<?> req) throws SendRequestError {
+    public static MessageResponse<?> sendRequestToRandomNode(MessageRequest<?> req) throws SendException {
         Optional<GossipResource> opt_r = GossipResource.getInstance();
         if (opt_r.isPresent()) {
             GossipResource r = opt_r.get();
             Optional<Node> opt_n;
-            if ( (opt_n = r.getRandomNode()).isPresent()) {
+            if ((opt_n = r.getRandomNode()).isPresent()) {
                 req.setSender(r);
                 opt_n.get().send(req);
                 Optional<MessageResponse<?>> responseOptional = r.<MessageResponse<?>>receive();
                 if (responseOptional.isPresent()) {
                     return responseOptional.get();
-                }
-                else
-                    throw new SendRequestError("nothing received back");
-            }else
-                throw new SendRequestError("no storage node found");
-        }else
-            throw new SendRequestError("GossipResource is not initialized");
+                } else
+                    throw new SendException("nothing received back");
+            } else
+                throw new SendException("no storage node found");
+        } else
+            throw new SendException("GossipResource is not initialized");
     }
 
     @Override

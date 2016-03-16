@@ -2,23 +2,15 @@ package lr.core;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
-import lr.core.Exception.SendRequestError;
-import lr.core.Messages.MessageRequest;
-import lr.core.Messages.MessageResponse;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Optional;
 
 /**
  * Created by luca on 04/03/16.
  */
 public class Helper {
-//    public static int hash(String s) {
-//        return MurmurHash.hash32(s) /*% 1000*/;
-//    }
-
     private static byte[] MD5(String s) {
         MessageDigest m = null;
         try {

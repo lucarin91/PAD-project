@@ -1,6 +1,7 @@
 package lr.api;
 
 import lr.core.Data;
+import lr.core.Exception.SendException;
 import lr.core.Nodes.GossipResource;
 import lr.core.Messages.Message.*;
 import lr.core.Messages.MessageRequest;
@@ -25,7 +26,11 @@ public class StatusAPI {
             GossipResource r = opt_r.get();
             List<Node> list = r.getNodes();
             for (Node n : list) {
-                n.send(new MessageRequest<>(r, MSG_OPERATION.STATUS));
+                try {
+                    n.send(new MessageRequest<>(r, MSG_OPERATION.STATUS));
+                } catch (SendException e) {
+                    e.printStackTrace();
+                }
             }
             List<StatusObj> res = new ArrayList<>();
             for (Node item : list) {

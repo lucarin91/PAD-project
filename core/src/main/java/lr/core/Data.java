@@ -1,19 +1,15 @@
 package lr.core;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import java.io.Serializable;
 
 /**
  * Created by luca on 28/02/16.
  */
-
-//@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class")
 public class Data<T> implements Serializable {
 
     private String key;
     private Long hash;
-  //  @JsonTypeInfo( use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY )
     private T value;
     private VectorClock version;
 
@@ -48,24 +44,6 @@ public class Data<T> implements Serializable {
     public void setVersion(VectorClock version) {
         this.version = version;
     }
-
-    //    public Data(JSONObject json) {
-//        this.key = json.getString("key");
-//        this.hash = json.getInt("hash");
-//        try {
-//
-//            this.value = (T) json.get("value");
-//        } catch (JSONException e) {
-//        }
-//    }
-//
-//    public JSONObject toJson() {
-//        JSONObject obj = new JSONObject();
-//        obj.add("key", key);
-//        obj.add("hash", hash);
-//        obj.add("value", value);
-//        return obj;
-//    }
 
     public void setKey(String key) {
         this.key = key;
