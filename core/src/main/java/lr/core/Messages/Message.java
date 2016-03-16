@@ -6,7 +6,7 @@ package lr.core.Messages;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import lr.core.Node;
+import lr.core.Nodes.Node;
 
 /***
  * Type of message:

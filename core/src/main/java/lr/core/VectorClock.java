@@ -52,9 +52,35 @@ public class VectorClock implements Serializable {
 //                                COMP_CLOCK.NOTHING;
 //    }
 
+//    public COMP_CLOCK compareTo(VectorClock that) {
+//        if (this == that) return COMP_CLOCK.EQUAL;
+//
+//        Map<String, COMP_CLOCK> res = new HashMap<>();
+//        Set<String> set = new HashSet<>();
+//        set.addAll(vector.keySet());
+//        set.addAll(that.vector.keySet());
+//        for (String key : set) {
+//            Long v1 = this.vector.getOrDefault(key, (long) 0);
+//            Long v2 = that.vector.getOrDefault(key, (long) 0);
+//            if (v1 > v2) {
+//                res.put(key, COMP_CLOCK.AFTER);
+//            } else if (v1 < v2) {
+//                res.put(key, COMP_CLOCK.BEFORE);
+//            } else
+//                res.put(key, COMP_CLOCK.EQUAL);
+//        }
+//
+//        return res.values().stream().allMatch(c -> c.equals(COMP_CLOCK.EQUAL)) ?
+//                COMP_CLOCK.EQUAL :
+//                res.values().stream().allMatch(c -> c.equals(COMP_CLOCK.BEFORE) || c.equals(COMP_CLOCK.EQUAL)) ?
+//                        COMP_CLOCK.BEFORE :
+//                        res.values().stream().allMatch(c -> c.equals(COMP_CLOCK.AFTER) || c.equals(COMP_CLOCK.EQUAL)) ?
+//                                COMP_CLOCK.AFTER :
+//                                COMP_CLOCK.NOTHING;
+//    }
+
     public COMP_CLOCK compareTo(VectorClock that) {
         if (this == that) return COMP_CLOCK.EQUAL;
-
         Map<String, COMP_CLOCK> res = new HashMap<>();
         Set<String> set = new HashSet<>();
         set.addAll(vector.keySet());
@@ -62,21 +88,15 @@ public class VectorClock implements Serializable {
         for (String key : set) {
             Long v1 = this.vector.getOrDefault(key, (long) 0);
             Long v2 = that.vector.getOrDefault(key, (long) 0);
-            if (v1 > v2) {
-                res.put(key, COMP_CLOCK.AFTER);
-            } else if (v1 < v2) {
-                res.put(key, COMP_CLOCK.BEFORE);
-            } else
-                res.put(key, COMP_CLOCK.EQUAL);
+            res.put(key, v1 > v2 ? COMP_CLOCK.AFTER : v1 < v2 ? COMP_CLOCK.BEFORE : COMP_CLOCK.EQUAL);
         }
 
-        return res.values().stream().allMatch(c -> c.equals(COMP_CLOCK.EQUAL)) ?
-                COMP_CLOCK.EQUAL :
-                res.values().stream().allMatch(c -> c.equals(COMP_CLOCK.BEFORE) || c.equals(COMP_CLOCK.EQUAL)) ?
-                        COMP_CLOCK.BEFORE :
-                        res.values().stream().allMatch(c -> c.equals(COMP_CLOCK.AFTER) || c.equals(COMP_CLOCK.EQUAL)) ?
-                                COMP_CLOCK.AFTER :
-                                COMP_CLOCK.NOTHING;
+        return res.values().parallelStream().reduce((c1, c2) -> {
+            if (c1 == c2) return c1;
+            else if (c1 == COMP_CLOCK.EQUAL) return c2;
+            else if (c2 == COMP_CLOCK.EQUAL) return c1;
+            else return COMP_CLOCK.NOTHING;
+        }).get();
     }
 
     public void update(VectorClock that) {

@@ -1,9 +1,12 @@
 import com.google.code.gossip.GossipMember;
 import com.google.code.gossip.RemoteGossipMember;
 import lr.core.*;
+import lr.core.Exception.SendRequestError;
 import lr.core.Messages.Message;
 import lr.core.Messages.MessageRequest;
 import lr.core.Messages.MessageResponse;
+import lr.core.Nodes.GossipResource;
+import lr.core.Nodes.StorageNode;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -17,7 +20,7 @@ import java.util.*;
 public class ModServer {
     @Test
     public void addServer() throws UnknownHostException, InterruptedException {
-        final List<NodeService> clients = new ArrayList<>();
+        final List<StorageNode> clients = new ArrayList<>();
         final List<GossipMember> startupMembers = new ArrayList<>();
         final int seedNodes = 2;
         int clusterMembers = 2;
@@ -27,7 +30,7 @@ public class ModServer {
         }
 
         for (int i = 1; i < clusterMembers + 1; ++i) {
-            clients.add(new NodeService(i + "", "127.0.0." + i, 2000, startupMembers)
+            clients.add(new StorageNode(i + "", "127.0.0." + i, 2000, startupMembers)
                     .clearStorage()
                     .setNBackup(0)
                     .start());
@@ -38,29 +41,32 @@ public class ModServer {
         Thread.sleep(5000);
 
         System.out.print("key: " + Helper.MD5ToLong("hkjasdjkhdsahjkasdsad"));
-        r.getRandomNode().send(new MessageRequest<>(r, Message.MSG_OPERATION.ADD, "hkjasdjkhdsahjkasdsad", "PROVA"));
-        r.<MessageResponse<?>>receive().ifPresent(message -> {
-            Assert.assertEquals(MessageResponse.MSG_STATUS.OK, message.getStatus());
-        });
+        try {
+            MessageResponse<?> msg = GossipResource.sendRequestToRandomNode(new MessageRequest<>(r, Message.MSG_OPERATION.ADD, "hkjasdjkhdsahjkasdsad", "PROVA"));
+            Assert.assertEquals(MessageResponse.MSG_STATUS.OK, msg.getStatus());
+        } catch (SendRequestError sendRequestError) {
+            sendRequestError.printStackTrace();
+        }
 
         try {
             Thread.sleep(2000);
-            clients.add(new NodeService("3", "127.0.0.3", 2000, startupMembers)
+            clients.add(new StorageNode("3", "127.0.0.3", 2000, startupMembers)
                     .clearStorage()
                     .setNBackup(0)
                     .start());
 
             Thread.sleep(5000);
 
-            r.getRandomNode().send(new MessageRequest<>(r, Message.MSG_OPERATION.DEL, "hkjasdjkhdsahjkasdsad"));
-            r.<MessageResponse<?>>receive().ifPresent(message -> {
-                Assert.assertEquals(MessageResponse.MSG_STATUS.OK, message.getStatus());
-            });
-
-
-            NodeService n = clients.get(2);
             try {
-                Field storeField = NodeService.class.getDeclaredField("_store");
+                MessageResponse<?> msg = GossipResource.sendRequestToRandomNode(new MessageRequest<>(r, Message.MSG_OPERATION.DEL, "hkjasdjkhdsahjkasdsad"));
+                Assert.assertEquals(MessageResponse.MSG_STATUS.OK, msg.getStatus());
+            } catch (SendRequestError sendRequestError) {
+                sendRequestError.printStackTrace();
+            }
+
+            StorageNode n = clients.get(2);
+            try {
+                Field storeField = StorageNode.class.getDeclaredField("_store");
                 storeField.setAccessible(true);
                 PersistentStorage store = (PersistentStorage) storeField.get(n);
 
@@ -88,9 +94,9 @@ public class ModServer {
 //            System.out.print("\n...");
 //            Thread.sleep(2000);
 //            System.out.println();
-//            for (NodeService n : clients) {
+//            for (StorageNode n : clients) {
 //                try {
-//                    Field privateField = NodeService.class.getDeclaredField("_ch");
+//                    Field privateField = StorageNode.class.getDeclaredField("_ch");
 //                    privateField.setAccessible(true);
 //                    ConsistentHash<Node> ch = (ConsistentHash<Node>) privateField.get(n);
 //
@@ -100,7 +106,7 @@ public class ModServer {
 //                        System.out.print(i.getValue().getId() + ", ");
 //                    }
 //
-//                    Field storeField = NodeService.class.getDeclaredField("_store");
+//                    Field storeField = StorageNode.class.getDeclaredField("_store");
 //                    storeField.setAccessible(true);
 //                    PersistentStorage store = (PersistentStorage) storeField.get(n);
 //

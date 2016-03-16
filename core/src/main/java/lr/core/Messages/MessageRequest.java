@@ -1,6 +1,6 @@
 package lr.core.Messages;
 
-import lr.core.Node;
+import lr.core.Nodes.Node;
 
 /**
  * Created by luca on 07/03/16.

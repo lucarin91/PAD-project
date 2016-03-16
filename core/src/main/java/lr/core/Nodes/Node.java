@@ -1,11 +1,9 @@
-package lr.core;
+package lr.core.Nodes;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.code.gossip.GossipMember;
 import lr.core.Messages.Message;
-import org.json.JSONException;
 
 import java.io.IOException;
 import java.net.DatagramPacket;

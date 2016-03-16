@@ -2,7 +2,7 @@ package lr.api;
 
 import com.google.code.gossip.GossipMember;
 import lr.core.CmdArgs;
-import lr.core.GossipResource;
+import lr.core.Nodes.GossipResource;
 import lr.core.Helper;
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;

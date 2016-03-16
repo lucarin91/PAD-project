@@ -5,7 +5,7 @@ package lr.core.Messages;
  */
 
 import lr.core.Data;
-import lr.core.Node;
+import lr.core.Nodes.Node;
 
 /***
  * Type of message:

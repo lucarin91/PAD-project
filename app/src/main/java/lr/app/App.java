@@ -2,10 +2,10 @@ package lr.app;
 
 import com.google.code.gossip.GossipMember;
 import com.google.code.gossip.RemoteGossipMember;
-import lr.core.GossipResource;
+import lr.core.Nodes.GossipResource;
 import lr.api.FrontAPI;
 import lr.core.Helper;
-import lr.core.NodeService;
+import lr.core.Nodes.StorageNode;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -25,7 +25,7 @@ public class App {
         CmdArgsApp s = new CmdArgsApp();
         Helper.parseArgs(s, args);
 
-        final Map<String, NodeService> clients = new HashMap<>();
+        final Map<String, StorageNode> clients = new HashMap<>();
         final List<GossipMember> startupMembers = new ArrayList<>();
         int lastServerID = s.getN() + 1;
         try {
@@ -36,7 +36,7 @@ public class App {
             FrontAPI.start("rest", "127.0.0.1", s.getPortG(), s.getPortM(), startupMembers);
 
             for (int i = 2; i <= lastServerID; i++) {
-                clients.put(i + "", new NodeService(i + "", "127.0.0." + i, 2000, startupMembers)
+                clients.put(i + "", new StorageNode(i + "", "127.0.0." + i, 2000, startupMembers)
                         .setNBackup(1)
                         .start());
             }
@@ -63,7 +63,7 @@ public class App {
                         case "add":
                             int id = cmd.length == 1 ? ++lastServerID : Integer.parseInt(cmd[1]);
                             try {
-                                NodeService n = new NodeService("" + id, "127.0.0." + id, 2000, startupMembers)
+                                StorageNode n = new StorageNode("" + id, "127.0.0." + id, 2000, startupMembers)
                                         .setNBackup(1)
                                         .start();
                                 clients.put("" + id, n);
@@ -88,7 +88,7 @@ public class App {
         } catch (InterruptedException | UnknownHostException e) {
             e.printStackTrace();
         } finally {
-            clients.values().forEach(NodeService::shutdown);
+            clients.values().forEach(StorageNode::shutdown);
             GossipResource.getInstance().ifPresent(GossipResource::shutdown);
         }
     }

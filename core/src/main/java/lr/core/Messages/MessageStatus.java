@@ -5,7 +5,7 @@ package lr.core.Messages;
  */
 
 import lr.core.Data;
-import lr.core.Node;
+import lr.core.Nodes.Node;
 
 import java.util.Map;
 import java.util.TreeMap;

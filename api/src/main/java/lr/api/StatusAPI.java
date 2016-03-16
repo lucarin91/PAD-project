@@ -1,11 +1,11 @@
 package lr.api;
 
 import lr.core.Data;
-import lr.core.GossipResource;
+import lr.core.Nodes.GossipResource;
 import lr.core.Messages.Message.*;
 import lr.core.Messages.MessageRequest;
 import lr.core.Messages.MessageStatus;
-import lr.core.Node;
+import lr.core.Nodes.Node;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -39,49 +39,6 @@ public class StatusAPI {
         } else
             return null;
     }
-//
-//    @RequestMapping(path = "/ch", method = RequestMethod.GET)
-//    public List<ChNode> ch() {
-//        Optional<GossipResource> opt_r = GossipResource.getInstance();
-//        if (opt_r.isPresent()) {
-//            GossipResource r = opt_r.get();
-//            List<Node> list = r.getNodes();
-//            for (Node n : list) {
-//                n.send(new MessageStatus(MSG_TYPE.REQUEST, r));
-//            }
-//
-//
-//            return res;
-//        } else
-//            return null;
-//    }
-
-//    class ChNode {
-//        private String id;
-//        private List<ChNodeChildren> ch;
-//
-//        public ChNode(){ }
-//        public ChNode(String id, List<ChNodeChildren> ch) {
-//            this.id = id;
-//            this.ch = ch;
-//        }
-//
-//        public String getId() {
-//            return id;
-//        }
-//
-//        public void setId(String id) {
-//            this.id = id;
-//        }
-//
-//        public List<ChNodeChildren> getCh() {
-//            return ch;
-//        }
-//
-//        public void setCh(List<ChNodeChildren> ch) {
-//            this.ch = ch;
-//        }
-//    }
 
     class ChNodeChildren {
         private Long hash;

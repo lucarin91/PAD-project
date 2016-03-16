@@ -1,9 +1,10 @@
-package lr.core;
+package lr.core.Nodes;
 
 import java.io.IOException;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BinaryOperator;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,13 +12,14 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.code.gossip.*;
 import com.google.code.gossip.event.GossipState;
 import com.google.code.gossip.manager.random.RandomGossipManager;
+import lr.core.*;
 import lr.core.Messages.*;
 import lr.core.Messages.Message.*;
 import org.apache.log4j.Logger;
 
 import com.google.code.gossip.manager.GossipManager;
 
-public class NodeService extends Node {
+public class StorageNode extends Node {
 
     public static final Logger LOGGER = Logger.getLogger(GossipService.class);
 
@@ -29,19 +31,19 @@ public class NodeService extends Node {
     private DatagramSocket _server;
     private int _replica = 2;
 
-    public NodeService clearStorage() {
+    public StorageNode clearStorage() {
         _store.close();
         _store = new PersistentStorage(getId(), true);
         return this;
     }
 
     @JsonIgnore
-    public NodeService setNBackup(int replica) {
+    public StorageNode setNBackup(int replica) {
         _replica = replica;
         return this;
     }
 
-    public NodeService(String id_, String ipAddress, int port, List<GossipMember> gossipMembers)
+    public StorageNode(String id_, String ipAddress, int port, List<GossipMember> gossipMembers)
             throws InterruptedException, UnknownHostException {
         super(id_, ipAddress, port);
 
@@ -64,7 +66,7 @@ public class NodeService extends Node {
     }
 
 
-    public NodeService start() {
+    public StorageNode start() {
         _passiveThread.start();
         _gossipManager.start();
         return this;
@@ -141,7 +143,11 @@ public class NodeService extends Node {
                             _store.update(msg.getData());
                             break;
                         case NOTHING:
-                            //TODO: found two uncomfortable version
+                            BinaryOperator<Long> sum = (a, b) -> a + b;
+                            long thisCounter = thisClock.getVector().values().parallelStream().reduce(sum).get();
+                            long thatCounter = thatClock.getVector().values().parallelStream().reduce(sum).get();
+                            if(thisCounter < thatCounter)
+                                _store.update(msg.getData());
                             break;
                         case AFTER:
                         case EQUAL:
@@ -263,7 +269,7 @@ public class NodeService extends Node {
 //
 //    @Override
 //    public String toString() {
-//        return "NodeService{" +
+//        return "StorageNode{" +
 //                //"_ch=" + _ch +
 //                ", _replica=" + _replica +
 //                //", _store=" + _store +

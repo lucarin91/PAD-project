@@ -1,5 +1,7 @@
 package lr.core;
 
+import lr.core.Nodes.StorageNode;
+
 import java.io.IOException;
 import java.net.UnknownHostException;
 
@@ -11,9 +13,9 @@ public class PadFs {
         CmdArgs s = new CmdArgs();
         Helper.parseArgs(s,args);
 
-        NodeService n = null;
+        StorageNode n = null;
         try {
-            n = new NodeService(s.getId(), s.getIp(), s.getPort(), s.getMembers()).start();
+            n = new StorageNode(s.getId(), s.getIp(), s.getPort(), s.getMembers()).start();
             System.out.print(n);
             while (true) {
             }

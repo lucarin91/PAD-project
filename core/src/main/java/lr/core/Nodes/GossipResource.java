@@ -1,4 +1,4 @@
-package lr.core;
+package lr.core.Nodes;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -20,7 +20,10 @@ import com.google.code.gossip.GossipSettings;
 import com.google.code.gossip.LocalGossipMember;
 import com.google.code.gossip.manager.GossipManager;
 import com.google.code.gossip.manager.random.RandomGossipManager;
+import lr.core.Exception.SendRequestError;
 import lr.core.Messages.Message;
+import lr.core.Messages.MessageRequest;
+import lr.core.Messages.MessageResponse;
 
 /**
  * Created by luca on 01/03/16.
@@ -35,10 +38,15 @@ public class GossipResource extends Node {
     private Random _random;
 
     @JsonIgnore
-    public Node getRandomNode() {
+    public Optional<Node> getRandomNode() {
         List<LocalGossipMember> list = _gossipManager.getMemberList();
-        //TODO: this function have to return only a storage node
-        return new Node(list.get(_random.nextInt(list.size())));
+        if (list.size()>0) {
+            LocalGossipMember member;
+            while ((member = list.get(_random.nextInt(list.size()))).getId().contains(GossipResource.FRONT_ID)) {
+            }
+            return Optional.of(new Node(member));
+        }else
+            return Optional.empty();
     }
 
     @JsonIgnore
@@ -48,7 +56,7 @@ public class GossipResource extends Node {
         return res;
     }
 
-    private GossipResource(String id, String ip, int portG,int portM, List<GossipMember> gossipMembers) {
+    private GossipResource(String id, String ip, int portG, int portM, List<GossipMember> gossipMembers) {
         super(id, ip, portG, portM);
 
         try {
@@ -66,7 +74,7 @@ public class GossipResource extends Node {
 
     @JsonIgnore
     public static GossipResource getInstance(String id, String ip, int port, List<GossipMember> gossipMembers) {
-        return getInstance(id,ip,port,port+1,gossipMembers);
+        return getInstance(id, ip, port, port + 1, gossipMembers);
     }
 
     @JsonIgnore
@@ -103,12 +111,33 @@ public class GossipResource extends Node {
 
             //System.out.println(receivedMessage);
             ObjectMapper mapper = new ObjectMapper().registerModule(new Jdk8Module());
-            return Optional.of(mapper.readValue(receivedMessage, new TypeReference<T>() {}));
+            return Optional.of(mapper.readValue(receivedMessage, new TypeReference<T>() {
+            }));
 
         } catch (IOException e) {
             //e.printStackTrace();
         }
         return Optional.empty();
+    }
+
+    public static MessageResponse<?> sendRequestToRandomNode(MessageRequest<?> req) throws SendRequestError {
+        Optional<GossipResource> opt_r = GossipResource.getInstance();
+        if (opt_r.isPresent()) {
+            GossipResource r = opt_r.get();
+            Optional<Node> opt_n;
+            if ( (opt_n = r.getRandomNode()).isPresent()) {
+                req.setSender(r);
+                opt_n.get().send(req);
+                Optional<MessageResponse<?>> responseOptional = r.<MessageResponse<?>>receive();
+                if (responseOptional.isPresent()) {
+                    return responseOptional.get();
+                }
+                else
+                    throw new SendRequestError("nothing received back");
+            }else
+                throw new SendRequestError("no storage node found");
+        }else
+            throw new SendRequestError("GossipResource is not initialized");
     }
 
     @Override
