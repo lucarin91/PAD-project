@@ -3,6 +3,7 @@ package lr.core;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * Created by luca on 06/03/16.
@@ -31,21 +32,17 @@ public class VectorClock implements Serializable {
 
     public COMP_CLOCK compareTo(VectorClock that) {
         if (this == that) return COMP_CLOCK.EQUAL;
-        Map<String, COMP_CLOCK> res = new HashMap<>();
+
         Set<String> set = new HashSet<>();
         set.addAll(vector.keySet());
         set.addAll(that.vector.keySet());
-        for (String key : set) {
+
+        return set.parallelStream().map(key -> {
             Long v1 = this.vector.getOrDefault(key, (long) 0);
             Long v2 = that.vector.getOrDefault(key, (long) 0);
-            res.put(key, v1 > v2 ? COMP_CLOCK.AFTER : v1 < v2 ? COMP_CLOCK.BEFORE : COMP_CLOCK.EQUAL);
-        }
-
-        return res.values().parallelStream().reduce((c1, c2) -> {
-            if (c1 == c2) return c1;
-            else if (c1 == COMP_CLOCK.EQUAL) return c2;
-            else if (c2 == COMP_CLOCK.EQUAL) return c1;
-            else return COMP_CLOCK.NOTHING;
+            return v1 > v2 ? COMP_CLOCK.AFTER : v1 < v2 ? COMP_CLOCK.BEFORE : COMP_CLOCK.EQUAL;
+        }).reduce((c1, c2) -> {
+            return c1 == c2 ? c1 : c1 == COMP_CLOCK.EQUAL ? c2 : c2 == COMP_CLOCK.EQUAL ? c1 : COMP_CLOCK.NOTHING;
         }).get();
     }
 

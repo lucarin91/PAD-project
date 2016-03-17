@@ -35,8 +35,10 @@ build/
 bin/
 
 #Nodejs
-node_modules
+node_modules/
 *.log
+nwjs_download_cache/
+TMP/
 
-#data
+# storage data
 *.data*

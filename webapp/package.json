@@ -14,7 +14,8 @@
   },
   "single-instance": false,
   "scripts": {
-    "start": "node_modules/nw/bin/nw ."
+    "start": "node_modules/nw/bin/nw .",
+    "pack": "node_modules/.bin/nwbuild -v 0.12.3 -p win32,win64,osx32,osx64,linux32,linux64 -o ../build ."
   },
   "dependencies": {
     "angular": "^1.5.0",
@@ -24,5 +25,8 @@
   },
   "config": {
     "url": "127.0.0.1:8080"
+  },
+  "devDependencies": {
+    "nw-builder": "~2.2.0"
   }
 }

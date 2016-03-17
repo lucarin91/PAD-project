@@ -43,6 +43,14 @@ configure(subprojects.findAll {it.name != 'webapp'}) {
             args System.getProperty("exec.args").split()
         }
     }
+
+
+    task copyJarToBin(type:Copy, dependsOn: [build]) {
+        copy {
+            from "${jar.archivePath}"
+            into "${rootDir}/build"
+        }
+    }
 }
 
 
