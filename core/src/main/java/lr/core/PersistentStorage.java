@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 
 /**
  * Created by luca on 05/03/16.
@@ -20,7 +21,8 @@ public class PersistentStorage {
     private DB _db;
 
     public PersistentStorage(String fileName, boolean clear) {
-        File f = new File("/tmp/" + fileName + ".data");
+        String dir = System.getProperty("java.io.tmpdir");
+        File f = new File(dir +'/'+ fileName + ".data");
 
         if (clear) {
             try {
