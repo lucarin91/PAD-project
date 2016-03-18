@@ -1,1 +1,1 @@
-include ":core", ":app", ":api", ":webapp"
+include ":core", ":app", ":api", ":webapp", ":report"

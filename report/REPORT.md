@@ -1,25 +1,30 @@
-# PAD-project
+% SPM Project: Micro Macro Data Flow
+% Luca Rinaldi
+% 22 February 2016
+
+# Introduction
 The aim of the project is to create weak consistency distributed file-system by the use of gossiping, consistent hashing and vectors clock.
 
 The communication between node exploit the Java socket mechanism in such a way  it can execute in different ways: on a single machine with the use of threads, on a cluster of servers or in virtual containers using docker.
 
 The file-system is implemented as a map with a string key and a number or string value with the following operations:
+
 - **add**(key, value), add only if the key is not present.
 - **get**(key), get the value of the key if present.
 - **update**(key, value), update the key with the new value only if the key already exists.
 - **remove**(key), remove the key if present.
 
-## Logical Structure
+# Logical Structure
 The file-system is composed by two fundamental parts the front-end, that provide the external access to the file-system through a Restful json API, and the storage system its self where the data are stored and manage. The first part doesn't have any information of the data present on the system, it only know the server present in the FS.
 
-![Alt text](./img/pad-logic.png  "Project logical structure")
+![Project logical structure](./img/pad-logic.png)
 
-### Communication system
+## Communication system
 All the internal communication are done with the java `DatagramSocket`, that use the UDP transport packet. All the node either the front end one and the storage one use the gossip protocol to update the list of the server involved in the file-system.
 So each node have two service running on it with two different port one for the gossip protocol and the other to receive messages from the other nodes.
 When a new request arrive to a front node is randomly extract a node from its list and send the request to it and wait for an acknowledgement that the request is correctly served.
 
-### Storage protocol
+## Storage protocol
 All the storage nodes use consistent hashing to assign a key value datum to a given server with the following way strategy:
 - a server is master of all the data with lower or equal hash value.
 - each data is replicated to a fixed number of next server in the consistent hash circle.
@@ -33,18 +38,20 @@ Within the data it is also added a vector clock to keep trace of the update of t
 This vector clock of a datum is used every time two version of it are founded, after some key management. If two unconfrontable version of the data are founded the node server keep the one in with the sum of all the counter is greater, this s a simple heuristic base on the fact that it is more probable that a datum that is updated more times is newer.
 
 
-## Project Structure
+# Project Structure
 The system is structured in the following projects:
+
 - **core**, it represent a single storage node with all the structure and the essential algorithms to work.
 - **api**, this is a single front-end node
 - **app**, it implement a distributed file system with a single API server, where each node run as a thread.
 - **webapp**, this is a nodejs application that graphically show the state of the FS.
 
-![Alt text](./img/webapp.png  "Project logical structure")
+![screen-shoot of the MonitorWebApp ](./img/webapp.png  "Project logical structure")
 
 
-### Core
+## Core
 The main class in the core project are:
+
 - **Messages**, and his children class - MessageManage, MessageRequest<T>, MessageResponse<T>, MessageStatus - they all represent a json message exchanged between the FS nodes.
 - **ConsistentHash**, the implementation of a Consistent hash owned by each storage nodes.
 - **Data<T>**, it represent a generic datum saved inside the system.
@@ -53,12 +60,13 @@ The main class in the core project are:
 - **PersistentStorage**, a wrapper for the MapDB library used to persistently store data on the service node
 -  **VectorClock**, the implementation of the vector clock included in each data
 
-#### Node class
+### Node class
 The node class represent a server of the file-system with the id the ip and the port of either the gossip server and the management service. It also expose a `send(Message msg)` method to send to it a new message with the DatragramSocket.
 
 This class is extended by the NodeService and the GossipResurce witch implement a storage node and a front-end node.
 
 The NodeService can be instantiated with the constructor `NodeService(String id, String ipAddress, int port, List<GossipMember> gossipMembers)` that initialize all the needed structure as:
+
 - `PersistentStorage` class
 - `DatagramSocketServer` with use to receive message from the other node
 - `ConsistentHash` class,
@@ -67,23 +75,25 @@ The NodeService can be instantiated with the constructor `NodeService(String id,
 Each NodeService use two port to work, one for the GossipServcer and the other to wait for messages from the other nodes. If it is not specified the service take two consecutive port.  
 
 
-### Api
+## Api
 The rest api, implemented with the Spring web framework, exposes the two end point `/api` and `/status`. The first is the public entry-point to operate with the file-system. The second is a monitoring tool that get a snapshot of all the node in the file-system including their data structures.
 
 The following operation can be used on the `/api` resources:
+
 - get a key, `method: GET, parameter: key`
 - add a key, `method: POST, body: {"key": "..", "value": ".."}`
 - update a key, `method: PUT, body: {"key": "..", "value": ".."}`
 - delete a key, `method: DEL, parameter: key`
 
 
-## How use it
-### Requirements
+# How use it
+## Requirements
+
 - **java8**
 - nodejs/npm (optional only for the management tools)
 - docker>=10 (optional only for the docker version of the file-system)
 
-### Thread version
+## Thread version
 ```
 ./gradlew app:run
 ```
@@ -93,6 +103,7 @@ if you want also to start also the management tools run
 ```
 
 optional parameters (you can pass it to gradle by `-Dexec.args="<parameters>"`):
+
 - `-N <number>` number of servers to start
 - `-n <number>` number of seeds servers
 - `-gport <number>` the port number used by the gossip protocol
@@ -103,7 +114,7 @@ example:
 ./gradlew webapp:run app:run -Dexec.args="-N 10 -n 2 -gport 3000 -mport 2000"
 ```
 
-### Single server
+## Single server
 to start a storage server run
 ```
 ./gradlew core:run
@@ -114,6 +125,7 @@ to start a front server run
 ```
 
 optional parameters (you can pass it to gradle by `-Dexec.args="<parameters>"`):
+
 - `-id <string>` the port of the server
 - `-ip <string>` the ip of the server
 - `-p <number>` the port of the server (two successive port are used)
@@ -125,7 +137,7 @@ example:
 ./gradlew core:run -Dexec.args="-h server1:192.0.0.5:2000 -m server2:192.0.0.2 -m server3:192.0.0.3"
 ```
 
-### Docker version
+## Docker version
 to build the docker image of the front node and the storage node run
 ```
 ./gradlew core:build core:docker api:build api:docker
@@ -153,28 +165,3 @@ now you can also start the management app with:
 ```
 ./gradlew webapp:run
 ```
-
-## References
-
-**Java library**:
-- edwardcapriolo/gossip (https://github.com/edwardcapriolo/gossip)
-- MapDB (http://www.mapdb.org/)
-- FasterXML/jackson (https://github.com/FasterXML/jackson)
-- JUnit (http://junit.org/)
-- Spring (https://spring.io/)
-- JCommander(http://jcommander.org/)
-
-**nodejs and javascript library**:
-- Angularjs (https://angularjs.org/)
-- Bootstrap (http://getbootstrap.com/)
-- jquery (https://jquery.com/)
-- nwjs (http://nwjs.io/)
-
-**build tools**:
-- Gradle (https://gradle.org/)
-- gradle-docker (https://github.com/Transmode/gradle-docker)
-- npm (https://www.npmjs.com/)
-- nwjs-shell-builder (https://github.com/Gisto/nwjs-shell-builder)
-
-**docker images**:
-- java (https://hub.docker.com/_/java/)
