@@ -4,7 +4,7 @@
 ### Requirements
 - **java8**
 - nodejs/npm (optional only for the management tools)
-- docker>=10 (optional only for the docker version of the fiilesystem)
+- docker>=10 (optional only for the docker version of the file-system)
 
 First of all download the last version of the project with github
 ```
