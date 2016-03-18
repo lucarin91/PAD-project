@@ -1,11 +1,11 @@
-% SPM Project: Micro Macro Data Flow
+% PAD Project: Distributed File System
 % Luca Rinaldi
-% 22 February 2016
+% 18 March 2016
 
 # Introduction
-The aim of the project is to create weak consistency distributed file-system by the use of gossiping, consistent hashing and vectors clock.
+The aim of the project is to create weak consistency distributed file-system by the use of gossiping, consistent hashing and vector clocks.
 
-The communication between node exploit the Java socket mechanism in such a way  it can execute in different ways: on a single machine with the use of threads, on a cluster of servers or in virtual containers using docker.
+The communication between node exploit the Java socket mechanism in such the project can be execute in different ways: on a single machine with the use of threads, on a cluster of servers or in virtual containers using *docker*.
 
 The file-system is implemented as a map with a string key and a number or string value with the following operations:
 
@@ -15,68 +15,71 @@ The file-system is implemented as a map with a string key and a number or string
 - **remove**(key), remove the key if present.
 
 # Logical Structure
-The file-system is composed by two fundamental parts the front-end, that provide the external access to the file-system through a Restful json API, and the storage system its self where the data are stored and manage. The first part doesn't have any information of the data present on the system, it only know the server present in the FS.
-
 ![Project logical structure](./img/pad-logic.png)
 
+The file-system is composed by two fundamental parts the front-end, that provide the external access to the file-system through a Restful json API, and the storage system its self where the data are stored and manage. The first part doesn't have any information of the data present on the system, it only know the server present in the down part.
+
 ## Communication system
-All the internal communication are done with the java `DatagramSocket`, that use the UDP transport packet. All the node either the front end one and the storage one use the gossip protocol to update the list of the server involved in the file-system.
-So each node have two service running on it with two different port one for the gossip protocol and the other to receive messages from the other nodes.
-When a new request arrive to a front node is randomly extract a node from its list and send the request to it and wait for an acknowledgement that the request is correctly served.
+All the internal communication are done with the UDP transport protocol, to avoid the overhead of the TCP and by assuming a good network between nodes.
+
+All the node either the front end one and the storage one use the gossip protocol to update the list of the server involved in the file-system.
+So that each node have two service running on different ports, one for the gossip protocol and the other to receive messages from the other nodes.
+
+When a new request arrive to a front node it is randomly send to storage node from its list and than the node wait 5 seconds for an acknowledgement that the request is correctly served, otherwise it assume that something goes wrong.
 
 ## Storage protocol
-All the storage nodes use consistent hashing to assign a key value datum to a given server with the following way strategy:
-- a server is master of all the data with lower or equal hash value.
+All the storage nodes use consistent hashing to assign a key datum to a given server with the following strategy:
+- a server is master for all the data with lower or equal hash value.
 - each data is replicated to a fixed number of next server in the consistent hash circle.
 
-The system use a single master storage protocol without consensus, so the data are write or read without wait for an acknowledgement the server that have the backup version of the data.
+The system use a single master storage protocol without consensus, so the data are write or read without wait for an acknowledgement from the backup's servers.
 
-Each time a new server arrive it immediately became master for the key with a grater hash and a backup server for the keys owned by the previous servers. So after the neighbors discover this new server, they either send the keys that it have to manage and also the key that it have to backup for a previous server.
+Each time a new server arrive it immediately became master for the key with a lower hash and a backup server for the keys owned by the previous servers. So after the neighbors discover the new server, they either send the keys that it have to manage or the key that it have to keep for backup.
 
-Within the data it is also added a vector clock to keep trace of the update of the datum. The vector clock is implemented with a map with as key the server iid and as value a long counter, where all serves no present in the map are consider 0. Each time a server update a datum as a master it increment the counter with its id inside the object.
+Within the data it is also added a vector clock to keep trace of the update of the datum. The vector clock is implemented as map where the key are the server ids and the values a counter, where all serves no present in the map are consider 0. Then each time a server update a datum as a master it increment the counter with its id inside the object.
 
-This vector clock of a datum is used every time two version of it are founded, after some key management. If two unconfrontable version of the data are founded the node server keep the one in with the sum of all the counter is greater, this s a simple heuristic base on the fact that it is more probable that a datum that is updated more times is newer.
+This vector clock of a datum is used every time two version of it are founded, after some key management. If two unconfrontable version of the data are founded the node server keep the one in which the sum of all the counter is greater, this is a simple heuristic base on the fact that it is more probable that a datum that was updated more times it cam be the newer.
 
 
 # Project Structure
 The system is structured in the following projects:
 
-- **core**, it represent a single storage node with all the structure and the essential algorithms to work.
-- **api**, this is a single front-end node
-- **app**, it implement a distributed file system with a single API server, where each node run as a thread.
-- **webapp**, this is a nodejs application that graphically show the state of the FS.
+- **core**, it is a single storage node with all the structure and the essential algorithms to work.
+- **api**, it is a single front-end node
+- **app**, it implement a distributed file system with a single API server, where each node run on threads.
+- **webapp**, this is a nodejs application that graphically show the state of the file-system.
 
 ![screen-shoot of the MonitorWebApp ](./img/webapp.png  "Project logical structure")
-
 
 ## Core
 The main class in the core project are:
 
-- **Messages**, and his children class - MessageManage, MessageRequest<T>, MessageResponse<T>, MessageStatus - they all represent a json message exchanged between the FS nodes.
-- **ConsistentHash**, the implementation of a Consistent hash owned by each storage nodes.
+- **Messages**, and his children class - MessageManage, MessageRequest<T>, MessageResponse<T>, MessageStatus - they all represent a json message exchanged between the file-system nodes.
+- **ConsistentHash<T>**, the implementation of a Consistent hash owned by each storage nodes.
 - **Data<T>**, it represent a generic datum saved inside the system.
 - **Node**, a generic server node of the system either a front-end or a backend server.
-- **NodeService**, it is a storage node object.
+- **StorageNode**, it is a storage node object.
+- **GossipResurce**, it is the resources use by the front-end to exploit the gossip protocol.
 - **PersistentStorage**, a wrapper for the MapDB library used to persistently store data on the service node
 -  **VectorClock**, the implementation of the vector clock included in each data
 
 ### Node class
-The node class represent a server of the file-system with the id the ip and the port of either the gossip server and the management service. It also expose a `send(Message msg)` method to send to it a new message with the DatragramSocket.
+The node class represent a server of the file-system with the id the ip and the port of either the gossip server and the management service. It also expose a `send(Message msg)` method to send to it a new message with the `DatragramSocket`.
 
-This class is extended by the NodeService and the GossipResurce witch implement a storage node and a front-end node.
+This class is extended by the `StorageNode` and the `GossipResurce` which implement a storage node and a front-end node.
 
-The NodeService can be instantiated with the constructor `NodeService(String id, String ipAddress, int port, List<GossipMember> gossipMembers)` that initialize all the needed structure as:
+The `StorageNode` can be instantiated with the constructor `NodeService(String id, String ipAddress, int port, List<GossipMember> gossipMembers)` that initialize all the needed structure such as:
 
 - `PersistentStorage` class
 - `DatagramSocketServer` with use to receive message from the other node
 - `ConsistentHash` class,
-- `GossipService` to mantein the CH structured
+- `GossipService` to maintain the consistent hash structure
 
-Each NodeService use two port to work, one for the GossipServcer and the other to wait for messages from the other nodes. If it is not specified the service take two consecutive port.  
+It have the have a thread that continually check for new message from the other nodes, and for each one it distinguish two general case: if it is a request from another node (either a front-end node or a request pass from another StorageNode) or if it is a `MessageManage` that indicate some manage operation send send by the master of a key.
 
 
 ## Api
-The rest api, implemented with the Spring web framework, exposes the two end point `/api` and `/status`. The first is the public entry-point to operate with the file-system. The second is a monitoring tool that get a snapshot of all the node in the file-system including their data structures.
+The Restful API, implemented with the Spring web framework, exposes the two end point `/api` and `/status`. The first is the public entry-point to operate with the file-system. The second is a monitoring tool that get a snapshot of all the node in the file-system with their data structures.
 
 The following operation can be used on the `/api` resources:
 
@@ -85,24 +88,32 @@ The following operation can be used on the `/api` resources:
 - update a key, `method: PUT, body: {"key": "..", "value": ".."}`
 - delete a key, `method: DEL, parameter: key`
 
+Each of the previous operations return a json object with the `status` field that can be either `ok` or `error` and the `data` field with optional return data.
 
-# How use it
-## Requirements
+# How to use
+
+It's possible to use the distributed file-system in the thread version for a single machine, the multi server for a cluster of machine or using the docker container either in a single machine or in cluster.
+
+The simplest way to use the file-system is to download the last release and run it with the only requirement of Java8. In this way the application can be used either in the thread version with the `app-<version>.jar` or in the cluster version with the storage node `core-<version>.jar` and the front node `api-<version>.jar`.
+In the release is also possible to find the the MonitorWebApp for Linux, MacOS or Windows.
+
+### Requirements
 
 - **java8**
-- nodejs/npm (optional only for the management tools)
+- nodejs/npm (optional only for the MonitorWebApp)
 - docker>=10 (optional only for the docker version of the file-system)
 
-## Thread version
-```
-./gradlew app:run
-```
-if you want also to start also the management tools run
-```
-./graadlew webapp:run app:run
-```
 
-optional parameters (you can pass it to gradle by `-Dexec.args="<parameters>"`):
+## Thread version
+It can be build with:
+```
+./gradlew app:build
+```
+and run with:
+```
+java -jar app-<version>.jar
+```
+Optional parameters:
 
 - `-N <number>` number of servers to start
 - `-n <number>` number of seeds servers
@@ -111,20 +122,26 @@ optional parameters (you can pass it to gradle by `-Dexec.args="<parameters>"`):
 
 example:
 ```
-./gradlew webapp:run app:run -Dexec.args="-N 10 -n 2 -gport 3000 -mport 2000"
+java -jar -N 10 -n 2 -gport 3000 -mport 2000"
 ```
 
 ## Single server
-to start a storage server run
+It can be build with:
 ```
-./gradlew core:run
-```
-to start a front server run
-```
-./gradlew api:run
+./gradlew core:build api:build
 ```
 
-optional parameters (you can pass it to gradle by `-Dexec.args="<parameters>"`):
+To start a storage node run:
+```
+./java -jar core-<version>.jar
+```
+
+To start a front server run:
+```
+./java -jar api-<version>.jar
+```
+
+optional parameters:
 
 - `-id <string>` the port of the server
 - `-ip <string>` the ip of the server
@@ -134,7 +151,7 @@ optional parameters (you can pass it to gradle by `-Dexec.args="<parameters>"`):
 
 example:
 ```
-./gradlew core:run -Dexec.args="-h server1:192.0.0.5:2000 -m server2:192.0.0.2 -m server3:192.0.0.3"
+./java -jar core-<version>.jar -h server1:192.0.0.5:2000 -m server2:192.0.0.2 -m server3:192.0.0.3
 ```
 
 ## Docker version
@@ -161,7 +178,9 @@ and a front end node with
 ```
 docker run -d -p 8080:8080 --net fs-net --ip 172.18.0.20 pad-fs/api:0.1 -h rest:172.18.0.20:2000 -m server2:172.18.0.2:2000
 ```
-now you can also start the management app with:
+
+## MonitorWebApp
+The webapp can be used with one of the release version for the different OS or run with the nodejs interpreter with the following command:
 ```
 ./gradlew webapp:run
 ```
