@@ -92,9 +92,20 @@ public class GossipResource extends Node {
         try {
             byte[] buf = new byte[_server.getReceiveBufferSize()];
 
-            _server.receive(new DatagramPacket(buf, buf.length));
+            DatagramPacket p = new DatagramPacket(buf, buf.length);
+            _server.receive(p);
 
-            String receivedMessage = new String(buf);
+            int packet_length = 0;
+            for (int i = 0; i < 4; i++) {
+                int shift = (4 - 1 - i) * 8;
+                packet_length += (buf[i] & 0x000000FF) << shift;
+            }
+
+            // TODO: check the data packet size
+
+            byte[] json_bytes = new byte[packet_length];
+            System.arraycopy(buf, 4, json_bytes, 0, packet_length);
+            String receivedMessage = new String(json_bytes);
 
             ObjectMapper mapper = new ObjectMapper().registerModule(new Jdk8Module());
             return Optional.of(mapper.readValue(receivedMessage, new TypeReference<T>() {

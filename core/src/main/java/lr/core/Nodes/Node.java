@@ -42,7 +42,7 @@ public class Node {
         this.id = id;
         this.ip = ip;
         this.portG = port;
-        this.portM = port+1;
+        this.portM = port + 1;
     }
 
 
@@ -84,20 +84,35 @@ public class Node {
             InetAddress dest = InetAddress.getByName(ip);
 
             byte[] json_bytes = new ObjectMapper().registerModule(new Jdk8Module()).writeValueAsBytes(msg);
+            int packet_length = json_bytes.length;
 
-            if (json_bytes.length > 1000){
-                throw new SendException("json message too long");
-            }
+            //TODO check packet size
+
+            // Convert the packet length to the byte representation of the int.
+            byte[] length_bytes = new byte[4];
+            length_bytes[0] = (byte) (packet_length >> 24);
+            length_bytes[1] = (byte) ((packet_length << 8) >> 24);
+            length_bytes[2] = (byte) ((packet_length << 16) >> 24);
+            length_bytes[3] = (byte) ((packet_length << 24) >> 24);
+
+            ByteBuffer byteBuffer = ByteBuffer.allocate(4 + json_bytes.length);
+            byteBuffer.put(length_bytes);
+            byteBuffer.put(json_bytes);
+            byte[] buf = byteBuffer.array();
 
             DatagramSocket socket = new DatagramSocket();
-            socket.send(new DatagramPacket(json_bytes, json_bytes.length, dest, portM));
+            DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, dest, portM);
+            socket.send(datagramPacket);
             socket.close();
         } catch (IOException e) {
             throw new SendException(e.getMessage());
         }
     }
 
-    public void shutdown() {};
+    public void shutdown() {
+    }
+
+    ;
 
     @Override
     public boolean equals(Object o) {
