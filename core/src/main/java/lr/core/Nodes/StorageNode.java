@@ -137,29 +137,38 @@ public class StorageNode extends Node {
                 _store.add(msg.getData());
                 break;
 
-            case UP:
-                VectorClock thatClock = msg.getData().getVersion();
-                _store.get(msg.getData().getKey()).ifPresent(thisData -> {
+            case UPDATE:
+                _store.update(msg.getData());
+                break;
+
+            case DELETE:
+                _store.remove(msg.getKey());
+                break;
+
+            case ADDorUPDATE:
+                Data<?> thatData = msg.getData();
+                VectorClock thatClock = thatData.getVersion();
+                Optional<Data<?>> optData = _store.get(msg.getData().getKey());
+                if (optData.isPresent()) {
+                    Data<?> thisData = optData.get();
                     VectorClock thisClock = thisData.getVersion();
                     switch (thisClock.compareTo(thatClock)) {
                         case BEFORE:
                             _store.update(msg.getData());
                             break;
                         case NOTHING:
-                            BinaryOperator<Long> sum = (a, b) -> a + b;
-                            long thisCounter = thisClock.getVector().values().parallelStream().reduce(sum).get();
-                            long thatCounter = thatClock.getVector().values().parallelStream().reduce(sum).get();
-                            if (thisCounter < thatCounter)
-                                _store.update(msg.getData());
+                            Set<Data<?>> set = new HashSet<>();
+                            set.add(thisData);
+                            set.add(thatData);
+                            Data<?> conflictData = new Data<>(set);
+                            _store.update(conflictData);
                             break;
                         case AFTER:
                         case EQUAL:
+                            break;
                     }
-                });
-                break;
-
-            case DEL:
-                _store.remove(msg.getKey());
+                } else
+                    _store.add(msg.getData());
                 break;
         }
     }
@@ -190,25 +199,35 @@ public class StorageNode extends Node {
                         sender.send(new MessageResponse<>(this, MessageResponse.MSG_STATUS.ERROR, MessageResponse.KEY_ALREADY));
                     break;
 
-                case DEL:
+                case DELETE:
                     if (_store.remove(msg.getKey())) {
-                        sendBackup(new MessageManage(this, MSG_OPERATION.DEL, msg.getKey()));
+                        sendBackup(new MessageManage(this, MSG_OPERATION.DELETE, msg.getKey()));
                         sender.send(new MessageResponse<>(this, MessageResponse.MSG_STATUS.OK));
                     } else {
                         sender.send(new MessageResponse<>(this, MessageResponse.MSG_STATUS.ERROR, MessageResponse.KEY_NOT_FOUND));
                     }
                     break;
 
-                case UP:
-                    Optional<Data<?>> data2 = _store.get(msg.getKey());
-                    if (data2.isPresent()) {
+                case UPDATE:
+                    Optional<Data<?>> optData = _store.get(msg.getKey());
+                    if (optData.isPresent()) {
+                        Data<?> d = optData.get();
+                        VectorClock v;
+                        if (d.isConflict()) {
+                            v = new VectorClock();
+                            for (Data<?> item : d.getConflictData()) {
+                                v.update(item.getVersion());
+                            }
+                        } else
+                            v = d.getVersion().increment(getId());
+
                         Data dataUp = new Data<>(msg.getKey(),
                                 _ch.doHash(msg.getKey()),
-                                msg.getValue(),
-                                data2.get().getVersion().increment(getId()));
+                                msg.getValue(), v);
                         _store.update(dataUp);
-                        sendBackup(new MessageManage(this, MSG_OPERATION.UP, dataUp));
+                        sendBackup(new MessageManage(this, MSG_OPERATION.UPDATE, dataUp));
                         sender.send(new MessageResponse<>(this, MessageResponse.MSG_STATUS.OK));
+
                     } else
                         sender.send(new MessageResponse<>(this, MessageResponse.MSG_STATUS.ERROR, MessageResponse.KEY_NOT_FOUND));
                     break;
@@ -220,14 +239,15 @@ public class StorageNode extends Node {
 
 
     private void sendBackup(MessageManage msg) {
-        List<Node> list = _ch.getNext(toString(), _replica);
+        //TODO: not enough
+        List<Node> list = _ch.getNext(msg.getData().getKey(), _replica);
         System.out.println("send propagate to.." + list);
-        for (Node n : list) {
+        list.parallelStream().filter(node -> !node.equals(this)).forEach(node -> {
             try {
-                n.send(msg);
+                node.send(msg);
             } catch (SendException ignore) {
             }
-        }
+        });
     }
 
     public void shutdown() {
@@ -245,34 +265,43 @@ public class StorageNode extends Node {
     }
 
     private void callback(GossipMember member, GossipState state) {
-        //System.out.println(member + " " + state);
+        //System.out.println(getId() + ". new member " + member + " with state " + state);
         if (!_toStop.get()) {
             if (!member.getId().contains(GossipResource.FRONT_ID)) {
                 Node n = new Node(member);
                 if (state.equals(GossipState.UP)) {
-                    String info = getId() + ". NEW MEMBER [" + n + "] up ...";
+                    String info = getId() + ". NEW MEMBER [" + n + "] up ... ";
                     _ch.add(n);
-                    List<Node> next = _ch.getNext(toString(), _replica);
-                    if (next.stream().anyMatch(node -> node.equals(n))) {
-                        System.out.println(info + "SEND backup data [" + next + "]");
-                        _store.getMap().forEach((s, data) -> {
-                            try {
-                                n.send(new MessageManage(this, MSG_OPERATION.ADD, data));
-                            } catch (SendException ignore) {
-                            }
-                        });
+
+                    if (_ch.getPrev(toString()).equals(n)) {
+                        //TODO: prev of which replica?
+                        _store.getMap().entrySet().parallelStream()
+                                .filter(dataEntry -> _ch.get(dataEntry.getValue().getKey()).equals(n) /*&& _ch.getNext(dataEntry.getValue().getKey()).equals(this)*/)
+                                .forEach(dataEntry -> {
+                                    System.out.println(info + "SEND his data " + dataEntry.getValue());
+                                    try {
+                                        n.send(new MessageManage(this, MSG_OPERATION.ADDorUPDATE, dataEntry.getValue()));
+                                    } catch (SendException ignore) {
+                                    }
+                                });
+                    } else {
+                        List<Node> next = _ch.getNext(toString(), _replica);
+                        //TODO: next of which replica?
+                        if (next.stream().anyMatch(node -> node.equals(n))) {
+                            _store.getMap().entrySet().parallelStream()
+                                    .filter(entry -> _ch.get(entry.getValue().getKey()).equals(this))
+                                    .forEach(dataEntry -> {
+                                        System.out.println(info + "SEND backup " + dataEntry.getValue());
+                                        try {
+                                            n.send(new MessageManage(this, MSG_OPERATION.ADDorUPDATE, dataEntry.getValue()));
+                                        } catch (SendException ignore) {
+                                        }
+                                    });
+                        }
                     }
 
-                    List<Long> hashList = _ch.getHashesForKey(n.toString());
-                    _store.getMap().entrySet().parallelStream()
-                            .filter(dataEntry -> hashList.stream().anyMatch(hash -> _ch.doHash(dataEntry.getValue().getKey()) < hash))
-                            .forEach(dataEntry -> {
-                                System.out.println(info + "SEND his data: " + dataEntry.getKey() + "-" + dataEntry.getValue());
-                                try {
-                                    n.send(new MessageManage(this, MSG_OPERATION.ADD, dataEntry.getValue()));
-                                } catch (SendException ignore) {
-                                }
-                            });
+                    //List<Long> hashList = _ch.getHashesForKey(n.toString());
+
                 } else
                     _ch.remove(n);
             }

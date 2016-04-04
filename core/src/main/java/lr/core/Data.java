@@ -1,7 +1,11 @@
 package lr.core;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by luca on 28/02/16.
@@ -11,6 +15,7 @@ public class Data<T> implements Serializable {
     private String key;
     private Long hash;
     private T value;
+    private Set<Data<?>> conflictData;
     private VectorClock version;
 
     public Data(String key, Long hash, T value) {
@@ -18,23 +23,29 @@ public class Data<T> implements Serializable {
     }
 
     public Data(String key, Long hash, T value, VectorClock clock) {
-        this.key = key;
+        this(key, value);
         this.hash = hash;
-        this.value = value;
         this.version = clock;
     }
 
     public Data(String key) {
+        this();
         this.key = key;
     }
 
 
     public Data(String key, T value) {
-        this.key = key;
+        this(key);
         this.value = value;
     }
 
+    public Data(Set<Data<?>> set){
+        this(set.iterator().next().getKey());
+        setConflictData(set);
+    }
+
     public Data() {
+        this.conflictData = new HashSet<>();
     }
 
     public VectorClock getVersion() {
@@ -47,6 +58,27 @@ public class Data<T> implements Serializable {
 
     public void setKey(String key) {
         this.key = key;
+    }
+
+    @JsonProperty("conflict")
+    public boolean isConflict(){
+        return conflictData.size()>0;
+    }
+
+    @JsonIgnore
+    public void setConflict(boolean ignored) {
+    }
+
+    public Set<Data<?>> getConflictData() {
+        return conflictData;
+    }
+
+    public void setConflictData(Set<Data<?>> conflictData) {
+        conflictData.stream().filter(Data::isConflict).forEach(d1 -> {
+            conflictData.addAll(d1.getConflictData());
+            d1.setConflictData(new HashSet<>());
+        });
+        this.conflictData = conflictData;
     }
 
     @Override

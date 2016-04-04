@@ -35,12 +35,12 @@ public class PublicAPI {
 
     @RequestMapping(method = RequestMethod.DELETE)
     public MessageResponse<?> del(@RequestParam(value = "key") String key) {
-        return sendRequest(new MessageRequest<>(MSG_OPERATION.DEL, key));
+        return sendRequest(new MessageRequest<>(MSG_OPERATION.DELETE, key));
     }
 
     @RequestMapping(method = RequestMethod.PUT)
     public MessageResponse<?> update(@RequestBody Data data) {
-       return sendRequest(new MessageRequest<>(MSG_OPERATION.UP, data.getKey(), data.getValue()));
+       return sendRequest(new MessageRequest<>(MSG_OPERATION.UPDATE, data.getKey(), data.getValue()));
     }
 }
 

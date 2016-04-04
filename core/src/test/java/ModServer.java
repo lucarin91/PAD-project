@@ -58,7 +58,7 @@ public class ModServer {
             Thread.sleep(5000);
 
             try {
-                MessageResponse<?> msg = GossipResource.sendRequestToRandomNode(new MessageRequest<>(r, Message.MSG_OPERATION.DEL, "hkjasdjkhdsahjkasdsad"));
+                MessageResponse<?> msg = GossipResource.sendRequestToRandomNode(new MessageRequest<>(r, Message.MSG_OPERATION.DELETE, "hkjasdjkhdsahjkasdsad"));
                 Assert.assertEquals(MessageResponse.MSG_STATUS.OK, msg.getStatus());
             } catch (SendException e) {
                 e.printStackTrace();

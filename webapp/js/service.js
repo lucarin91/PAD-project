@@ -12,15 +12,16 @@
                     return $http.put(CONST.URL + '/api', {key: key, value: value})
                 },
                 status: function (callback) {
-                    var me = this
+                    var me = this;
                     $http.get(CONST.URL + '/status').success(function (data) {
+                        console.log(data);
                         var check = {};
                         for (var i = 0; i < data.length; i++) {
                             check[data[i].id] = {};
                             for (var j = 0; j < data.length; j++) {
                                 check[data[i].id][data[j].id] = true;
                                 for (var k = 0; k < data[i].ch.length; k++) {
-                                    if (data[i].ch.hash != data[j].ch.hash && data[i].ch.id != data[j].ch.id)
+                                    if (data[i].ch.hash != data[j].ch.hash || data[i].ch.id != data[j].ch.id)
                                         check[data[i].id][data[j].id] = false;
                                 }
                             }
@@ -39,8 +40,8 @@
             return {
                 getSVGch: function (newData, real) {
                     if (newData) {
-                        var step = (2 * Math.PI) / (real ? CONST.MAX_HASH : newData.length)
-                        var res = []
+                        var step = (2 * Math.PI) / (real ? CONST.MAX_HASH : newData.length);
+                        var res = [];
                         for (var i = 0; i < newData.length; i++) {
                             var hash = real ? newData[i].hash + CONST.MAX_HASH / 2 : i;
                             res.push({
@@ -59,9 +60,9 @@
                 },
                 getStore: function (data) {
                     var me = this;
-                    var res = {}
+                    var res = {};
                     angular.forEach(data, function (item) {
-                        console.log(item.store)
+                        console.log(item.store);
                         res[item.id] = {
                             color: me.heatMapColorforValue(item.store.length > CONST.MAX_STORE ?
                                 1 : item.store.length / CONST.MAX_STORE),
@@ -71,25 +72,28 @@
                     return res;
                 },
                 heatMapColorforValue: function (value) {
-                    var h = (1.0 - value) * 220
+                    var h = (1.0 - value) * 220;
                     return "hsl(" + h + ", 100%, 50%)";
                 },
                 redGreenValue: function (value){
-                    var red = Math.round(255 - (150 * value))
-                    var green = Math.round(200 * value)
-                    var blue = 0
+                    var red = Math.round(255 - (150 * value));
+                    var green = Math.round(200 * value);
+                    var blue = 0;
                     return "rgb("+red+','+green+','+blue+')'
                 },
                 getCheckValue: function(check){
+                    console.log(check)
                     var r = 0;
                     var N = 0;
                     for(var i in check){
-                        var row = check[i]
+                        var row = check[i];
                         for (var j in row){
                             r += check[i][j] ? 1 : 0;
                             N++;
                         }
                     }
+                    console.log(r);
+                    console.log(N);
                     //for (var i=0; i<check.key.length; i++){
                     //    for (var j=0; j<check[0].key.length; j++){
                     //        r = check[i][j] ? 1 : 0;

@@ -10,7 +10,8 @@
                     $scope.ch = DATA.getSVGch(data[0].ch, true);
 
                     $scope.store = DATA.getStore(data);
-                    if ($scope.select) $scope.select.store = $scope.store[$scope.select.id].list
+                    if ($scope.select && $scope.store[$scope.select.id])
+                        $scope.select.store = $scope.store[$scope.select.id].list
                     $scope.loading = false;
                 })
             }

@@ -42,8 +42,7 @@ public class GossipResource extends Node {
         List<LocalGossipMember> list = _gossipManager.getMemberList();
         if (list.size() > 0) {
             LocalGossipMember member;
-            while ((member = list.get(_random.nextInt(list.size()))).getId().contains(GossipResource.FRONT_ID)) {
-            }
+            while ((member = list.get(_random.nextInt(list.size()))).getId().contains(GossipResource.FRONT_ID));
             return Optional.of(new Node(member));
         } else
             return Optional.empty();

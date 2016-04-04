@@ -115,7 +115,7 @@
 %%      - Added option to control line spacing of notes.
 %%      - Added options to control the size of margins.
 %%      - Changed names of temporary macros used in redefinitions
-%%        to avoid conflicts with existing names.
+%%        to avoid conflictData with existing names.
 %%  v1.0: 1998/09/29 (Francois Pitt)
 %%      - Initial version.
 %%  

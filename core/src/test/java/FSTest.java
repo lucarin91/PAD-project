@@ -36,11 +36,11 @@ public class FSTest {
     }
 
     public MessageResponse<?> rm(String key) {
-        return sendRequest(new MessageRequest<>(Message.MSG_OPERATION.DEL, key));
+        return sendRequest(new MessageRequest<>(Message.MSG_OPERATION.DELETE, key));
     }
 
     public MessageResponse<?> up(String key, String value) {
-        return sendRequest(new MessageRequest<>(Message.MSG_OPERATION.UP, key, value));
+        return sendRequest(new MessageRequest<>(Message.MSG_OPERATION.UPDATE, key, value));
     }
 
     @Test

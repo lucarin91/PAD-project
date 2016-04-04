@@ -45,7 +45,7 @@ public class StatusAPI {
             return null;
     }
 
-    class ChNodeChildren {
+    private class ChNodeChildren {
         private Long hash;
         private String id;
 
@@ -74,7 +74,7 @@ public class StatusAPI {
         }
     }
 
-    class StatusObj {
+    private class StatusObj {
         private String id;
         private String ip;
         private List<Data<?>> store;

@@ -7,21 +7,6 @@ package lr.core.Messages;
 import lr.core.Data;
 import lr.core.Nodes.Node;
 
-/***
- * Type of message:
- * <p>
- * GET
- * {"type": "GET", "sender_type": FRONT|BACK, "key": ..., "hash": ... }
- * <p>
- * ADD
- * {"type": "ADD", "sender_type": FRONT|BACK, "key": ..., "hash": ..., "data": ....}
- * UP
- * {"type": "UP", "sender_type": FRONT|BACK, "key": ..., "hash": ..., "data": ....}
- * <p>
- * DEL
- * {"type": "DEL", "sender_type": FRONT|BACK, "key": ...., "hash": ... }
- */
-
 public class MessageManage extends Message{
     private MSG_OPERATION operation;
     private String key;
@@ -33,6 +18,7 @@ public class MessageManage extends Message{
         super(sender);
         this.operation = operation;
         this.data = data;
+        this.key = data.getKey();
     }
 
     public MessageManage(Node sender, MSG_OPERATION operation, String key) {
@@ -68,7 +54,9 @@ public class MessageManage extends Message{
     @Override
     public String toString() {
         return "MessageManage{" +
-                "data=" + data +
+                "operation=" + operation +
+                ", key='" + key + '\'' +
+                ", data=" + data +
                 "} " + super.toString();
     }
 }

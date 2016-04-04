@@ -49,6 +49,7 @@ public class App {
                 String read = br.readLine();
                 if (read != null) {
                     String[] cmd = read.split("\\s+");
+                    StorageNode n;
                     switch (cmd[0]) {
                         case "h":
                             System.out.println("COMMANDS:\n" +
@@ -63,19 +64,22 @@ public class App {
                         case "add":
                             int id = cmd.length == 1 ? ++lastServerID : Integer.parseInt(cmd[1]);
                             try {
-                                StorageNode n = new StorageNode("" + id, "127.0.0." + id, 2000, startupMembers)
+                                n = new StorageNode("" + id, "127.0.0." + id, 2000, startupMembers)
                                         .setNBackup(1)
                                         .start();
                                 clients.put("" + id, n);
-                                System.out.println(n);
+                                System.out.println("add server " + n);
+                                System.out.println(clients);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
                             break;
                         case "rm":
                             if (cmd.length > 1) {
-                                clients.get(cmd[1]).shutdown();
+                                n = clients.get(cmd[1]);
                                 clients.remove(cmd[1]);
+                                n.shutdown();
+                                System.out.println("remove server " + n);
                                 System.out.println(clients);
                             } else {
                                 System.out.println("not founded");

@@ -18,9 +18,9 @@
         <span class="glyphicon glyphicon-info-sign" ng-attr-style="{{'color:'+chCheckColor}}"></span>
         <span>CH status ({{chCheck*100}}%)</span>
     </div>
-    <div class="graphic">
-        <svg ng-mouseenter="overSvgIn()"
-             ng-mouseleave="overSvgOut()">
+    <div ng-mouseenter="overSvgIn()"
+         ng-mouseleave="overSvgOut()" class="graphic">
+        <svg>
             <node ng-mouseenter="overNodeIn(n)"
                   ng-mouseleave="overNodeOut(n)"
                   ng-repeat="n in ch"

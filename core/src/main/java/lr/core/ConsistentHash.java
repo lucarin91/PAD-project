@@ -29,9 +29,7 @@ public class ConsistentHash<T> {
 
     public ConsistentHash(Collection<T> list, int replication) {
         this(replication);
-        for (T item : list) {
-            add(item);
-        }
+        list.forEach(this::add);
     }
 
     public ConsistentHash(Collection<T> list) {
@@ -62,21 +60,20 @@ public class ConsistentHash<T> {
     synchronized public T get(String key) {
         long hash = _hash.apply(key);
         Long res = _map.ceilingKey(hash);
-        if (res != null) {
-            T n = _map.get(res);
-            return n;
-        } else {
+        if (res != null) return _map.get(res);
+        else {
             return _map.firstEntry().getValue();
         }
     }
 
     synchronized public List<T> getNext(String key, int n) {
+        //TODO: fix this method...
         List<T> list = new ArrayList<>();
-        if (n > (_map.size()/_replication) -1 ) return list;
+        if (n > (_map.size() / _replication) - 1 ) return list;
         List<Long> hashs = getHashesForKey(key);
         long hash = hashs.get(0);
         int i=0;
-        while (i<n) {
+        while (i < n) {
             Map.Entry<Long, T> entry = _map.ceilingEntry(hash);
             if (entry == null) entry = _map.firstEntry();
             if (!hashs.contains(entry.getKey()) && !list.contains(entry.getValue())) {
@@ -85,7 +82,7 @@ public class ConsistentHash<T> {
             }
             hash = entry.getKey()+1;
         }
-        System.out.println("getNext "+list);
+        //System.out.println("getNext "+list);
         return list;
     }
 
@@ -111,7 +108,7 @@ public class ConsistentHash<T> {
             }
             hash = entry.getKey()-1;
         }
-        System.out.println("getPrev "+list);
+        //System.out.println("getPrev "+list);
         return list;
     }
 

@@ -33,8 +33,7 @@ import lr.core.Nodes.Node;
         @JsonSubTypes.Type(value = MessageResponse.class, name = "msg_response"),
         @JsonSubTypes.Type(value = MessageStatus.class, name = "msg_status")})
 public class Message {
-    //public enum MSG_TYPE {MANAGEMENT, STATUS}
-    public enum MSG_OPERATION {ADD, DEL, UP, GET, STATUS}
+    public enum MSG_OPERATION {ADD, DELETE, UPDATE, GET, ADDorUPDATE, STATUS}
 
     private Node sender;
     public Message() { }
