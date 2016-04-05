@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.BinaryOperator;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -239,12 +238,11 @@ public class StorageNode extends Node {
 
 
     private void sendBackup(MessageManage msg) {
-        //TODO: not enough
-        List<Node> list = _ch.getNext(msg.getData().getKey(), _replica);
+        List<Map.Entry<Long,Node>> list = _ch.getNext(msg.getData().getKey(), _replica + 1);
         System.out.println("send propagate to.." + list);
-        list.parallelStream().filter(node -> !node.equals(this)).forEach(node -> {
+        list.parallelStream().filter(node -> !node.equals(this)).forEach(entry -> {
             try {
-                node.send(msg);
+                entry.getValue().send(msg);
             } catch (SendException ignore) {
             }
         });
@@ -273,34 +271,91 @@ public class StorageNode extends Node {
                     String info = getId() + ". NEW MEMBER [" + n + "] up ... ";
                     _ch.add(n);
 
-                    if (_ch.getPrev(toString()).equals(n)) {
-                        //TODO: prev of which replica?
-                        _store.getMap().entrySet().parallelStream()
-                                .filter(dataEntry -> _ch.get(dataEntry.getValue().getKey()).equals(n) /*&& _ch.getNext(dataEntry.getValue().getKey()).equals(this)*/)
-                                .forEach(dataEntry -> {
-                                    System.out.println(info + "SEND his data " + dataEntry.getValue());
-                                    try {
-                                        n.send(new MessageManage(this, MSG_OPERATION.ADDorUPDATE, dataEntry.getValue()));
-                                    } catch (SendException ignore) {
-                                    }
-                                });
-                    } else {
-                        List<Node> next = _ch.getNext(toString(), _replica);
-                        //TODO: next of which replica?
-                        if (next.stream().anyMatch(node -> node.equals(n))) {
-                            _store.getMap().entrySet().parallelStream()
-                                    .filter(entry -> _ch.get(entry.getValue().getKey()).equals(this))
-                                    .forEach(dataEntry -> {
-                                        System.out.println(info + "SEND backup " + dataEntry.getValue());
-                                        try {
-                                            n.send(new MessageManage(this, MSG_OPERATION.ADDorUPDATE, dataEntry.getValue()));
-                                        } catch (SendException ignore) {
-                                        }
-                                    });
-                        }
-                    }
+                    _ch.getReplicaForKey(toString()).parallelStream().forEach(repHash -> {
 
-                    //List<Long> hashList = _ch.getHashesForKey(n.toString());
+                        //check if new node is prev of replica
+                        ArrayList<Map.Entry<Long, Node>> preEntry = _ch.getPrev(repHash, 2);
+                        Set<Data<?>> dataSet = new HashSet<>();
+
+                        if (preEntry.get(0).getValue().equals(n)) {
+                            dataSet.addAll(_store.getInterval(preEntry.get(1).getKey(), preEntry.get(0).getKey()));
+                            System.out.println(info + "SEND his data " + dataSet);
+                        } else {
+
+                            ArrayList<Map.Entry<Long, Node>> nextMap = _ch.getNext(repHash, _replica);
+
+                            if (nextMap.stream().anyMatch(entry -> entry.getValue().equals(n))){
+                                dataSet.addAll(_store.getInterval(_ch.getPrev(repHash).getKey(), repHash));
+                                System.out.println(info + "SEND backup data " + dataSet);
+                            }
+                        }
+
+                        dataSet.parallelStream().forEach(data -> {
+                            try {
+                                n.send(new MessageManage(this, MSG_OPERATION.ADDorUPDATE, data));
+                            } catch (SendException ignore) {
+                            }
+
+                        });
+
+                    });
+
+
+//                    TreeSet<Long> nodeHash = new TreeSet<>();
+//                    for (Map.Entry<Long, Node> item : _ch.getPrev(toString()).entrySet()){
+//                        if (item.getValue().equals(n)){
+//                            nodeHash.add(item.getKey());
+//                        }
+//                    }
+//                    if (nodeHash.size() != 0){
+//                        TreeSet<Long> myHashes = new TreeSet<>(_ch.getReplicaForKey(toString()));
+//                        Set<Data<?>> dataSet = _store.getInterval(myHashes, nodeHash);
+//                        for (Data<?> data : dataSet){
+//                            System.out.println(info + "SEND his data " + data);
+//                            try {
+//                                n.send(new MessageManage(this, MSG_OPERATION.ADDorUPDATE, data));
+//                            } catch (SendException ignore) {
+//                            }
+//                        }
+//                    }
+//
+//
+//                    //check if is next node
+//                    TreeSet<Long> nextHash = new TreeSet<>();
+//                    for (Map.Entry<Long, Node> item : _ch.getNext(toString(), _replica).entrySet()){
+//                        if (item.getValue().equals(n)){
+//                            nextHash.add(item.getKey());
+//                        }
+//                    }
+
+//                    if (_ch.getPrev(toString()).equals(n)) {
+//                        //TODO: prev of which replica?
+//                        _store.getMap().entrySet().parallelStream()
+//                                .filter(dataEntry -> _ch.get(dataEntry.getValue().getKey()).equals(n) /*&& _ch.getNext(dataEntry.getValue().getKey()).equals(this)*/)
+//                                .forEach(dataEntry -> {
+//                                    System.out.println(info + "SEND his data " + dataEntry.getValue());
+//                                    try {
+//                                        n.send(new MessageManage(this, MSG_OPERATION.ADDorUPDATE, dataEntry.getValue()));
+//                                    } catch (SendException ignore) {
+//                                    }
+//                                });
+//                    } else {
+//                        List<Node> next = _ch.getNext(toString(), _replica);
+//                        //TODO: next of which replica?
+//                        if (next.stream().anyMatch(node -> node.equals(n))) {
+//                            _store.getMap().entrySet().parallelStream()
+//                                    .filter(entry -> _ch.get(entry.getValue().getKey()).equals(this))
+//                                    .forEach(dataEntry -> {
+//                                        System.out.println(info + "SEND backup " + dataEntry.getValue());
+//                                        try {
+//                                            n.send(new MessageManage(this, MSG_OPERATION.ADDorUPDATE, dataEntry.getValue()));
+//                                        } catch (SendException ignore) {
+//                                        }
+//                                    });
+//                        }
+//                    }
+
+                    //List<Long> hashList = _ch.getReplicaForKey(n.toString());
 
                 } else
                     _ch.remove(n);

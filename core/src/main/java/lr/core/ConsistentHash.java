@@ -1,7 +1,6 @@
 package lr.core;
 
 import java.util.*;
-import java.util.function.Function;
 
 /**
  * Created by luca on 24/02/16.
@@ -10,7 +9,7 @@ import java.util.function.Function;
 public class ConsistentHash<T> {
     private TreeMap<Long, T> _map;
     private int _replication;
-    private Function<String,Long> _hash;
+    private Helper.IHash _hash;
     private final static int default_replication = 3;
 
     public ConsistentHash() {
@@ -21,7 +20,7 @@ public class ConsistentHash<T> {
         this(replication, Helper::MD5ToLong);
     }
 
-    public ConsistentHash(int replication, Function<String,Long> f) {
+    public ConsistentHash(int replication, Helper.IHash f) {
         _replication = replication;
         _map = new TreeMap<>();
         _hash = f;
@@ -39,26 +38,26 @@ public class ConsistentHash<T> {
     synchronized public boolean add(T node) {
         boolean insert = true;
 
-        getHashesForKey(node.toString()).forEach(aLong -> _map.put(aLong,node));
+        getReplicaForKey(node.toString()).forEach(aLong -> _map.put(aLong, node));
 
         return true;
     }
 
-    public Long doHash(String key){
-        return _hash.apply(key);
+    public Long doHash(String key) {
+        return _hash.hash(key);
     }
 
-    synchronized public TreeMap<Long,T> getMap() {
-    //    System.out.println("MAP " + _map);
+    synchronized public TreeMap<Long, T> getMap() {
+        //    System.out.println("MAP " + _map);
         return _map;
     }
 
     synchronized public void remove(T node) {
-        getHashesForKey(node.toString()).forEach(aLong -> _map.remove(aLong));
+        getReplicaForKey(node.toString()).forEach(aLong -> _map.remove(aLong));
     }
 
     synchronized public T get(String key) {
-        long hash = _hash.apply(key);
+        long hash = _hash.hash(key);
         Long res = _map.ceilingKey(hash);
         if (res != null) return _map.get(res);
         else {
@@ -66,59 +65,81 @@ public class ConsistentHash<T> {
         }
     }
 
-    synchronized public List<T> getNext(String key, int n) {
-        //TODO: fix this method...
-        List<T> list = new ArrayList<>();
-        if (n > (_map.size() / _replication) - 1 ) return list;
-        List<Long> hashs = getHashesForKey(key);
-        long hash = hashs.get(0);
-        int i=0;
-        while (i < n) {
-            Map.Entry<Long, T> entry = _map.ceilingEntry(hash);
-            if (entry == null) entry = _map.firstEntry();
-            if (!hashs.contains(entry.getKey()) && !list.contains(entry.getValue())) {
-                list.add(entry.getValue());
-                i++;
-            }
-            hash = entry.getKey()+1;
-        }
-        //System.out.println("getNext "+list);
-        return list;
+    synchronized public ArrayList<Map.Entry<Long, T>> getNext(String key, int n) {
+        long hash = _hash.hash(key);
+        return getNext(hash, n);
     }
 
-    public List<Long> getHashesForKey (String key){
+    synchronized public ArrayList<Map.Entry<Long, T>> getNext(long hash, int n) {
+        ArrayList<Map.Entry<Long, T>> res = new ArrayList<>();
+        int index = 0;
+        NavigableMap<Long, T> orderMap = _map.tailMap(hash, false);
+        for (int num = 0; num < 2 && index < n; num++) {
+
+            for (Map.Entry<Long, T> item : orderMap.entrySet()) {
+                if (!res.contains(item)) {
+                    res.add(item);
+                    index++;
+                }
+                if (index == n) break;
+            }
+            orderMap = _map.headMap(hash, false);
+        }
+
+        System.out.println("getNext " + res);
+
+        return res;
+    }
+
+    public List<Long> getReplicaForKey(String key) {
         List<Long> hashes = new ArrayList<>();
-        for (int i=0; i<_replication; i++){
-            hashes.add(_hash.apply(_hash.apply(Math.pow(3,i)+"") + key + _hash.apply(Math.pow(2,i)+"")));
+        for (int i = 0; i < _replication; i++) {
+            hashes.add(_hash.hash(_hash.hash(Math.pow(3, i) + "") + key + _hash.hash(Math.pow(2, i) + "")));
         }
         return hashes;
     }
 
-    synchronized public List<T> getPrev(String key, int n) {
-        List<T> list = new ArrayList<>();
-        List<Long> hashes = getHashesForKey(key);
-        long hash = hashes.get(0);
-        int i=0;
-        while (i < n) {
-            Map.Entry<Long, T> entry = _map.floorEntry(hash);
-            if (entry == null) entry = _map.lastEntry();
-            if (!hashes.contains(entry.getKey()) && !list.contains(entry.getValue())) {
-                list.add(entry.getValue());
-                i++;
+    synchronized public ArrayList<Map.Entry<Long, T>> getPrev(String key, int n) {
+        long hash = _hash.hash(key);
+        return getNext(hash, n);
+    }
+
+    synchronized public ArrayList<Map.Entry<Long, T>> getPrev(long hash, int n) {
+        ArrayList<Map.Entry<Long, T>> res = new ArrayList<>();
+
+        int index = 0;
+        NavigableMap<Long, T> orderMap = _map.headMap(hash, false);
+        for (int num = 0; num < 2 && index < n; num++) {
+
+            for (Map.Entry<Long, T> item : orderMap.descendingMap().entrySet()) {
+                if (!res.contains(item)) {
+                    res.add(item);
+                    index++;
+                }
+                if (index == n) break;
             }
-            hash = entry.getKey()-1;
+            orderMap = _map.tailMap(hash, false);
         }
-        //System.out.println("getPrev "+list);
-        return list;
+
+        System.out.println("getPrev " + res);
+
+        return res;
     }
 
-    public T getPrev(String key){
-        return getPrev(key,1).get(0);
+    public Map.Entry<Long, T> getPrev(String key) {
+        return getPrev(key, 1).get(0);
     }
 
+    public Map.Entry<Long, T> getPrev(long hash) {
+        return getPrev(hash, 1).get(0);
+    }
 
-    public T getNext(String key){
-        return getNext(key,1).get(0);
+    public Map.Entry<Long, T> getNext(String key) {
+        return getNext(key, 1).get(0);
+    }
+
+    public Map.Entry<Long, T> getNext(long hash) {
+        return getNext(hash, 1).get(0);
     }
 
     @Override

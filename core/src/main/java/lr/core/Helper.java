@@ -57,4 +57,8 @@ public class Helper {
             System.exit(-1);
         }
     }
+
+    public interface IHash {
+        long hash(String key);
+    }
 }
