@@ -1,5 +1,8 @@
-import com.google.code.gossip.GossipMember;
-import com.google.code.gossip.RemoteGossipMember;
+//import com.google.code.gossip.GossipMember;
+//import com.google.code.gossip.RemoteGossipMember;
+import lr.gossip.GossipMember;
+import lr.gossip.RemoteGossipMember;
+
 import lr.core.*;
 import lr.core.Exception.SendException;
 import lr.core.Messages.Message;

@@ -1,7 +1,10 @@
 package lr.app;
 
-import com.google.code.gossip.GossipMember;
-import com.google.code.gossip.RemoteGossipMember;
+//import com.google.code.gossip.GossipMember;
+//import com.google.code.gossip.RemoteGossipMember;
+import lr.gossip.GossipMember;
+import lr.gossip.RemoteGossipMember;
+
 import lr.core.Nodes.GossipResource;
 import lr.api.FrontAPI;
 import lr.core.Helper;
@@ -16,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
+import org.apache.log4j.net.SyslogAppender;
 
 /**
  * Created by luca on 24/02/16.
@@ -24,7 +28,7 @@ import org.apache.log4j.Logger;
 public class App {
     public static void main(String[] args) throws IOException {
         final Logger LOG = Logger.getLogger(App.class);
-        LOG.debug("TEST!!!!");
+
         CmdArgsApp s = new CmdArgsApp();
         Helper.parseArgs(s, args);
 
@@ -87,6 +91,9 @@ public class App {
                             } else {
                                 System.out.println("not founded");
                             }
+                            break;
+                        case "ls":
+                                clients.forEach((s1, storageNode) -> System.out.println(storageNode));
                             break;
                     }
                 }

@@ -3,9 +3,6 @@ package lr.app;
 import com.beust.jcommander.Parameter;
 import lr.core.CmdArgs;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Created by luca on 11/03/16.
  */

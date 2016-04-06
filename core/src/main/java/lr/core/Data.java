@@ -73,12 +73,25 @@ public class Data<T> implements Serializable {
         return conflictData;
     }
 
-    public void setConflictData(Set<Data<?>> conflictData) {
-        conflictData.stream().filter(Data::isConflict).forEach(d1 -> {
-            conflictData.addAll(d1.getConflictData());
-            d1.setConflictData(new HashSet<>());
-        });
-        this.conflictData = conflictData;
+    public void setConflictData(Set<Data<?>> conflict) {
+//        conflict.stream().filter(Data::isConflict).forEach(d1 -> {
+//            this.conflictData.addAll(d1.getConflictData());
+//            d1.setConflictData(new HashSet<>());
+//        });
+        this.conflictData = conflict;
+    }
+
+    public boolean addConflict(Data<?> data){
+        if (!data.getKey().equals(getKey())) return false;
+        if (data.isConflict()){
+            conflictData.addAll(data.getConflictData());
+        }else{
+            conflictData.add(data);
+        }
+        version = null;
+        value = null;
+        hash = null;
+        return true;
     }
 
     @Override

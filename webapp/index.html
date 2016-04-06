@@ -67,8 +67,23 @@
             <tr ng-repeat="item in select.store">
                 <td>{{item.key}}</td>
                 <td>{{item.hash}}</td>
-                <td><input ng-model="item.value"/></td>
-                <td><span ng-repeat="(node, v) in item.version.vector"><b>{{node}}</b>:{{v}} </span></td>
+                <td>
+                    <!--<table ng-show="item.conflict">-->
+                        <!--<tr ng-repeat="con in item.conflictData">-->
+                            <!--<td>{{con.value}}</td>-->
+                        <!--</tr>-->
+                    <!--</table>-->
+                    <input ng-hide="item.conflict" type="text" class="form-control" ng-model="item.value"/>
+
+                    <select ng-show="item.conflict" class="form-control" ng-model="item.value">
+                        <option ng-repeat="con in item.conflictData">{{con.value}}</option>
+                    </select>
+
+                </td>
+                <td>
+                    <span ng-hide="item.conflict" ng-repeat="(node, v) in item.version.vector"><b>{{node}}</b>:{{v}} </span>
+                    <span ng-show="item.conflict">conflict</span>
+                </td>
                 <td>
                     <button ng-click="removeData(item.key, item.value)" ng-class="{'disabled': loading}" type="button" class="btn btn-default btn-lg">
                         <span class="glyphicon glyphicon-remove-sign" aria-hidden="true"></span>

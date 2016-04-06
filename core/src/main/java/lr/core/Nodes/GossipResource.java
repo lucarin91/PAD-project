@@ -4,7 +4,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.google.code.gossip.GossipMember;
+
+//import com.google.code.gossip.GossipMember;
+//import com.google.code.gossip.GossipSettings;
+//import com.google.code.gossip.LocalGossipMember;
+//import com.google.code.gossip.manager.GossipManager;
+//import com.google.code.gossip.manager.random.RandomGossipManager;
+import lr.gossip.*;
+import lr.gossip.manager.GossipManager;
+import lr.gossip.manager.random.RandomGossipManager;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -16,14 +24,12 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-import com.google.code.gossip.GossipSettings;
-import com.google.code.gossip.LocalGossipMember;
-import com.google.code.gossip.manager.GossipManager;
-import com.google.code.gossip.manager.random.RandomGossipManager;
+
 import lr.core.Exception.SendException;
 import lr.core.Messages.Message;
 import lr.core.Messages.MessageRequest;
 import lr.core.Messages.MessageResponse;
+import org.apache.log4j.Logger;
 
 /**
  * Created by luca on 01/03/16.
@@ -31,6 +37,7 @@ import lr.core.Messages.MessageResponse;
 public class GossipResource extends Node {
     public final static String FRONT_ID = "[REST-FRONT]";
 
+    private Logger LOG;
     private static GossipResource _r;
     @JsonIgnore
     private GossipManager _gossipManager;
@@ -58,15 +65,17 @@ public class GossipResource extends Node {
     private GossipResource(String id, String ip, int portG, int portM, List<GossipMember> gossipMembers) {
         super(id, ip, portG, portM);
 
+        LOG = Logger.getLogger(GossipResource.class);
+
         try {
             _server = new DatagramSocket(new InetSocketAddress(ip, portM));
-            _server.setSoTimeout(5000);
+            _server.setSoTimeout(1000);
         } catch (SocketException ex) {
             ex.printStackTrace();
             //throw new RuntimeException(ex);
         }
 
-        _gossipManager = new RandomGossipManager(ip, portG, FRONT_ID + " " + id, new GossipSettings(), gossipMembers, null);
+        _gossipManager = new RandomGossipManager(ip, portG, FRONT_ID + " " + id, new GossipSettings(), gossipMembers, (member, state) -> LOG.info(member + " "+ state));
         _gossipManager.start();
         _random = new Random();
     }

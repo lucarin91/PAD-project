@@ -2,7 +2,10 @@ package lr.core.Nodes;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.google.code.gossip.GossipMember;
+
+//import com.google.code.gossip.GossipMember;
+import lr.gossip.GossipMember;
+
 import lr.core.Exception.SendException;
 import lr.core.Messages.Message;
 
