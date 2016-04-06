@@ -52,5 +52,5 @@ configure(subprojects.findAll {it.name != 'webapp' && it.name != 'report'}) {
 
 task cleanStorage(type: Exec) {
     executable "sh"
-    args "-c", "rm /tmp/*.data*"
+    args "-c", "rm -f /tmp/*.data*"
 }
