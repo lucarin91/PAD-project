@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.log4j.Logger;
 
 /**
  * Created by luca on 24/02/16.
@@ -22,6 +23,8 @@ import java.util.Map;
 
 public class App {
     public static void main(String[] args) throws IOException {
+        final Logger LOG = Logger.getLogger(App.class);
+        LOG.debug("TEST!!!!");
         CmdArgsApp s = new CmdArgsApp();
         Helper.parseArgs(s, args);
 

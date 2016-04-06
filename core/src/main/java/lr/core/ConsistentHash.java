@@ -1,5 +1,6 @@
 package lr.core;
 
+import org.apache.log4j.Logger;
 import java.util.*;
 
 /**
@@ -7,6 +8,8 @@ import java.util.*;
  */
 
 public class ConsistentHash<T> {
+    private static final Logger LOG = Logger.getLogger(ConsistentHash.class);
+
     private TreeMap<Long, T> _map;
     private int _replication;
     private Helper.IHash _hash;
@@ -60,9 +63,8 @@ public class ConsistentHash<T> {
         long hash = _hash.hash(key);
         Long res = _map.ceilingKey(hash);
         if (res != null) return _map.get(res);
-        else {
+        else
             return _map.firstEntry().getValue();
-        }
     }
 
     synchronized public ArrayList<Map.Entry<Long, T>> getNext(String key, int n) {
@@ -72,13 +74,15 @@ public class ConsistentHash<T> {
 
     synchronized public ArrayList<Map.Entry<Long, T>> getNext(long hash, int n) {
         ArrayList<Map.Entry<Long, T>> res = new ArrayList<>();
+        Set<T> check = new HashSet<>();
         int index = 0;
         NavigableMap<Long, T> orderMap = _map.tailMap(hash, false);
         for (int num = 0; num < 2 && index < n; num++) {
 
             for (Map.Entry<Long, T> item : orderMap.entrySet()) {
-                if (!res.contains(item)) {
+                if (!check.contains(item.getValue())) {
                     res.add(item);
+                    check.add(item.getValue());
                     index++;
                 }
                 if (index == n) break;
@@ -86,34 +90,35 @@ public class ConsistentHash<T> {
             orderMap = _map.headMap(hash, false);
         }
 
-        System.out.println("getNext " + res);
-
+        LOG.debug("getNext " + res);
         return res;
     }
 
     public List<Long> getReplicaForKey(String key) {
         List<Long> hashes = new ArrayList<>();
         for (int i = 0; i < _replication; i++) {
-            hashes.add(_hash.hash(_hash.hash(Math.pow(3, i) + "") + key + _hash.hash(Math.pow(2, i) + "")));
+            hashes.add(_hash.hash(key + i));
         }
         return hashes;
     }
 
     synchronized public ArrayList<Map.Entry<Long, T>> getPrev(String key, int n) {
         long hash = _hash.hash(key);
-        return getNext(hash, n);
+        return getPrev(hash, n);
     }
 
     synchronized public ArrayList<Map.Entry<Long, T>> getPrev(long hash, int n) {
         ArrayList<Map.Entry<Long, T>> res = new ArrayList<>();
+        Set<T> check = new HashSet<>();
 
         int index = 0;
         NavigableMap<Long, T> orderMap = _map.headMap(hash, false);
         for (int num = 0; num < 2 && index < n; num++) {
 
             for (Map.Entry<Long, T> item : orderMap.descendingMap().entrySet()) {
-                if (!res.contains(item)) {
+                if (!check.contains(item.getValue())) {
                     res.add(item);
+                    check.add(item.getValue());
                     index++;
                 }
                 if (index == n) break;
@@ -121,8 +126,7 @@ public class ConsistentHash<T> {
             orderMap = _map.tailMap(hash, false);
         }
 
-        System.out.println("getPrev " + res);
-
+        LOG.debug("getPrev " + res);
         return res;
     }
 

@@ -18,10 +18,11 @@ import lr.core.Messages.Message.*;
 import org.apache.log4j.Logger;
 
 import com.google.code.gossip.manager.GossipManager;
+import org.apache.log4j.spi.LoggerFactory;
 
 public class StorageNode extends Node {
 
-    public static final Logger LOGGER = Logger.getLogger(GossipService.class);
+    private Logger LOG;
 
     private GossipManager _gossipManager;
     private ConsistentHash<Node> _ch;
@@ -46,6 +47,8 @@ public class StorageNode extends Node {
     public StorageNode(String id_, String ipAddress, int port, List<GossipMember> gossipMembers)
             throws InterruptedException, UnknownHostException {
         super(id_, ipAddress, port);
+
+        LOG = Logger.getLogger("StorageNode-"+ id_);
 
         _ch = new ConsistentHash<>();
         gossipMembers.stream().filter(member -> !member.getId().contains(GossipResource.FRONT_ID))
@@ -95,7 +98,7 @@ public class StorageNode extends Node {
                 ObjectMapper mapper = new ObjectMapper().registerModule(new Jdk8Module());
                 Message msg = mapper.readValue(receivedMessage, Message.class);
 
-                System.out.print(id + ".RECEIVE: " + msg);
+                LOG.info("receive.. " + msg);
 
                 if (msg instanceof MessageRequest<?>) {
 
@@ -107,7 +110,7 @@ public class StorageNode extends Node {
                         if (n.getId().equals(getId())) {
                             doOperation(msgR);
                         } else {
-                            System.out.println("pass request..");
+                            LOG.info("pass message..");
                             n.send(msg);
                         }
 
@@ -115,7 +118,6 @@ public class StorageNode extends Node {
                         msgR.getSender().send(new MessageStatus(this, _store.getMap(), _ch.getMap()));
                     }
                 } else if (msg instanceof MessageManage) {
-                    System.out.println("receive management..");
                     MessageManage msgM = (MessageManage) msg;
                     doManageOperation(msgM);
                 }
@@ -130,7 +132,7 @@ public class StorageNode extends Node {
     }
 
     private void doManageOperation(MessageManage msg) {
-        System.out.println("do Management Operation... ");
+        LOG.info("do Management Operation with.. "+ msg.getData());
         switch (msg.getOperation()) {
             case ADD:
                 _store.add(msg.getData());
@@ -173,7 +175,7 @@ public class StorageNode extends Node {
     }
 
     private void doOperation(MessageRequest<?> msg) {
-        System.out.println("do Operation... ");
+        LOG.info("do Operation with.. " + msg.getKey());
         Node sender = msg.getSender();
         try {
             switch (msg.getOperation()) {
@@ -238,8 +240,8 @@ public class StorageNode extends Node {
 
 
     private void sendBackup(MessageManage msg) {
-        List<Map.Entry<Long,Node>> list = _ch.getNext(msg.getData().getKey(), _replica + 1);
-        System.out.println("send propagate to.." + list);
+        List<Map.Entry<Long,Node>> list = _ch.getNext(msg.getKey(), _replica + 1);
+        LOG.info("send backup to.. " + list);
         list.parallelStream().filter(node -> !node.equals(this)).forEach(entry -> {
             try {
                 entry.getValue().send(msg);
@@ -268,7 +270,7 @@ public class StorageNode extends Node {
             if (!member.getId().contains(GossipResource.FRONT_ID)) {
                 Node n = new Node(member);
                 if (state.equals(GossipState.UP)) {
-                    String info = getId() + ". NEW MEMBER [" + n + "] up ... ";
+                    LOG.info("new member [" + n + "] up.. ");
                     _ch.add(n);
 
                     _ch.getReplicaForKey(toString()).parallelStream().forEach(repHash -> {
@@ -279,14 +281,14 @@ public class StorageNode extends Node {
 
                         if (preEntry.get(0).getValue().equals(n)) {
                             dataSet.addAll(_store.getInterval(preEntry.get(1).getKey(), preEntry.get(0).getKey()));
-                            System.out.println(info + "SEND his data " + dataSet);
+                            LOG.info("send his data " + dataSet);
                         } else {
 
                             ArrayList<Map.Entry<Long, Node>> nextMap = _ch.getNext(repHash, _replica);
 
                             if (nextMap.stream().anyMatch(entry -> entry.getValue().equals(n))){
                                 dataSet.addAll(_store.getInterval(_ch.getPrev(repHash).getKey(), repHash));
-                                System.out.println(info + "SEND backup data " + dataSet);
+                                LOG.info("send backup data " + dataSet);
                             }
                         }
 
