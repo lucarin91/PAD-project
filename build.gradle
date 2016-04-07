@@ -8,6 +8,7 @@ configure(subprojects.findAll {it.name != 'webapp' && it.name != 'report'}) {
 
     repositories {
         mavenCentral()
+        maven { url "https://jitpack.io" }
     }
 
     sourceCompatibility = 1.8
@@ -23,7 +24,8 @@ configure(subprojects.findAll {it.name != 'webapp' && it.name != 'report'}) {
         compile 'org.mapdb:mapdb:1.0.8'
         compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.7.2'
         compile 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.7.2'
-        compile 'io.teknek:gossip:0.0.3'
+        //compile 'io.teknek:gossip:0.0.3'
+        compile 'com.github.edwardcapriolo:gossip:master'
     }
 
     task wrapper(type: Wrapper) {
@@ -50,7 +52,7 @@ configure(subprojects.findAll {it.name != 'webapp' && it.name != 'report'}) {
 }
 
 
-task cleanStorage(type: Exec) {
+task delStorage(type: Exec) {
     executable "sh"
     args "-c", "rm -f /tmp/*.data*"
 }

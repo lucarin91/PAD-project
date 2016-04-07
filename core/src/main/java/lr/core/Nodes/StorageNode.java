@@ -9,11 +9,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
-//import com.google.code.gossip.*;
-import lr.gossip.*;
-import lr.gossip.event.GossipState;
-import lr.gossip.manager.random.*;
-import lr.gossip.manager.*;
+import com.google.code.gossip.*;
+import com.google.code.gossip.event.GossipState;
+import com.google.code.gossip.manager.random.*;
+import com.google.code.gossip.manager.*;
+//import lr.gossip.*;
+//import lr.gossip.event.GossipState;
+//import lr.gossip.manager.random.*;
+//import lr.gossip.manager.*;
 
 import lr.core.*;
 import lr.core.Exception.SendException;
@@ -22,8 +25,6 @@ import lr.core.Messages.Message.*;
 
 
 public class StorageNode extends Node {
-
-    private LoggerWrapper LOG;
 
     private GossipManager _gossipManager;
     private ConsistentHash<Node> _ch;
@@ -45,11 +46,9 @@ public class StorageNode extends Node {
         return this;
     }
 
-    public StorageNode(String id_, String ipAddress, int port, List<GossipMember> gossipMembers)
+    public StorageNode(String id, String ipAddress, int port, List<GossipMember> gossipMembers)
             throws InterruptedException, UnknownHostException {
-        super(id_, ipAddress, port);
-
-        LOG = new LoggerWrapper(StorageNode.class, id_);
+        super(id, ipAddress, port);
 
         _ch = new ConsistentHash<>();
         gossipMembers.stream().filter(member -> !member.getId().contains(GossipResource.FRONT_ID))
@@ -60,9 +59,9 @@ public class StorageNode extends Node {
 
         _toStop = new AtomicBoolean(false);
 
-        _gossipManager = new RandomGossipManager(ip, portG, id, new GossipSettings(), gossipMembers, this::callback);
+        _gossipManager = new RandomGossipManager(getIp(), getPortG(), getId(), new GossipSettings(), gossipMembers, this::callback);
         try {
-            _server = new DatagramSocket(new InetSocketAddress(ip, portM));
+            _server = new DatagramSocket(new InetSocketAddress(getIp(), getPortM()));
         } catch (SocketException ex) {
             ex.printStackTrace();
         }
@@ -99,7 +98,7 @@ public class StorageNode extends Node {
                 ObjectMapper mapper = new ObjectMapper().registerModule(new Jdk8Module());
                 Message msg = mapper.readValue(receivedMessage, Message.class);
 
-                LOG.i("receive.. " + msg);
+                logFilter(msg, "receive.. " + msg);
 
                 if (msg instanceof MessageRequest<?>) {
 
@@ -112,11 +111,11 @@ public class StorageNode extends Node {
                             doOperation(msgR);
                         } else {
                             LOG.i("pass message..");
-                            n.send(msg);
+                            send(n, msg);
                         }
 
                     } else {
-                        msgR.getSender().send(new MessageStatus(this, _store.getMap(), _ch.getMap()));
+                        send(msgR.getSender(), new MessageStatus(this, _store.getMap(), _ch.getMap()));
                     }
                 } else if (msg instanceof MessageManage) {
                     MessageManage msgM = (MessageManage) msg;
@@ -127,7 +126,7 @@ public class StorageNode extends Node {
                 _toStop.set(true);
             } catch (IOException e) {
                 e.printStackTrace();
-            } catch (SendException e) {
+            } catch (SendException ignored) {
             }
         }
     }
@@ -135,18 +134,11 @@ public class StorageNode extends Node {
     private void doManageOperation(MessageManage msg) {
         LOG.i("do Management Operation with.. " + msg.getData());
         switch (msg.getOperation()) {
-            case ADD:
-                _store.add(msg.getData());
-                break;
-
-            case UPDATE:
-                _store.update(msg.getData());
-                break;
-
             case DELETE:
                 _store.remove(msg.getKey());
                 break;
-
+            case ADD:
+            case UPDATE:
             case ADDorUPDATE:
                 Data<?> thatData = msg.getData();
                 Optional<Data<?>> optData = _store.get(msg.getData().getKey());
@@ -163,10 +155,10 @@ public class StorageNode extends Node {
                                 _store.update(msg.getData());
                                 break;
                             case NOTHING:
-                                Set<Data<?>> set = new HashSet<>();
-                                set.add(thisData);
-                                set.add(thatData);
-                                Data<?> conflictData = new Data<>(set);
+//                                Set<Data<?>> set = new HashSet<>();
+//                                set.add(thisData);
+//                                set.add(thatData);
+                                Data<?> conflictData = new Data<>(thisData, thatData);
                                 _store.update(conflictData);
                                 break;
                             case AFTER:
@@ -188,9 +180,9 @@ public class StorageNode extends Node {
                 case GET:
                     Optional<Data<?>> data = _store.get(msg.getKey());
                     if (data.isPresent()) {
-                        sender.send(new MessageResponse<>(this, MessageResponse.MSG_STATUS.OK, data.get()));
+                        send(sender, new MessageResponse<>(this, MessageResponse.MSG_STATUS.OK, data.get()));
                     } else {
-                        sender.send(new MessageResponse<>(this, MessageResponse.MSG_STATUS.ERROR, MessageResponse.KEY_NOT_FOUND));
+                        send(sender, new MessageResponse<>(this, MessageResponse.MSG_STATUS.ERROR, MessageResponse.KEY_NOT_FOUND));
                     }
                     break;
 
@@ -200,18 +192,18 @@ public class StorageNode extends Node {
                             msg.getValue(),
                             new VectorClock().increment(getId()));
                     if (_store.add(data1)) {
-                        sender.send(new MessageResponse<>(this, MessageResponse.MSG_STATUS.OK));
-                        sendBackup(new MessageManage(this, MSG_OPERATION.ADD, data1));
+                        send(sender, new MessageResponse<>(this, MessageResponse.MSG_STATUS.OK));
+                        sendBackup(new MessageManage(this, MSG_OPERATION.ADDorUPDATE, data1));
                     } else
-                        sender.send(new MessageResponse<>(this, MessageResponse.MSG_STATUS.ERROR, MessageResponse.KEY_ALREADY));
+                        send(sender, new MessageResponse<>(this, MessageResponse.MSG_STATUS.ERROR, MessageResponse.KEY_ALREADY));
                     break;
 
                 case DELETE:
                     if (_store.remove(msg.getKey())) {
                         sendBackup(new MessageManage(this, MSG_OPERATION.DELETE, msg.getKey()));
-                        sender.send(new MessageResponse<>(this, MessageResponse.MSG_STATUS.OK));
+                        send(sender, new MessageResponse<>(this, MessageResponse.MSG_STATUS.OK));
                     } else {
-                        sender.send(new MessageResponse<>(this, MessageResponse.MSG_STATUS.ERROR, MessageResponse.KEY_NOT_FOUND));
+                        send(sender, new MessageResponse<>(this, MessageResponse.MSG_STATUS.ERROR, MessageResponse.KEY_NOT_FOUND));
                     }
                     break;
 
@@ -232,11 +224,11 @@ public class StorageNode extends Node {
                                 _ch.doHash(msg.getKey()),
                                 msg.getValue(), v);
                         _store.update(dataUp);
-                        sendBackup(new MessageManage(this, MSG_OPERATION.UPDATE, dataUp));
-                        sender.send(new MessageResponse<>(this, MessageResponse.MSG_STATUS.OK));
+                        sendBackup(new MessageManage(this, MSG_OPERATION.ADDorUPDATE, dataUp));
+                        send(sender, new MessageResponse<>(this, MessageResponse.MSG_STATUS.OK));
 
                     } else
-                        sender.send(new MessageResponse<>(this, MessageResponse.MSG_STATUS.ERROR, MessageResponse.KEY_NOT_FOUND));
+                        send(sender, new MessageResponse<>(this, MessageResponse.MSG_STATUS.ERROR, MessageResponse.KEY_NOT_FOUND));
                     break;
             }
         } catch (SendException ignore) {
@@ -248,9 +240,9 @@ public class StorageNode extends Node {
     private void sendBackup(MessageManage msg) {
         List<Map.Entry<Long, Node>> list = _ch.getNext(msg.getKey(), _replica + 1);
         LOG.i("send backup to.. " + list);
-        list.parallelStream().filter(node -> !node.equals(this)).forEach(entry -> {
+        list.parallelStream().filter(node -> !node.getValue().equals(this)).forEach(entry -> {
             try {
-                entry.getValue().send(msg);
+                send(entry.getValue(), msg);
             } catch (SendException ignore) {
             }
         });
@@ -271,12 +263,12 @@ public class StorageNode extends Node {
     }
 
     private void callback(GossipMember member, GossipState state) {
-        //System.out.println(getId() + ". new member " + member + " with state " + state);
         if (!_toStop.get()) {
             if (!member.getId().contains(GossipResource.FRONT_ID)) {
                 Node n = new Node(member);
                 if (state.equals(GossipState.UP)) {
-                    LOG.i("new member [" + member + "] up {live: "+ _gossipManager.getMemberList() +"- death: " + _gossipManager.getDeadList() +  "}");
+                    LOG.i("add node [" + member + "] up");
+                    LOG.d("live members: "+ _gossipManager.getMemberList() +" - death members: " + _gossipManager.getDeadList());
                     _ch.add(n);
 
                     _ch.getReplicaForKey(toString()).parallelStream().forEach(repHash -> {
@@ -300,7 +292,7 @@ public class StorageNode extends Node {
 
                         dataSet.parallelStream().forEach(data -> {
                             try {
-                                n.send(new MessageManage(this, MSG_OPERATION.ADDorUPDATE, data));
+                                send(n, new MessageManage(this, MSG_OPERATION.ADDorUPDATE, data));
                             } catch (SendException ignore) {
                             }
 
@@ -309,7 +301,7 @@ public class StorageNode extends Node {
                     });
 
                 } else {
-                    LOG.i("del member [" + member + "] down.. ");
+                    LOG.i("del node [" + member + "] down.. ");
                     _ch.remove(n);
                 }
             }

@@ -109,37 +109,37 @@ public class PersistentStorage {
 
         return res;
     }
-
-    synchronized public Set<Data<?>> getInterval(TreeSet<Long> hash1, TreeSet<Long> hash2) {
-        Set<Data<?>> res = new HashSet<>();
-
-        Iterator<Long> navHash1 = hash1.descendingIterator();
-        Iterator<Long> navHash2 = hash2.descendingIterator();
-        long h1 = navHash1.next();
-        long h2 = navHash2.next();
-        while (navHash2.hasNext()) {
-            if (!navHash1.hasNext()) {
-                res.addAll(getInterval(hash1.last(), h2));
-                break;
-            }
-            if (h2 > h1) {
-                //get interval
-                res.addAll(getInterval(h1, h2));
-                h1 = navHash1.next();
-                h2 = navHash2.next();
-            } else if (h2 <= h1) {
-                h1 = navHash1.next();
-            }
-        }
-//        if (hash1 < hash2) {
-//            res.addAll(_map.subMap(hash1, false, hash2, true).values());
-//        } else {
-//            res.addAll(_map.tailMap(hash1, false).values());
-//            res.addAll(_map.headMap(hash2, true).values());
+//
+//    synchronized public Set<Data<?>> getInterval(TreeSet<Long> hash1, TreeSet<Long> hash2) {
+//        Set<Data<?>> res = new HashSet<>();
+//
+//        Iterator<Long> navHash1 = hash1.descendingIterator();
+//        Iterator<Long> navHash2 = hash2.descendingIterator();
+//        long h1 = navHash1.next();
+//        long h2 = navHash2.next();
+//        while (navHash2.hasNext()) {
+//            if (!navHash1.hasNext()) {
+//                res.addAll(getInterval(hash1.last(), h2));
+//                break;
+//            }
+//            if (h2 > h1) {
+//                //get interval
+//                res.addAll(getInterval(h1, h2));
+//                h1 = navHash1.next();
+//                h2 = navHash2.next();
+//            } else if (h2 <= h1) {
+//                h1 = navHash1.next();
+//            }
 //        }
-
-        return res;
-    }
+////        if (hash1 < hash2) {
+////            res.addAll(_map.subMap(hash1, false, hash2, true).values());
+////        } else {
+////            res.addAll(_map.tailMap(hash1, false).values());
+////            res.addAll(_map.headMap(hash2, true).values());
+////        }
+//
+//        return res;
+//    }
 
     synchronized public Map<String, Data<?>> getMap() {
         Map<String,Data<?>> res = new HashMap<>();

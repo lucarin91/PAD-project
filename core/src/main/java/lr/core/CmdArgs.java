@@ -2,10 +2,10 @@ package lr.core;
 
 import com.beust.jcommander.Parameter;
 
-//import com.google.code.gossip.GossipMember;
-//import com.google.code.gossip.RemoteGossipMember;
-import lr.gossip.GossipMember;
-import lr.gossip.RemoteGossipMember;
+import com.google.code.gossip.GossipMember;
+import com.google.code.gossip.RemoteGossipMember;
+//import lr.gossip.GossipMember;
+//import lr.gossip.RemoteGossipMember;
 
 
 import java.util.ArrayList;

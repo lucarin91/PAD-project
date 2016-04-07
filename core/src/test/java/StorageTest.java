@@ -1,4 +1,5 @@
 import lr.core.Data;
+import lr.core.Helper;
 import lr.core.PersistentStorage;
 import org.junit.Assert;
 import org.junit.Test;
@@ -13,7 +14,7 @@ public class StorageTest {
     @Test
     public void operations(){
         PersistentStorage s = new PersistentStorage("testSorage", true);
-        Data <?> data1 = new Data<>("test", "prova");
+        Data <?> data1 = new Data<>("test", Helper.MD5ToLong("test"), "prova");
 
         //Test add
         s.add(data1);
@@ -23,7 +24,7 @@ public class StorageTest {
         Assert.assertEquals(data2.get().getValue(), data1.getValue());
 
         //Test Update
-        data1 = new Data<>("test","prova updated!");
+        data1 = new Data<>("test", Helper.MD5ToLong("test"), "prova updated!");
         s.update(data1);
         data2 = s.get("test");
         Assert.assertEquals(data2.isPresent(), true);

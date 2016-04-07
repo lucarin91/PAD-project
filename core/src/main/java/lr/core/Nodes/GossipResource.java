@@ -5,14 +5,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
-//import com.google.code.gossip.GossipMember;
-//import com.google.code.gossip.GossipSettings;
-//import com.google.code.gossip.LocalGossipMember;
-//import com.google.code.gossip.manager.GossipManager;
-//import com.google.code.gossip.manager.random.RandomGossipManager;
-import lr.gossip.*;
-import lr.gossip.manager.GossipManager;
-import lr.gossip.manager.random.RandomGossipManager;
+import com.google.code.gossip.*;
+import com.google.code.gossip.manager.GossipManager;
+import com.google.code.gossip.manager.random.RandomGossipManager;
+//import lr.gossip.*;
+//import lr.gossip.manager.GossipManager;
+//import lr.gossip.manager.random.RandomGossipManager;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -29,7 +27,6 @@ import lr.core.Exception.SendException;
 import lr.core.Messages.Message;
 import lr.core.Messages.MessageRequest;
 import lr.core.Messages.MessageResponse;
-import org.apache.log4j.Logger;
 
 /**
  * Created by luca on 01/03/16.
@@ -37,7 +34,6 @@ import org.apache.log4j.Logger;
 public class GossipResource extends Node {
     public final static String FRONT_ID = "[REST-FRONT]";
 
-    private Logger LOG;
     private static GossipResource _r;
     @JsonIgnore
     private GossipManager _gossipManager;
@@ -55,27 +51,31 @@ public class GossipResource extends Node {
             return Optional.empty();
     }
 
-    @JsonIgnore
-    public List<Node> getNodes() {
+    public int sendToNodes(MessageRequest msg) {
         List<LocalGossipMember> list = _gossipManager.getMemberList();
-        List<Node> res = list.stream().map(Node::new).collect(Collectors.toList());
-        return res;
+        int N = 0;
+        for (LocalGossipMember n : list) {
+            try {
+                send(new Node(n), msg);
+                N++;
+            } catch (SendException e) {
+                e.printStackTrace();
+            }
+        }
+        return N;
     }
 
     private GossipResource(String id, String ip, int portG, int portM, List<GossipMember> gossipMembers) {
         super(id, ip, portG, portM);
 
-        LOG = Logger.getLogger(GossipResource.class);
-
         try {
             _server = new DatagramSocket(new InetSocketAddress(ip, portM));
             _server.setSoTimeout(1000);
-        } catch (SocketException ex) {
-            ex.printStackTrace();
-            //throw new RuntimeException(ex);
+        } catch (SocketException e) {
+            e.printStackTrace();
         }
 
-        _gossipManager = new RandomGossipManager(ip, portG, FRONT_ID + " " + id, new GossipSettings(), gossipMembers, (member, state) -> LOG.info(member + " "+ state));
+        _gossipManager = new RandomGossipManager(ip, portG, FRONT_ID + " " + id, new GossipSettings(), gossipMembers, (member, state) -> LOG.i(member + " "+ state));
         _gossipManager.start();
         _random = new Random();
     }
@@ -119,8 +119,7 @@ public class GossipResource extends Node {
             return Optional.of(mapper.readValue(receivedMessage, new TypeReference<T>() {
             }));
 
-        } catch (IOException e) {
-            //e.printStackTrace();
+        } catch (IOException ignored) {
         }
         return Optional.empty();
     }
@@ -132,7 +131,7 @@ public class GossipResource extends Node {
             Optional<Node> opt_n;
             if ((opt_n = r.getRandomNode()).isPresent()) {
                 req.setSender(r);
-                opt_n.get().send(req);
+                r.send(opt_n.get(), req);
                 Optional<MessageResponse<?>> responseOptional = r.<MessageResponse<?>>receive();
                 if (responseOptional.isPresent()) {
                     return responseOptional.get();

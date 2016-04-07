@@ -1,7 +1,7 @@
 package lr.api;
 
-//import com.google.code.gossip.GossipMember;
-import lr.gossip.GossipMember;
+import com.google.code.gossip.GossipMember;
+//import lr.gossip.GossipMember;
 
 import lr.core.CmdArgs;
 import lr.core.Nodes.GossipResource;

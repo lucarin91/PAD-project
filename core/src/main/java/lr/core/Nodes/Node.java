@@ -3,11 +3,15 @@ package lr.core.Nodes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
-//import com.google.code.gossip.GossipMember;
-import lr.gossip.GossipMember;
+import com.google.code.gossip.GossipMember;
+//import lr.gossip.GossipMember;
 
 import lr.core.Exception.SendException;
+import lr.core.LoggerWrapper;
 import lr.core.Messages.Message;
+import lr.core.Messages.MessageRequest;
+import lr.core.Messages.MessageStatus;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -19,36 +23,38 @@ import java.nio.ByteBuffer;
  * Created by luca on 29/02/16.
  */
 public class Node {
-    protected String id;
-    protected String ip;
-    protected int portG;
-    protected int portM;
+    protected LoggerWrapper LOG;
+    private String id;
+    private String ip;
+    private int portG;
+    private int portM;
 
     public Node() {
     }
 
     public Node(GossipMember m) {
-        this.id = m.getId();
-        this.ip = m.getHost();
-        this.portG = m.getPort();
-        this.portM = m.getPort() + 1;
+        this(m.getId(), m.getHost(), m.getPort());
+    }
+
+    public Node(String id, String ip, int port) {
+        this(id, ip, port, port + 1);
     }
 
     public Node(String id, String ip, int portG, int portM) {
+        this.LOG = new LoggerWrapper(Node.class, id + "@" + ip + "@" + portG + "@" + portM);
         this.id = id;
         this.ip = ip;
         this.portG = portG;
         this.portM = portM;
     }
 
-    public Node(String id, String ip, int port) {
-        this.id = id;
-        this.ip = ip;
-        this.portG = port;
-        this.portM = port + 1;
+    protected void logFilter (Message msg, String logMsg){
+        if ((msg instanceof MessageRequest<?> && ((MessageRequest<?>) msg).getOperation() == Message.MSG_OPERATION.STATUS)
+                || msg instanceof MessageStatus)
+            LOG.d(logMsg);
+        else
+            LOG.i(logMsg);
     }
-
-
     public String getId() {
         return id;
     }
@@ -81,10 +87,10 @@ public class Node {
         this.portM = portM;
     }
 
-    public void send(Message msg) throws SendException {
-        System.out.println("SEND to " + id + "(" + ip + ":" + portM + ") - " + msg);
+    protected void send(Node to, Message msg) throws SendException {
+        logFilter(msg, "send to " + to + " message " + msg);
         try {
-            InetAddress dest = InetAddress.getByName(ip);
+            InetAddress dest = InetAddress.getByName(to.getIp());
 
             byte[] json_bytes = new ObjectMapper().registerModule(new Jdk8Module()).writeValueAsBytes(msg);
             int packet_length = json_bytes.length;
@@ -104,7 +110,7 @@ public class Node {
             byte[] buf = byteBuffer.array();
 
             DatagramSocket socket = new DatagramSocket();
-            DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, dest, portM);
+            DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, dest, to.getPortM());
             socket.send(datagramPacket);
             socket.close();
         } catch (IOException e) {
@@ -114,8 +120,6 @@ public class Node {
 
     public void shutdown() {
     }
-
-    ;
 
     @Override
     public boolean equals(Object o) {

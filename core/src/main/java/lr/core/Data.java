@@ -18,14 +18,9 @@ public class Data<T> implements Serializable {
     private Set<Data<?>> conflictData;
     private VectorClock version;
 
-    public Data(String key, Long hash, T value) {
-        this(key, hash, value, null);
-    }
-
-    public Data(String key, Long hash, T value, VectorClock clock) {
-        this(key, value);
-        this.hash = hash;
-        this.version = clock;
+    public Data() {
+        this.conflictData = new HashSet<>();
+        this.version = new VectorClock();
     }
 
     public Data(String key) {
@@ -33,19 +28,31 @@ public class Data<T> implements Serializable {
         this.key = key;
     }
 
-
-    public Data(String key, T value) {
+    public Data(String key, Long hash) {
         this(key);
+        this.hash = hash;
+    }
+
+//    public Data(String key, T value) {
+//        this(key);
+//        this.value = value;
+//    }
+
+    public Data(String key, Long hash, T value) {
+        this(key, hash);
         this.value = value;
     }
 
-    public Data(Set<Data<?>> set){
-        this(set.iterator().next().getKey());
-        setConflictData(set);
+    public Data(String key, Long hash, T value, VectorClock clock) {
+        this(key, hash, value);
+        this.version = clock;
     }
 
-    public Data() {
-        this.conflictData = new HashSet<>();
+    public Data(Data<?>... set) {
+        this(set.clone()[0].getKey(), set.clone()[0].getHash());
+        for (Data<?> d : set) {
+            addConflict(d);
+        }
     }
 
     public VectorClock getVersion() {
@@ -61,8 +68,8 @@ public class Data<T> implements Serializable {
     }
 
     @JsonProperty("conflict")
-    public boolean isConflict(){
-        return conflictData.size()>0;
+    public boolean isConflict() {
+        return conflictData.size() > 0;
     }
 
     @JsonIgnore
@@ -74,23 +81,22 @@ public class Data<T> implements Serializable {
     }
 
     public void setConflictData(Set<Data<?>> conflict) {
-//        conflict.stream().filter(Data::isConflict).forEach(d1 -> {
-//            this.conflictData.addAll(d1.getConflictData());
-//            d1.setConflictData(new HashSet<>());
-//        });
         this.conflictData = conflict;
     }
 
-    public boolean addConflict(Data<?> data){
+    public boolean addConflict(Data<?> data) {
         if (!data.getKey().equals(getKey())) return false;
-        if (data.isConflict()){
+        if (!isConflict()){
+            conflictData.add(new Data<>(key,hash,value,version));
+            version = null;
+            value = null;
+        }
+        if (data.isConflict()) {
             conflictData.addAll(data.getConflictData());
-        }else{
+        } else {
             conflictData.add(data);
         }
-        version = null;
-        value = null;
-        hash = null;
+
         return true;
     }
 
@@ -100,6 +106,7 @@ public class Data<T> implements Serializable {
                 "key='" + key + '\'' +
                 ", hash=" + hash +
                 ", value=" + value +
+                ", conflictData=" + conflictData +
                 ", version=" + version +
                 '}';
     }
@@ -124,4 +131,28 @@ public class Data<T> implements Serializable {
         return value;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Data<?> data = (Data<?>) o;
+
+        if (key != null ? !key.equals(data.key) : data.key != null) return false;
+        if (hash != null ? !hash.equals(data.hash) : data.hash != null) return false;
+        if (value != null ? !value.equals(data.value) : data.value != null) return false;
+        if (conflictData != null ? !conflictData.equals(data.conflictData) : data.conflictData != null) return false;
+        return version != null ? version.equals(data.version) : data.version == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = key != null ? key.hashCode() : 0;
+        result = 31 * result + (hash != null ? hash.hashCode() : 0);
+        result = 31 * result + (value != null ? value.hashCode() : 0);
+        result = 31 * result + (conflictData != null ? conflictData.hashCode() : 0);
+        result = 31 * result + (version != null ? version.hashCode() : 0);
+        return result;
+    }
 }
