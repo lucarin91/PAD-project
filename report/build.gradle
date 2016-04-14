@@ -1,4 +1,4 @@
 task build(type: Exec) {
     executable "sh"
-    args "-c", "make pdf"
+    args "-c", "./compile.sh"
 }
