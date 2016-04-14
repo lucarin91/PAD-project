@@ -35,6 +35,11 @@ The `StorageNode` can be instantiated with the constructor `NodeService(String i
 
 It has a thread that continually check new messages from the other nodes, and for each one it distinguish two general case: if it is a new request from another node or if it is a `MessageManage` with some manage operation sent by the master to add or modified a backup key.
 
+### PersistentStorage
+This class implement the storage on file using a B-Tree Map implemented by the library `MapDB`. This data structure have as key the hash of the key of the value and as value a `Data<?>` object, this is because in this way is possible to retrieve in $O(log(n))$ all the keys that have the hash in certain subset.
+
+This operation can be done with the method `getInterval(Long hash1, Long hash2)` and it used to easily understand who is the master of which keys. In this way when a new node is founded on the network thanks to the gossip protocol it is more simple to search the keys that he have to manage as master or the keys that it have to store as a backup node.
+
 ## Api
 The Restful API, implemented with the Spring web framework, exposes the two end point `/api` and `/status`. The first is the public entry-point to operate with the file-system. The second is a monitoring tool used by the webapp to get a snapshot of all the node in the file-system with their data structures.
 
@@ -50,23 +55,24 @@ Each of the previous operations return a json object with the `status` field tha
 ## Tests
 In the project core there are the following test classes:
 
-- `ConsistentHashTest`, test for the `ConsistentHash` class.
-- `DataTest`, test for the `Data` class.
-- `FSTest`, test of the threaded version of the file-system with 10 nodes, it checks all the implemented operation (get, add, update, delete).
-- `ModServerTest`, check if the procedure to add or remove a node in the file system work.
-- `StorageTest`, test the `PersistenStorage` class.
-- `VectorClockTest`, test the `VectorClock` class.
+- `ConsistentHashTest`, test the methods `add`, `get`, `getPrev`, `getNext` of the `ConsistentHash` class.
+- `DataTest`, test the methods to manages multiple conflict versison of the same data in the `Data` class.
+- `FSTest`, test the threaded version of the file-system with 10 nodes, it checks all the implemented operation (get, add, update, delete).
+- `ModServerTest`, check if the procedure to add or remove a node of the file-system is work.
+- `StorageTest`, test the `add`, `get`, `update`, `delete`, methods of the `PersistenStorage` class.
+- `VectorClockTest`, test the `increment`, `update` and `compareTo` methods of the `VectorClock` class.
 
-During the testing  are done same coverage analysis to see if all the code is correctly tested.
 
-Here there is the whole coverage of the test in the `core` project:
+Given the latter test classes also a coverage analysis is done to understend if all the code is correctly tested.
+The first statistics is the coverage of the test in the whole project.
 
 | % Class        | %	Method        | %	Line           |
 |----------------|------------------|------------------|
 | 94.1% (16/ 17) | 84.4% (135/ 160) |	83.3% (509/ 611) |
 
+It is also to consider that same of those not tested method are only a constructor or the `toString` methods of the classes, so we can consider a good pervasion of the testing.
 
-Here there is the coverage statistics by classes:
+Now there is a table showing in more detail the coverage of the most important classes of the project:
 
 | Class    	  | %	Method        | %	Line           |
 |-------------|-----------------|------------------|
