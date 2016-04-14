@@ -1,0 +1,169 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html id="htmlId">
+<head>
+  <title>Coverage Report :: Message</title>
+  <style type="text/css">
+    @import "../../.css/coverage.css";
+  </style>
+</head>
+
+<body>
+<div class="header"></div>
+
+<div class="content">
+<div class="breadCrumbs">
+    [ <a href="../../index.html">all classes</a> ]
+    [ <a href="../index.html">lr.core.Messages</a> ]
+</div>
+
+<h1>Coverage Summary for Class: Message (lr.core.Messages)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Message</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (5/ 5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (8/ 8)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">Message$MSG_OPERATION</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/ 1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/ 1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/ 6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (9/ 9)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<div class="sourceCode"><i>1</i>&nbsp;package lr.core.Messages;
+<i>2</i>&nbsp;
+<i>3</i>&nbsp;/**
+<i>4</i>&nbsp; * Created by luca on 02/03/16.
+<i>5</i>&nbsp; */
+<i>6</i>&nbsp;
+<i>7</i>&nbsp;import com.fasterxml.jackson.annotation.JsonSubTypes;
+<i>8</i>&nbsp;import com.fasterxml.jackson.annotation.JsonTypeInfo;
+<i>9</i>&nbsp;import lr.core.Nodes.Node;
+<i>10</i>&nbsp;
+<i>11</i>&nbsp;/***
+<i>12</i>&nbsp; * Type of message:
+<i>13</i>&nbsp; * &lt;p&gt;
+<i>14</i>&nbsp; * GET
+<i>15</i>&nbsp; * {&quot;type&quot;: &quot;GET&quot;, &quot;sender_type&quot;: FRONT|BACK, &quot;key&quot;: ..., &quot;hash&quot;: ... }
+<i>16</i>&nbsp; * &lt;p&gt;
+<i>17</i>&nbsp; * ADD
+<i>18</i>&nbsp; * {&quot;type&quot;: &quot;ADD&quot;, &quot;sender_type&quot;: FRONT|BACK, &quot;key&quot;: ..., &quot;hash&quot;: ..., &quot;data&quot;: ....}
+<i>19</i>&nbsp; * UP
+<i>20</i>&nbsp; * {&quot;type&quot;: &quot;UP&quot;, &quot;sender_type&quot;: FRONT|BACK, &quot;key&quot;: ..., &quot;hash&quot;: ..., &quot;data&quot;: ....}
+<i>21</i>&nbsp; * &lt;p&gt;
+<i>22</i>&nbsp; * DEL
+<i>23</i>&nbsp; * {&quot;type&quot;: &quot;DEL&quot;, &quot;sender_type&quot;: FRONT|BACK, &quot;key&quot;: ...., &quot;hash&quot;: ... }
+<i>24</i>&nbsp; */
+<i>25</i>&nbsp;
+<i>26</i>&nbsp;@JsonTypeInfo(
+<i>27</i>&nbsp;        use = JsonTypeInfo.Id.NAME,
+<i>28</i>&nbsp;        include = JsonTypeInfo.As.PROPERTY,
+<i>29</i>&nbsp;        property = &quot;type&quot;)
+<i>30</i>&nbsp;@JsonSubTypes({
+<i>31</i>&nbsp;        @JsonSubTypes.Type(value = MessageManage.class, name = &quot;msg_manage&quot;),
+<i>32</i>&nbsp;        @JsonSubTypes.Type(value = MessageRequest.class, name = &quot;msg_request&quot;),
+<i>33</i>&nbsp;        @JsonSubTypes.Type(value = MessageResponse.class, name = &quot;msg_response&quot;),
+<i>34</i>&nbsp;        @JsonSubTypes.Type(value = MessageStatus.class, name = &quot;msg_status&quot;)})
+<i>35</i>&nbsp;public class Message {
+<b class="fc"><i>36</i>&nbsp;    public enum MSG_OPERATION {ADD, DELETE, UPDATE, GET, ADDorUPDATE, STATUS}</b>
+<i>37</i>&nbsp;
+<i>38</i>&nbsp;    private Node sender;
+<b class="fc"><i>39</i>&nbsp;    public Message() { }</b>
+<i>40</i>&nbsp;
+<b class="fc"><i>41</i>&nbsp;    public Message(Node sender) {</b>
+<b class="fc"><i>42</i>&nbsp;        this.sender = sender;</b>
+<b class="fc"><i>43</i>&nbsp;    }</b>
+<i>44</i>&nbsp;
+<i>45</i>&nbsp;    @Override
+<i>46</i>&nbsp;    public String toString() {
+<b class="fc"><i>47</i>&nbsp;        return &quot;Message{&quot; +</b>
+<i>48</i>&nbsp;                &quot;sender=&quot; + sender +
+<i>49</i>&nbsp;                &#39;}&#39;;
+<i>50</i>&nbsp;    }
+<i>51</i>&nbsp;
+<i>52</i>&nbsp;    public Node getSender() {
+<b class="fc"><i>53</i>&nbsp;        return sender;</b>
+<i>54</i>&nbsp;    }
+<i>55</i>&nbsp;
+<i>56</i>&nbsp;    public void setSender(Node sender) {
+<b class="fc"><i>57</i>&nbsp;        this.sender = sender;</b>
+<b class="fc"><i>58</i>&nbsp;    }</b>
+<i>59</i>&nbsp;}
+<i>60</i>&nbsp;
+</div>
+</div>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2016-04-14 15:36</div>
+</div>
+</body>
+</html>

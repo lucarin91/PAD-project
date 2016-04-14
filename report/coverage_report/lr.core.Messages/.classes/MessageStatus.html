@@ -1,0 +1,151 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html id="htmlId">
+<head>
+  <title>Coverage Report :: MessageStatus</title>
+  <style type="text/css">
+    @import "../../.css/coverage.css";
+  </style>
+</head>
+
+<body>
+<div class="header"></div>
+
+<div class="content">
+<div class="breadCrumbs">
+    [ <a href="../../index.html">all classes</a> ]
+    [ <a href="../index.html">lr.core.Messages</a> ]
+</div>
+
+<h1>Coverage Summary for Class: MessageStatus (lr.core.Messages)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">MessageStatus</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/ 1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/ 8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/ 16)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<div class="sourceCode"><i>1</i>&nbsp;package lr.core.Messages;
+<i>2</i>&nbsp;
+<i>3</i>&nbsp;/**
+<i>4</i>&nbsp; * Created by luca on 02/03/16.
+<i>5</i>&nbsp; */
+<i>6</i>&nbsp;
+<i>7</i>&nbsp;import lr.core.Data;
+<i>8</i>&nbsp;import lr.core.Nodes.Node;
+<i>9</i>&nbsp;
+<i>10</i>&nbsp;import java.util.Map;
+<i>11</i>&nbsp;import java.util.TreeMap;
+<i>12</i>&nbsp;
+<i>13</i>&nbsp;/***
+<i>14</i>&nbsp; * Type of message:
+<i>15</i>&nbsp; * &lt;p&gt;
+<i>16</i>&nbsp; * GET
+<i>17</i>&nbsp; * {&quot;type&quot;: &quot;GET&quot;, &quot;sender_type&quot;: FRONT|BACK, &quot;key&quot;: ..., &quot;hash&quot;: ... }
+<i>18</i>&nbsp; * &lt;p&gt;
+<i>19</i>&nbsp; * ADD
+<i>20</i>&nbsp; * {&quot;type&quot;: &quot;ADD&quot;, &quot;sender_type&quot;: FRONT|BACK, &quot;key&quot;: ..., &quot;hash&quot;: ..., &quot;data&quot;: ....}
+<i>21</i>&nbsp; * UP
+<i>22</i>&nbsp; * {&quot;type&quot;: &quot;UP&quot;, &quot;sender_type&quot;: FRONT|BACK, &quot;key&quot;: ..., &quot;hash&quot;: ..., &quot;data&quot;: ....}
+<i>23</i>&nbsp; * &lt;p&gt;
+<i>24</i>&nbsp; * DEL
+<i>25</i>&nbsp; * {&quot;type&quot;: &quot;DEL&quot;, &quot;sender_type&quot;: FRONT|BACK, &quot;key&quot;: ...., &quot;hash&quot;: ... }
+<i>26</i>&nbsp; */
+<i>27</i>&nbsp;
+<i>28</i>&nbsp;public class MessageStatus extends Message {
+<i>29</i>&nbsp;
+<i>30</i>&nbsp;    private Map&lt;String, Data&lt;?&gt;&gt; store;
+<i>31</i>&nbsp;    private TreeMap&lt;Long, Node&gt; ch;
+<i>32</i>&nbsp;
+<i>33</i>&nbsp;    public TreeMap&lt;Long, Node&gt; getCh() {
+<b class="nc"><i>34</i>&nbsp;        return ch;</b>
+<i>35</i>&nbsp;    }
+<i>36</i>&nbsp;
+<i>37</i>&nbsp;    public void setCh(TreeMap&lt;Long, Node&gt; ch) {
+<b class="nc"><i>38</i>&nbsp;        this.ch = ch;</b>
+<b class="nc"><i>39</i>&nbsp;    }</b>
+<i>40</i>&nbsp;
+<b class="nc"><i>41</i>&nbsp;    public MessageStatus() {</b>
+<b class="nc"><i>42</i>&nbsp;    }</b>
+<i>43</i>&nbsp;
+<i>44</i>&nbsp;    public MessageStatus(Node sender, Map&lt;String, Data&lt;?&gt;&gt; store, TreeMap&lt;Long, Node&gt; ch) {
+<b class="nc"><i>45</i>&nbsp;        super(sender);</b>
+<b class="nc"><i>46</i>&nbsp;        this.store = store;</b>
+<b class="nc"><i>47</i>&nbsp;        this.ch = ch;</b>
+<b class="nc"><i>48</i>&nbsp;    }</b>
+<i>49</i>&nbsp;
+<i>50</i>&nbsp;    public MessageStatus(Node sender) {
+<b class="nc"><i>51</i>&nbsp;        this(sender, null, null);</b>
+<b class="nc"><i>52</i>&nbsp;    }</b>
+<i>53</i>&nbsp;
+<i>54</i>&nbsp;    public Map&lt;String, Data&lt;?&gt;&gt; getStore() {
+<b class="nc"><i>55</i>&nbsp;        return store;</b>
+<i>56</i>&nbsp;    }
+<i>57</i>&nbsp;
+<i>58</i>&nbsp;    public void setStore(Map&lt;String, Data&lt;?&gt;&gt; store) {
+<b class="nc"><i>59</i>&nbsp;        this.store = store;</b>
+<b class="nc"><i>60</i>&nbsp;    }</b>
+<i>61</i>&nbsp;
+<i>62</i>&nbsp;    @Override
+<i>63</i>&nbsp;    public String toString() {
+<b class="nc"><i>64</i>&nbsp;        return &quot;MessageStatus{&quot; +</b>
+<i>65</i>&nbsp;                &quot;store=&quot; + store +
+<b class="nc"><i>66</i>&nbsp;                &quot;} &quot; + super.toString();</b>
+<i>67</i>&nbsp;    }
+<i>68</i>&nbsp;}
+</div>
+</div>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2016-04-14 15:36</div>
+</div>
+</body>
+</html>

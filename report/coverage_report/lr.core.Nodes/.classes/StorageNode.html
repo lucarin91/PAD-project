@@ -1,0 +1,419 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html id="htmlId">
+<head>
+  <title>Coverage Report :: StorageNode</title>
+  <style type="text/css">
+    @import "../../.css/coverage.css";
+  </style>
+</head>
+
+<body>
+<div class="header"></div>
+
+<div class="content">
+<div class="breadCrumbs">
+    [ <a href="../../index.html">all classes</a> ]
+    [ <a href="../index.html">lr.core.Nodes</a> ]
+</div>
+
+<h1>Coverage Summary for Class: StorageNode (lr.core.Nodes)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">StorageNode</td>
+<td class="coverageStat">
+  <span class="percent">
+    92.3%
+  </span>
+  <span class="absValue">
+    (12/ 13)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    83.6%
+  </span>
+  <span class="absValue">
+    (133/ 159)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">StorageNode$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/ 1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/ 2)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    92.9%
+  </span>
+  <span class="absValue">
+    (13/ 14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    83.9%
+  </span>
+  <span class="absValue">
+    (135/ 161)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<div class="sourceCode"><i>1</i>&nbsp;package lr.core.Nodes;
+<i>2</i>&nbsp;
+<i>3</i>&nbsp;import java.io.IOException;
+<i>4</i>&nbsp;import java.net.*;
+<i>5</i>&nbsp;import java.util.*;
+<i>6</i>&nbsp;import java.util.concurrent.atomic.AtomicBoolean;
+<i>7</i>&nbsp;
+<i>8</i>&nbsp;import com.fasterxml.jackson.annotation.JsonIgnore;
+<i>9</i>&nbsp;import com.fasterxml.jackson.databind.ObjectMapper;
+<i>10</i>&nbsp;import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+<i>11</i>&nbsp;
+<i>12</i>&nbsp;import com.google.code.gossip.*;
+<i>13</i>&nbsp;import com.google.code.gossip.event.GossipState;
+<i>14</i>&nbsp;import com.google.code.gossip.manager.random.*;
+<i>15</i>&nbsp;import com.google.code.gossip.manager.*;
+<i>16</i>&nbsp;//import lr.gossip.*;
+<i>17</i>&nbsp;//import lr.gossip.event.GossipState;
+<i>18</i>&nbsp;//import lr.gossip.manager.random.*;
+<i>19</i>&nbsp;//import lr.gossip.manager.*;
+<i>20</i>&nbsp;
+<i>21</i>&nbsp;import lr.core.*;
+<i>22</i>&nbsp;import lr.core.Exception.SendException;
+<i>23</i>&nbsp;import lr.core.Messages.*;
+<i>24</i>&nbsp;import lr.core.Messages.Message.*;
+<i>25</i>&nbsp;
+<i>26</i>&nbsp;
+<i>27</i>&nbsp;public class StorageNode extends Node {
+<i>28</i>&nbsp;
+<i>29</i>&nbsp;    private GossipManager _gossipManager;
+<i>30</i>&nbsp;    private ConsistentHash&lt;Node&gt; _ch;
+<i>31</i>&nbsp;    private PersistentStorage _store;
+<i>32</i>&nbsp;    private final Thread _passiveThread;
+<i>33</i>&nbsp;    private AtomicBoolean _toStop;
+<i>34</i>&nbsp;    private DatagramSocket _server;
+<b class="fc"><i>35</i>&nbsp;    private int _replica = 2;</b>
+<i>36</i>&nbsp;
+<i>37</i>&nbsp;    public StorageNode clearStorage() {
+<b class="fc"><i>38</i>&nbsp;        _store.close();</b>
+<b class="fc"><i>39</i>&nbsp;        _store = new PersistentStorage(getId(), true);</b>
+<b class="fc"><i>40</i>&nbsp;        return this;</b>
+<i>41</i>&nbsp;    }
+<i>42</i>&nbsp;
+<i>43</i>&nbsp;    @JsonIgnore
+<i>44</i>&nbsp;    public StorageNode setNBackup(int replica) {
+<b class="fc"><i>45</i>&nbsp;        _replica = replica;</b>
+<b class="fc"><i>46</i>&nbsp;        return this;</b>
+<i>47</i>&nbsp;    }
+<i>48</i>&nbsp;
+<i>49</i>&nbsp;    public StorageNode(String id, String ipAddress, int port, List&lt;GossipMember&gt; gossipMembers)
+<i>50</i>&nbsp;            throws InterruptedException, UnknownHostException {
+<b class="fc"><i>51</i>&nbsp;        super(id, ipAddress, port);</b>
+<i>52</i>&nbsp;
+<b class="fc"><i>53</i>&nbsp;        _ch = new ConsistentHash&lt;&gt;();</b>
+<b class="fc"><i>54</i>&nbsp;        gossipMembers.stream().filter(member -&gt; !member.getId().contains(GossipResource.FRONT_ID))</b>
+<b class="fc"><i>55</i>&nbsp;                .forEach(gossipMember -&gt; _ch.add(new Node(gossipMember)));</b>
+<b class="fc"><i>56</i>&nbsp;        _ch.add(this);</b>
+<i>57</i>&nbsp;
+<b class="fc"><i>58</i>&nbsp;        _store = new PersistentStorage(getId());</b>
+<i>59</i>&nbsp;
+<b class="fc"><i>60</i>&nbsp;        _toStop = new AtomicBoolean(false);</b>
+<i>61</i>&nbsp;
+<b class="fc"><i>62</i>&nbsp;        _gossipManager = new RandomGossipManager(getIp(), getPortG(), getId(), new GossipSettings(), gossipMembers, this::callback);</b>
+<i>63</i>&nbsp;        try {
+<b class="fc"><i>64</i>&nbsp;            _server = new DatagramSocket(new InetSocketAddress(getIp(), getPortM()));</b>
+<b class="nc"><i>65</i>&nbsp;        } catch (SocketException ex) {</b>
+<b class="nc"><i>66</i>&nbsp;            ex.printStackTrace();</b>
+<b class="fc"><i>67</i>&nbsp;        }</b>
+<b class="fc"><i>68</i>&nbsp;        _passiveThread = new Thread(this::passiveRequest);</b>
+<b class="fc"><i>69</i>&nbsp;    }</b>
+<i>70</i>&nbsp;
+<i>71</i>&nbsp;
+<i>72</i>&nbsp;    public StorageNode start() {
+<b class="fc"><i>73</i>&nbsp;        _passiveThread.start();</b>
+<b class="fc"><i>74</i>&nbsp;        _gossipManager.start();</b>
+<b class="fc"><i>75</i>&nbsp;        return this;</b>
+<i>76</i>&nbsp;    }
+<i>77</i>&nbsp;
+<i>78</i>&nbsp;    private void passiveRequest() {
+<b class="fc"><i>79</i>&nbsp;        while (!_toStop.get()) {</b>
+<i>80</i>&nbsp;            try {
+<b class="fc"><i>81</i>&nbsp;                byte[] buf = new byte[_server.getReceiveBufferSize()];</b>
+<i>82</i>&nbsp;
+<b class="fc"><i>83</i>&nbsp;                DatagramPacket p = new DatagramPacket(buf, buf.length);</b>
+<b class="fc"><i>84</i>&nbsp;                _server.receive(p);</b>
+<i>85</i>&nbsp;
+<b class="fc"><i>86</i>&nbsp;                int packet_length = 0;</b>
+<b class="fc"><i>87</i>&nbsp;                for (int i = 0; i &lt; 4; i++) {</b>
+<b class="fc"><i>88</i>&nbsp;                    int shift = (4 - 1 - i) * 8;</b>
+<b class="fc"><i>89</i>&nbsp;                    packet_length += (buf[i] &amp; 0x000000FF) &lt;&lt; shift;</b>
+<i>90</i>&nbsp;                }
+<i>91</i>&nbsp;
+<i>92</i>&nbsp;                // TODO: check the data packet size
+<i>93</i>&nbsp;
+<b class="fc"><i>94</i>&nbsp;                byte[] json_bytes = new byte[packet_length];</b>
+<b class="fc"><i>95</i>&nbsp;                System.arraycopy(buf, 4, json_bytes, 0, packet_length);</b>
+<b class="fc"><i>96</i>&nbsp;                String receivedMessage = new String(json_bytes);</b>
+<i>97</i>&nbsp;
+<b class="fc"><i>98</i>&nbsp;                ObjectMapper mapper = new ObjectMapper().registerModule(new Jdk8Module());</b>
+<b class="fc"><i>99</i>&nbsp;                Message msg = mapper.readValue(receivedMessage, Message.class);</b>
+<i>100</i>&nbsp;
+<b class="fc"><i>101</i>&nbsp;                logFilter(msg, &quot;receive.. &quot; + msg);</b>
+<i>102</i>&nbsp;
+<b class="fc"><i>103</i>&nbsp;                if (msg instanceof MessageRequest&lt;?&gt;) {</b>
+<i>104</i>&nbsp;
+<b class="fc"><i>105</i>&nbsp;                    MessageRequest msgR = (MessageRequest) msg;</b>
+<b class="fc"><i>106</i>&nbsp;                    if (msgR.getOperation() != MSG_OPERATION.STATUS) {</b>
+<i>107</i>&nbsp;                        //msg.setSender(this);
+<b class="fc"><i>108</i>&nbsp;                        Node n = _ch.get(msgR.getKey());</b>
+<i>109</i>&nbsp;
+<b class="fc"><i>110</i>&nbsp;                        if (n.getId().equals(getId())) {</b>
+<b class="fc"><i>111</i>&nbsp;                            doOperation(msgR);</b>
+<i>112</i>&nbsp;                        } else {
+<b class="fc"><i>113</i>&nbsp;                            LOG.i(&quot;pass message..&quot;);</b>
+<b class="fc"><i>114</i>&nbsp;                            send(n, msg);</b>
+<i>115</i>&nbsp;                        }
+<i>116</i>&nbsp;
+<b class="fc"><i>117</i>&nbsp;                    } else {</b>
+<b class="nc"><i>118</i>&nbsp;                        send(msgR.getSender(), new MessageStatus(this, _store.getMap(), _ch.getMap()));</b>
+<i>119</i>&nbsp;                    }
+<b class="fc"><i>120</i>&nbsp;                } else if (msg instanceof MessageManage) {</b>
+<b class="fc"><i>121</i>&nbsp;                    MessageManage msgM = (MessageManage) msg;</b>
+<b class="fc"><i>122</i>&nbsp;                    doManageOperation(msgM);</b>
+<i>123</i>&nbsp;                }
+<b class="fc"><i>124</i>&nbsp;            } catch (SocketException e) {</b>
+<i>125</i>&nbsp;                //e.printStackTrace();
+<b class="fc"><i>126</i>&nbsp;                _toStop.set(true);</b>
+<b class="nc"><i>127</i>&nbsp;            } catch (IOException e) {</b>
+<b class="nc"><i>128</i>&nbsp;                e.printStackTrace();</b>
+<b class="nc"><i>129</i>&nbsp;            } catch (SendException ignored) {</b>
+<b class="fc"><i>130</i>&nbsp;            }</b>
+<i>131</i>&nbsp;        }
+<b class="fc"><i>132</i>&nbsp;    }</b>
+<i>133</i>&nbsp;
+<i>134</i>&nbsp;    private void doManageOperation(MessageManage msg) {
+<b class="fc"><i>135</i>&nbsp;        LOG.i(&quot;do Management Operation with.. &quot; + msg.getData());</b>
+<b class="fc"><i>136</i>&nbsp;        switch (msg.getOperation()) {</b>
+<i>137</i>&nbsp;            case DELETE:
+<b class="fc"><i>138</i>&nbsp;                _store.remove(msg.getKey());</b>
+<b class="fc"><i>139</i>&nbsp;                break;</b>
+<i>140</i>&nbsp;            case ADD:
+<i>141</i>&nbsp;            case UPDATE:
+<i>142</i>&nbsp;            case ADDorUPDATE:
+<b class="fc"><i>143</i>&nbsp;                Data&lt;?&gt; thatData = msg.getData();</b>
+<b class="fc"><i>144</i>&nbsp;                Optional&lt;Data&lt;?&gt;&gt; optData = _store.get(msg.getData().getKey());</b>
+<b class="fc"><i>145</i>&nbsp;                if (optData.isPresent()) {</b>
+<b class="fc"><i>146</i>&nbsp;                    Data&lt;?&gt; thisData = optData.get();</b>
+<b class="fc"><i>147</i>&nbsp;                    if (thisData.isConflict() || thatData.isConflict()) {</b>
+<b class="nc"><i>148</i>&nbsp;                        thisData.addConflict(thatData);</b>
+<b class="nc"><i>149</i>&nbsp;                        _store.update(thatData);</b>
+<i>150</i>&nbsp;                    }else {
+<b class="fc"><i>151</i>&nbsp;                        VectorClock thisClock = thisData.getVersion();</b>
+<b class="fc"><i>152</i>&nbsp;                        VectorClock thatClock = thatData.getVersion();</b>
+<b class="fc"><i>153</i>&nbsp;                        switch (thisClock.compareTo(thatClock)) {</b>
+<i>154</i>&nbsp;                            case BEFORE:
+<b class="fc"><i>155</i>&nbsp;                                _store.update(msg.getData());</b>
+<b class="fc"><i>156</i>&nbsp;                                break;</b>
+<i>157</i>&nbsp;                            case NOTHING:
+<i>158</i>&nbsp;//                                Set&lt;Data&lt;?&gt;&gt; set = new HashSet&lt;&gt;();
+<i>159</i>&nbsp;//                                set.add(thisData);
+<i>160</i>&nbsp;//                                set.add(thatData);
+<b class="nc"><i>161</i>&nbsp;                                Data&lt;?&gt; conflictData = new Data&lt;&gt;(thisData, thatData);</b>
+<b class="nc"><i>162</i>&nbsp;                                _store.update(conflictData);</b>
+<b class="nc"><i>163</i>&nbsp;                                break;</b>
+<i>164</i>&nbsp;                            case AFTER:
+<i>165</i>&nbsp;                            case EQUAL:
+<i>166</i>&nbsp;                                break;
+<i>167</i>&nbsp;                        }
+<i>168</i>&nbsp;                    }
+<b class="fc"><i>169</i>&nbsp;                } else</b>
+<b class="fc"><i>170</i>&nbsp;                    _store.add(msg.getData());</b>
+<i>171</i>&nbsp;                break;
+<i>172</i>&nbsp;        }
+<b class="fc"><i>173</i>&nbsp;    }</b>
+<i>174</i>&nbsp;
+<i>175</i>&nbsp;    private void doOperation(MessageRequest&lt;?&gt; msg) {
+<b class="fc"><i>176</i>&nbsp;        LOG.i(&quot;do Operation with.. &quot; + msg.getKey());</b>
+<b class="fc"><i>177</i>&nbsp;        Node sender = msg.getSender();</b>
+<i>178</i>&nbsp;        try {
+<b class="fc"><i>179</i>&nbsp;            switch (msg.getOperation()) {</b>
+<i>180</i>&nbsp;                case GET:
+<b class="fc"><i>181</i>&nbsp;                    Optional&lt;Data&lt;?&gt;&gt; data = _store.get(msg.getKey());</b>
+<b class="fc"><i>182</i>&nbsp;                    if (data.isPresent()) {</b>
+<b class="fc"><i>183</i>&nbsp;                        send(sender, new MessageResponse&lt;&gt;(this, MessageResponse.MSG_STATUS.OK, data.get()));</b>
+<i>184</i>&nbsp;                    } else {
+<b class="fc"><i>185</i>&nbsp;                        send(sender, new MessageResponse&lt;&gt;(this, MessageResponse.MSG_STATUS.ERROR, MessageResponse.KEY_NOT_FOUND));</b>
+<i>186</i>&nbsp;                    }
+<b class="fc"><i>187</i>&nbsp;                    break;</b>
+<i>188</i>&nbsp;
+<i>189</i>&nbsp;                case ADD:
+<b class="fc"><i>190</i>&nbsp;                    Data data1 = new Data&lt;&gt;(msg.getKey(),</b>
+<b class="fc"><i>191</i>&nbsp;                            _ch.doHash(msg.getKey()),</b>
+<b class="fc"><i>192</i>&nbsp;                            msg.getValue(),</b>
+<b class="fc"><i>193</i>&nbsp;                            new VectorClock().increment(getId()));</b>
+<b class="fc"><i>194</i>&nbsp;                    if (_store.add(data1)) {</b>
+<b class="fc"><i>195</i>&nbsp;                        send(sender, new MessageResponse&lt;&gt;(this, MessageResponse.MSG_STATUS.OK));</b>
+<b class="fc"><i>196</i>&nbsp;                        sendBackup(new MessageManage(this, MSG_OPERATION.ADDorUPDATE, data1));</b>
+<i>197</i>&nbsp;                    } else
+<b class="nc"><i>198</i>&nbsp;                        send(sender, new MessageResponse&lt;&gt;(this, MessageResponse.MSG_STATUS.ERROR, MessageResponse.KEY_ALREADY));</b>
+<b class="nc"><i>199</i>&nbsp;                    break;</b>
+<i>200</i>&nbsp;
+<i>201</i>&nbsp;                case DELETE:
+<b class="fc"><i>202</i>&nbsp;                    if (_store.remove(msg.getKey())) {</b>
+<b class="fc"><i>203</i>&nbsp;                        sendBackup(new MessageManage(this, MSG_OPERATION.DELETE, msg.getKey()));</b>
+<b class="fc"><i>204</i>&nbsp;                        send(sender, new MessageResponse&lt;&gt;(this, MessageResponse.MSG_STATUS.OK));</b>
+<i>205</i>&nbsp;                    } else {
+<b class="fc"><i>206</i>&nbsp;                        send(sender, new MessageResponse&lt;&gt;(this, MessageResponse.MSG_STATUS.ERROR, MessageResponse.KEY_NOT_FOUND));</b>
+<i>207</i>&nbsp;                    }
+<b class="fc"><i>208</i>&nbsp;                    break;</b>
+<i>209</i>&nbsp;
+<i>210</i>&nbsp;                case UPDATE:
+<b class="fc"><i>211</i>&nbsp;                    Optional&lt;Data&lt;?&gt;&gt; optData = _store.get(msg.getKey());</b>
+<b class="fc"><i>212</i>&nbsp;                    if (optData.isPresent()) {</b>
+<b class="fc"><i>213</i>&nbsp;                        Data&lt;?&gt; d = optData.get();</b>
+<i>214</i>&nbsp;                        VectorClock v;
+<b class="fc"><i>215</i>&nbsp;                        if (d.isConflict()) {</b>
+<b class="nc"><i>216</i>&nbsp;                            v = new VectorClock();</b>
+<b class="nc"><i>217</i>&nbsp;                            for (Data&lt;?&gt; item : d.getConflictData()) {</b>
+<b class="nc"><i>218</i>&nbsp;                                v.update(item.getVersion());</b>
+<b class="nc"><i>219</i>&nbsp;                            }</b>
+<i>220</i>&nbsp;                        } else
+<b class="fc"><i>221</i>&nbsp;                            v = d.getVersion().increment(getId());</b>
+<i>222</i>&nbsp;
+<b class="fc"><i>223</i>&nbsp;                        Data dataUp = new Data&lt;&gt;(msg.getKey(),</b>
+<b class="fc"><i>224</i>&nbsp;                                _ch.doHash(msg.getKey()),</b>
+<b class="fc"><i>225</i>&nbsp;                                msg.getValue(), v);</b>
+<b class="fc"><i>226</i>&nbsp;                        _store.update(dataUp);</b>
+<b class="fc"><i>227</i>&nbsp;                        sendBackup(new MessageManage(this, MSG_OPERATION.ADDorUPDATE, dataUp));</b>
+<b class="fc"><i>228</i>&nbsp;                        send(sender, new MessageResponse&lt;&gt;(this, MessageResponse.MSG_STATUS.OK));</b>
+<i>229</i>&nbsp;
+<b class="fc"><i>230</i>&nbsp;                    } else</b>
+<b class="nc"><i>231</i>&nbsp;                        send(sender, new MessageResponse&lt;&gt;(this, MessageResponse.MSG_STATUS.ERROR, MessageResponse.KEY_NOT_FOUND));</b>
+<i>232</i>&nbsp;                    break;
+<i>233</i>&nbsp;            }
+<b class="nc"><i>234</i>&nbsp;        } catch (SendException ignore) {</b>
+<i>235</i>&nbsp;
+<b class="fc"><i>236</i>&nbsp;        }</b>
+<b class="fc"><i>237</i>&nbsp;    }</b>
+<i>238</i>&nbsp;
+<i>239</i>&nbsp;
+<i>240</i>&nbsp;    private void sendBackup(MessageManage msg) {
+<b class="fc"><i>241</i>&nbsp;        List&lt;Map.Entry&lt;Long, Node&gt;&gt; list = _ch.getNext(msg.getKey(), _replica + 1);</b>
+<b class="fc"><i>242</i>&nbsp;        LOG.i(&quot;send backup to.. &quot; + list);</b>
+<b class="fc"><i>243</i>&nbsp;        list.parallelStream().filter(node -&gt; !node.getValue().equals(this)).forEach(entry -&gt; {</b>
+<i>244</i>&nbsp;            try {
+<b class="fc"><i>245</i>&nbsp;                send(entry.getValue(), msg);</b>
+<b class="nc"><i>246</i>&nbsp;            } catch (SendException ignore) {</b>
+<b class="fc"><i>247</i>&nbsp;            }</b>
+<b class="fc"><i>248</i>&nbsp;        });</b>
+<b class="fc"><i>249</i>&nbsp;    }</b>
+<i>250</i>&nbsp;
+<i>251</i>&nbsp;    public void shutdown() {
+<b class="fc"><i>252</i>&nbsp;        _gossipManager.shutdown();</b>
+<b class="fc"><i>253</i>&nbsp;        _server.close();</b>
+<b class="fc"><i>254</i>&nbsp;        _store.close();</b>
+<i>255</i>&nbsp;//        try {
+<i>256</i>&nbsp;//            synchronized (_passiveThread) {
+<i>257</i>&nbsp;        //_passiveThread.wait();
+<i>258</i>&nbsp;//            }
+<i>259</i>&nbsp;//            System.out.println(&quot;after join&quot;);
+<i>260</i>&nbsp;//        } catch (InterruptedException e) {
+<i>261</i>&nbsp;//            e.printStackTrace();
+<i>262</i>&nbsp;//        }
+<b class="fc"><i>263</i>&nbsp;    }</b>
+<i>264</i>&nbsp;
+<i>265</i>&nbsp;    private void callback(GossipMember member, GossipState state) {
+<b class="fc"><i>266</i>&nbsp;        if (!_toStop.get()) {</b>
+<b class="fc"><i>267</i>&nbsp;            if (!member.getId().contains(GossipResource.FRONT_ID)) {</b>
+<b class="fc"><i>268</i>&nbsp;                Node n = new Node(member);</b>
+<b class="fc"><i>269</i>&nbsp;                if (state.equals(GossipState.UP)) {</b>
+<b class="fc"><i>270</i>&nbsp;                    LOG.i(&quot;add node [&quot; + member + &quot;] up&quot;);</b>
+<b class="fc"><i>271</i>&nbsp;                    LOG.d(&quot;live members: &quot;+ _gossipManager.getMemberList() +&quot; - death members: &quot; + _gossipManager.getDeadList());</b>
+<b class="fc"><i>272</i>&nbsp;                    _ch.add(n);</b>
+<i>273</i>&nbsp;
+<b class="fc"><i>274</i>&nbsp;                    _ch.getReplicaForKey(toString()).parallelStream().forEach(repHash -&gt; {</b>
+<i>275</i>&nbsp;
+<i>276</i>&nbsp;                        //check if new node is prev of replica
+<b class="fc"><i>277</i>&nbsp;                        ArrayList&lt;Map.Entry&lt;Long, Node&gt;&gt; preEntry = _ch.getPrev(repHash, 2);</b>
+<b class="fc"><i>278</i>&nbsp;                        Set&lt;Data&lt;?&gt;&gt; dataSet = new HashSet&lt;&gt;();</b>
+<i>279</i>&nbsp;
+<b class="fc"><i>280</i>&nbsp;                        if (preEntry.get(0).getValue().equals(n)) {</b>
+<b class="fc"><i>281</i>&nbsp;                            dataSet.addAll(_store.getInterval(preEntry.get(1).getKey(), preEntry.get(0).getKey()));</b>
+<b class="fc"><i>282</i>&nbsp;                            LOG.i(&quot;send his data &quot; + dataSet);</b>
+<i>283</i>&nbsp;                        } else {
+<i>284</i>&nbsp;
+<b class="fc"><i>285</i>&nbsp;                            ArrayList&lt;Map.Entry&lt;Long, Node&gt;&gt; nextMap = _ch.getNext(repHash, _replica);</b>
+<i>286</i>&nbsp;
+<b class="fc"><i>287</i>&nbsp;                            if (nextMap.stream().anyMatch(entry -&gt; entry.getValue().equals(n))) {</b>
+<b class="fc"><i>288</i>&nbsp;                                dataSet.addAll(_store.getInterval(_ch.getPrev(repHash).getKey(), repHash));</b>
+<b class="fc"><i>289</i>&nbsp;                                LOG.i(&quot;send backup data &quot; + dataSet);</b>
+<i>290</i>&nbsp;                            }
+<i>291</i>&nbsp;                        }
+<i>292</i>&nbsp;
+<b class="fc"><i>293</i>&nbsp;                        dataSet.parallelStream().forEach(data -&gt; {</b>
+<i>294</i>&nbsp;                            try {
+<b class="nc"><i>295</i>&nbsp;                                send(n, new MessageManage(this, MSG_OPERATION.ADDorUPDATE, data));</b>
+<b class="nc"><i>296</i>&nbsp;                            } catch (SendException ignore) {</b>
+<b class="nc"><i>297</i>&nbsp;                            }</b>
+<i>298</i>&nbsp;
+<b class="nc"><i>299</i>&nbsp;                        });</b>
+<i>300</i>&nbsp;
+<b class="fc"><i>301</i>&nbsp;                    });</b>
+<i>302</i>&nbsp;
+<i>303</i>&nbsp;                } else {
+<b class="nc"><i>304</i>&nbsp;                    LOG.i(&quot;del node [&quot; + member + &quot;] down.. &quot;);</b>
+<b class="nc"><i>305</i>&nbsp;                    _ch.remove(n);</b>
+<i>306</i>&nbsp;                }
+<i>307</i>&nbsp;            }
+<i>308</i>&nbsp;        }
+<b class="fc"><i>309</i>&nbsp;    }</b>
+<i>310</i>&nbsp;}
+</div>
+</div>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2016-04-14 15:36</div>
+</div>
+</body>
+</html>

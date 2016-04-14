@@ -2,6 +2,7 @@ import lr.core.Data;
 import lr.core.Helper;
 import lr.core.PersistentStorage;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Optional;
@@ -11,29 +12,44 @@ import java.util.Optional;
  */
 public class StorageTest {
 
+    PersistentStorage s;
+    Data<String> data;
+    Optional<Data<?>> dataGet;
+
+    @Before
+    public void setup() {
+        s = new PersistentStorage("testSorage", true);
+        data = new Data<>("test", Helper.MD5ToLong("test"), "prova");
+    }
+
     @Test
-    public void operations(){
-        PersistentStorage s = new PersistentStorage("testSorage", true);
-        Data <?> data1 = new Data<>("test", Helper.MD5ToLong("test"), "prova");
+    public void add() {
+        s.add(data);
+        dataGet = s.get("test");
+        Assert.assertEquals(dataGet.isPresent(), true);
+        Assert.assertEquals(dataGet.get(), data);
+        Assert.assertEquals(dataGet.get().getValue(), data.getValue());
 
-        //Test add
-        s.add(data1);
-        Optional<Data<?>> data2 = s.get("test");
-        Assert.assertEquals(data2.isPresent(), true);
-        Assert.assertEquals(data2.get(), data1);
-        Assert.assertEquals(data2.get().getValue(), data1.getValue());
+    }
 
-        //Test Update
-        data1 = new Data<>("test", Helper.MD5ToLong("test"), "prova updated!");
-        s.update(data1);
-        data2 = s.get("test");
-        Assert.assertEquals(data2.isPresent(), true);
-        Assert.assertEquals(data2.get(), data1);
-        Assert.assertEquals(data2.get().getValue(), data1.getValue());
+    @Test
+    public void update() {
+        s.add(data);
 
-        //Test remove
+        data = new Data<>("test", Helper.MD5ToLong("test"), "prova updated!");
+        s.update(data);
+        dataGet = s.get("test");
+        Assert.assertEquals(dataGet.isPresent(), true);
+        Assert.assertEquals(dataGet.get(), data);
+        Assert.assertEquals(dataGet.get().getValue(), data.getValue());
+    }
+
+    @Test
+    public void remove() {
+        s.add(data);
+
         s.remove("test");
-        data2 = s.get("test");
-        Assert.assertEquals(data2.isPresent(), false);
+        dataGet = s.get("test");
+        Assert.assertEquals(dataGet.isPresent(), false);
     }
 }

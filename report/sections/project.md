@@ -48,3 +48,37 @@ The following operation can be used on the `/api` resources:
 Each of the previous operations return a json object with the `status` field that can be either `ok` or `error` and the `data` field with optional return data.
 
 ## Tests
+In the project core there are the following test classes:
+
+- `ConsistentHashTest`, test for the `ConsistentHash` class.
+- `DataTest`, test for the `Data` class.
+- `FSTest`, test of the threaded version of the file-system with 10 nodes, it checks all the implemented operation (get, add, update, delete).
+- `ModServerTest`, check if the procedure to add or remove a node in the file system work.
+- `StorageTest`, test the `PersistenStorage` class.
+- `VectorClockTest`, test the `VectorClock` class.
+
+During the testing  are done same coverage analysis to see if all the code is correctly tested.
+
+Here there is the whole coverage of the test in the `core` project:
+
+| % Class        | %	Method        | %	Line           |
+|----------------|------------------|------------------|
+| 94.1% (16/ 17) | 84.4% (135/ 160) |	83.3% (509/ 611) |
+
+
+Here there is the coverage statistics by classes:
+
+| Class    	  | %	Method        | %	Line           |
+|-------------|-----------------|------------------|
+| GossipResource	 | 100% (2/ 2)	| 90% (9/ 10)	| 70% (42/ 60) |
+| Node             |	94.4% (17/ 18) | 92.2% (59/ 64) |
+| StorageNode	     | 100% (2/ 2)	| 92.9% (13/ 14) | 83.9% (135/ 161) |
+| ConsistentHash	 | 100% (1/ 1)	| 68.2% (15/ 22) | 82.9% (58/ 70) |
+| Data	| 95.5% (21/ 22)	| 98.4% (60/ 61) |
+| PersistentStorage	| 83.3% (10/ 12) | 79.7% (47/ 59) |
+| VectorClock	| 86.7% (13/ 15)	| 86.1% (31/ 36) |
+| Message	| 100% (6/ 6)	| 100% (9/ 9) |
+| MessageManage	|	100% (10/ 10)	| 100% (21/ 21) |
+| MessageRequest	| 92.3% (12/ 13)	| 90.9% (30/ 33) |
+| MessageResponse	| 90% (9/ 10)	| 81% (17/ 21) |
+| MessageStatus	| 0% (0/ 8) | 	0% (0/ 16) |

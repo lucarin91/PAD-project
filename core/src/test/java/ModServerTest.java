@@ -11,6 +11,7 @@ import lr.core.Messages.MessageResponse;
 import lr.core.Nodes.GossipResource;
 import lr.core.Nodes.StorageNode;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
@@ -20,12 +21,16 @@ import java.util.*;
 /**
  * Created by luca on 12/03/16.
  */
-public class ModServer {
-    @Test
-    public void addServer() throws UnknownHostException, InterruptedException {
-        final List<StorageNode> clients = new ArrayList<>();
-        final List<GossipMember> startupMembers = new ArrayList<>();
-        final int seedNodes = 2;
+public class ModServerTest {
+
+    List<StorageNode> clients;
+    List<GossipMember> startupMembers;
+
+    @Before
+    public void setup() throws InterruptedException, UnknownHostException {
+        clients = new ArrayList<>();
+        startupMembers = new ArrayList<>();
+        int seedNodes = 2;
         int clusterMembers = 2;
 
         for (int i = 1; i < seedNodes + 1; ++i) {
@@ -42,6 +47,11 @@ public class ModServer {
         GossipResource r = GossipResource.getInstance("rest", "127.0.0.20", 2000, startupMembers);
 
         Thread.sleep(5000);
+    }
+
+    @Test
+    public void addServer() throws UnknownHostException, InterruptedException {
+        GossipResource r = GossipResource.getInstance().get();
 
         System.out.print("key: " + Helper.MD5ToLong("hkjasdjkhdsahjkasdsad"));
         try {
