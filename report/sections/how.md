@@ -1,7 +1,7 @@
-# How to use
-It is possible to use the distributed file-system in the thread version for a single machine, the multi server for a cluster of machine or using the docker container either in a single machine or in cluster.
+# User Guide
+It is possible to use the distributed file system in the multi-threaded version for a single machine, the multi- server for a cluster of machines or using the *Docker* container either in a single machine or in cluster.
 
-The simplest way to use the file-system is to download the last release and run it with the only requirement of Java8. In this way the application can be used either in the thread version with the `app-<version>.jar` or in the cluster version with the storage node `core-<version>.jar` and the front node `api-<version>.jar`.
+The simplest way to use the file system is to download the last release and run it with the only requirement of Java8. In this way, the application can be used either in the multi-thread version with the `app-<version>.jar` or in the cluster version with the storage node `core-<version>.jar` and the front node `api-<version>.jar`.
 In the release is also possible to find the the MonitorWebApp for Linux, MacOS and Windows.
 
 
@@ -9,11 +9,11 @@ In the release is also possible to find the the MonitorWebApp for Linux, MacOS a
 
 - Java8
 - *Nodejs/npm (optional only for the MonitorWebApp)*
-- *Docker>=10 (optional only for the docker version of the file-system)*
+- *Docker>=10 (optional only for the Docker version of the file system)*
 
 
 ## Thread version
-It can be build with:
+It can be built with:
 ```bash
 ./gradlew app:build
 ```
@@ -35,7 +35,7 @@ java -jar -N 10 -n 2 -gport 3000 -mport 2000"
 ```
 
 ## Single server
-It can be build with:
+It can be built with:
 ```bash
 ./gradlew core:build api:build
 ```
@@ -70,16 +70,17 @@ To build the docker image of the front node and the storage node run
 ./gradlew core:build core:docker api:build api:docker
 ```
 
-Now is possible to execute a demo by run the following perl script:
+Now is possible to execute a demo by running the following Perl script:
 ```bash
 perl start-docker.pl <number of storage node :default 5>
 ```
 
-To manually run a file-system node you have to create a new docker network with the command:
+To manually run a file system node you have to create a new docker network with the command:
+
 ```bash
 docker network create --subnet=172.18.0.1/16 fs-net
-```bash
-then to start a two node file-system run
+```
+then to start a two node file system
 ```bash
 docker run -d \
     --net fs-net \
@@ -102,7 +103,7 @@ docker run -d \
 ```
 
 ## MonitorWebApp
-The webapp can be used with one of the release version for the different OS or run with the nodejs interpreter with the following command:
+The web-app can be used with one of the released versions for the different OS's or run with the Node.js interpreter with the following command:
 ```bash
 ./gradlew webapp:run
 ```

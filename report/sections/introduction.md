@@ -1,11 +1,11 @@
 # Introduction
-The aim of the project is to create a weakly consist distributed file-system by the use of gossiping, consistent hashing and vector clocks.
+The aim of the project is to create a weakly consistent distributed file system by using gossiping, consistent hashing and vector clocks.
 
-The communication between node exploit the Java socket mechanism so it can be execute in different ways: on a single machine with threads, on a cluster of servers or in virtual containers using *docker*.
+The communication between nodes exploits the Java socket mechanism, thus it can be executed in different ways: on a single machine with threads, on a cluster of servers or in virtual containers using *Docker*.
 
-The file-system is implemented as a map with a string key and a number or string value with the following operations:
+The file system is implemented as a key value map of type $\langle string, string \cup number \rangle$ with the following operations:
 
-- **add**(key, value), add only if the key is not present.
-- **get**(key), get the value of the key if present.
-- **update**(key, value), update the key with the new value only if the key already exists.
-- **remove**(key), remove the key if present.
+- **add**(key, value) that adds the pair only if the key is not present;
+- **get**(key) returning the value of the key if present;
+- **update**(key, value) that updates the key with the new value only if the key already exists;
+- **remove**(key) that removes the key if present;
