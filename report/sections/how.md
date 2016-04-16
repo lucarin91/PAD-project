@@ -31,7 +31,7 @@ Optional parameters:
 example:
 
 ```bash
-java -jar -N 10 -n 2 -gport 3000 -mport 2000"
+java -jar -N 10 -n 2 -gport 3000 -mport 2000
 ```
 
 ## Single server
@@ -104,6 +104,7 @@ docker run -d \
 
 ## MonitorWebApp
 The web-app can be used with one of the released versions for the different OS's or run with the Node.js interpreter with the following command:
+
 ```bash
 ./gradlew webapp:run
 ```

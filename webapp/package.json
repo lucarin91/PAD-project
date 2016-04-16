@@ -1,32 +1,45 @@
 {
-  "name": "MonitorWebApp",
-  "description": "",
-  "version": "0.0.1",
-  "main": "index.html",
-  "window": {
-    "toolbar": true,
-    "width": 850,
-    "height": 800,
-    "min_width": 850,
-    "min_height": 800,
-    "max_width": 850,
-    "max_height": 800
-  },
-  "single-instance": false,
-  "scripts": {
-    "start": "node_modules/nw/bin/nw .",
-    "pack": "node_modules/.bin/nwbuild -v 0.12.3 -p win64,osx64,linux64 -o ../build ."
-  },
-  "dependencies": {
-    "angular": "^1.5.0",
-    "bootstrap": "^3.3.6",
-    "jquery": "^2.2.1",
-    "nw": "^0.12.3"
-  },
-  "config": {
-    "url": "127.0.0.1:8080"
-  },
-  "devDependencies": {
-    "nw-builder": "~2.2.0"
-  }
+    "name": "MonitorWebApp",
+    "description": "The monitor app for the PAD-FS distributed file system",
+    "version": "0.0.1",
+    "main": "index.html",
+    "window": {
+        "toolbar": true,
+        "width": 850,
+        "height": 800,
+        "min_width": 850,
+        "min_height": 800,
+        "max_width": 850,
+        "max_height": 800
+    },
+    "single-instance": false,
+    "scripts": {
+        "start": "nw .",
+        "pack": "nwbuild --cacheDir /tmp -v 0.12.3 -p win64,osx64,linux64 -o ../build ."
+    },
+    "dependencies": {
+        "angular": "^1.5.0",
+        "bootstrap": "^3.3.6",
+        "jquery": "^2.2.1"
+    },
+    "config": {
+        "url": "127.0.0.1:8080"
+    },
+    "platformOverrides": {
+        "win": {
+            "window": {
+                "toolbar": true
+            }
+        },
+        "osx": {
+            "window": {
+                "toolbar": true
+            }
+        },
+        "linux": {
+            "window": {
+                "toolbar": true
+            }
+        }
+    }
 }

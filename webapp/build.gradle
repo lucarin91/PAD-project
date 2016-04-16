@@ -12,5 +12,3 @@ task build(type: Exec) {
     executable "sh"
     args "-c", "npm install && npm run pack"
 }
-
-
