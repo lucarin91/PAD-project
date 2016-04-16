@@ -28,17 +28,17 @@
     "platformOverrides": {
         "win": {
             "window": {
-                "toolbar": true
+                "toolbar": false
             }
         },
         "osx": {
             "window": {
-                "toolbar": true
+                "toolbar": false
             }
         },
         "linux": {
             "window": {
-                "toolbar": true
+                "toolbar": false
             }
         }
     }
