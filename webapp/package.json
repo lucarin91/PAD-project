@@ -15,7 +15,7 @@
     "single-instance": false,
     "scripts": {
         "start": "nw .",
-        "pack": "nwbuild --cacheDir /tmp -v 0.12.3 -p win64,osx64,linux64 -o ../build ."
+        "pack": "nwbuild --cacheDir /tmp -v 0.12.3 -p win64,osx64,linux64 -o ./build . && perl zip-build.pl"
     },
     "dependencies": {
         "angular": "^1.5.0",
