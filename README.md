@@ -2,6 +2,8 @@
 
 The aim of the project is to create a weakly consistent distributed file system by using gossiping, consistent hashing and vector clocks.
 
+This is the project of the Distributed Enabling Platforms course and [here](./REPORT.pdf) can be found the report.
+
 <!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
 - [Introduction](#introduction)
@@ -19,8 +21,6 @@ The aim of the project is to create a weakly consistent distributed file system 
 <!-- /TOC -->
 
 ## Introduction
-
-
 The communication between nodes exploits the Java socket mechanism, thus it can be executed in different ways: on a single machine with threads, on a cluster of servers or in virtual containers using *Docker*.
 
 ![Project logical structure](./report/img/pad-logic.png)
