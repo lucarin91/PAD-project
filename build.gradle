@@ -1,4 +1,6 @@
-configure(subprojects.findAll {it.name != 'webapp' && it.name != 'report'}) {
+configure(subprojects.findAll {it.name != 'webapp' &&
+                               it.name != 'report' &&
+                               it.name != 'slides'}) {
 
     group = 'pad-fs'
     version '0.2'
