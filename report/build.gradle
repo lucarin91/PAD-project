@@ -1,4 +1,0 @@
-task build(type: Exec) {
-    executable "sh"
-    args "-c", "./compile.sh"
-}

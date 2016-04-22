@@ -1,60 +1,9 @@
-configure(subprojects.findAll {it.name != 'webapp' &&
-                               it.name != 'report' &&
-                               it.name != 'slides'}) {
-
-    group = 'pad-fs'
-    version '0.2'
-
-    apply plugin: 'application'
-
-
-    repositories {
-        mavenCentral()
-        maven { url "https://jitpack.io" }
-    }
-
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
-
-
-    dependencies {
-        compile 'junit:junit:4.8.2'
-        compile 'com.fasterxml.jackson.core:jackson-core:2.7.2'
-        compile 'com.fasterxml.jackson.core:jackson-annotations:2.7.2'
-        compile 'com.fasterxml.jackson.core:jackson-databind:2.7.2'
-        compile 'log4j:log4j:1.2.17'
-        compile 'org.mapdb:mapdb:1.0.8'
-        compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.7.2'
-        compile 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.7.2'
-        //compile 'io.teknek:gossip:0.0.3'
-        compile 'com.github.edwardcapriolo:gossip:master'
-    }
-
-    task wrapper(type: Wrapper) {
-        gradleVersion = '2.7'
-    }
-
-    run {
-        /* Can pass all the properties: */
-        systemProperties System.getProperties()
-
-        /* Need to split the space-delimited value in the exec.args */
-        if(System.getProperty("exec.args") != null) {
-            args System.getProperty("exec.args").split()
-        }
-    }
-
-
-    task copyJarToBin(type:Copy, dependsOn: [build]) {
-        copy {
-            from "${jar.archivePath}"
-            into "${rootDir}/build"
-        }
-    }
+task run(type: Exec) {
+    executable "sh"
+    args "-c", "npm install && npm start"
 }
 
-
-task delStorage(type: Exec) {
+task install(type: Exec) {
     executable "sh"
-    args "-c", "rm -f /tmp/*.data*"
+    args "-c", "npm install"
 }
