@@ -16,7 +16,6 @@
 
 	<link rel="stylesheet" href="css/reveal.css">
 	<link rel="stylesheet" href="css/theme/blood.css" id="theme">
-	<link rel="stylesheet" href="css/mystyle.css">
 
 	<!-- Code syntax highlighting -->
 	<link rel="stylesheet" href="lib/css/zenburn.css">
@@ -43,15 +42,127 @@
 		<!-- Any section element inside of this container is displayed as a slide -->
 		<div class="slides">
 
-			<!-- <section>
+			<section>
 				<h1>PAD-FS</h1>
 				<h4>A distributed persistent file system</h4>
 				<p>
 					<small>Created by <a href="http://www.github.com/lucarin91">Luca Rinaldi</a></small>
 				</p>
+			</section>
+
+			<!-- <section>
+				<h2>Characteristics:</h2>
+
+				<p class="fragment">
+					dynamic number of server
+				</p>
+				<p class="fragment">
+					replication on multiple server
+				</p>
+				<p class="fragment">
+					RESTful API to interact
+				</p>
+				<p class="fragment">
+					MonitorApp to manage the whole file system
+				</p>
+				<p class="fragment">
+					data versing and data conflict resolution
+				</p>
+
+				<aside class="notes">
+					This slide has fragments which are also stepped through in the notes window.
+				</aside>
 			</section> -->
 
-			<section data-markdown="slides.md" data-separator="^\n\n\n" data-separator-vertical="^\n\n" data-separator-notes="^Note:" data-charset="iso-8859-15">
+			<section data-markdown>
+				<script type="text/template">
+					## Characteristics:
+
+					dynamic number of server
+					<!-- .element: class="fragment" -->
+
+					replication on multiple server
+					<!-- .element: class="fragment" -->
+
+					RESTful API to interact
+					<!-- .element: class="fragment" -->
+
+					MonitorApp to manage the whole file system
+					<!-- .element: class="fragment" -->
+
+					data versing and data conflict resolution
+					<!-- .element: class="fragment" -->
+
+				</script>
+			</section>
+
+
+			<section>
+				<section>
+					<h3>Infrastructure</h3>
+					<img src="img/pad-logic.png" />
+				</section>
+				<section>
+					<img src="img/webapp.png" />
+				</section>
+
+				<!-- <p>
+					Two type of server:
+				</p>
+				<ul>
+					<li class="fragment">
+						one for the data storage
+					</li>
+					<li class="fragment">
+						one for the user interaction
+					</li>
+				</ul>
+
+				<p class="fragment">
+					A monitor application for the management
+				</p> -->
+			</section>
+
+			<section>
+				<section>
+					<h3>Storage Protocol</h3>
+					<p class="fragment">
+						single Master without consensus
+					</p>
+					<p class="fragment">
+						with replication
+					</p>
+					<p class="fragment">
+						with update operation tracking
+					</p>
+				</section>
+
+				<section>
+					<p class="">
+						Operations available:
+					</p>
+					<p>
+						<ul>
+							<li class="">
+								<code>add(key, value)</code>
+							</li>
+							<li class="">
+								<code>get(key)</code>
+							</li>
+							<li class="">
+								<code>update(key, value)</code>
+							</li>
+							<li class="">
+								<code>delete(key)</code>
+							</li>
+						</ul>
+					</p>
+				</section>
+
+			</section>
+
+			<section>
+
 			</section>
 		</div>
 	</div>

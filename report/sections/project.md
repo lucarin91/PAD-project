@@ -76,10 +76,10 @@ Now there is a table showing in more detail the coverage of the most important c
 
 | Class    	  | %	Method        | %	Line           |
 |-------------|-----------------|------------------|
-| GossipResource	 | 100% (2/ 2)	| 90% (9/ 10)	| 70% (42/ 60) |
+| GossipResource		| 90% (9/ 10)	| 70% (42/ 60) |
 | Node             |	94.4% (17/ 18) | 92.2% (59/ 64) |
-| StorageNode	     | 100% (2/ 2)	| 92.9% (13/ 14) | 83.9% (135/ 161) |
-| ConsistentHash	 | 100% (1/ 1)	| 68.2% (15/ 22) | 82.9% (58/ 70) |
+| StorageNode	     |  92.9% (13/ 14) | 83.9% (135/ 161) |
+| ConsistentHash	 |  68.2% (15/ 22) | 82.9% (58/ 70) |
 | Data	| 95.5% (21/ 22)	| 98.4% (60/ 61) |
 | PersistentStorage	| 83.3% (10/ 12) | 79.7% (47/ 59) |
 | VectorClock	| 86.7% (13/ 15)	| 86.1% (31/ 36) |
