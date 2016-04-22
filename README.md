@@ -4,6 +4,8 @@ The aim of the project is to create a weakly consistent distributed file system 
 
 This is the project of the Distributed Enabling Platforms course and [here](./REPORT.pdf) can be found the report.
 
+[Here](http://lucarin91.github.io/PAD-project) find the slides that presents the PAD-FS project.
+
 <!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
 - [Introduction](#introduction)
