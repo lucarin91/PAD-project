@@ -64,7 +64,8 @@ Optional parameters:
 example:
 
 ```bash
-java -jar -N 10 -n 2 -gport 3000 -mport 2000
+java -jar app-<version>.jar \
+    -N 10 -n 2 -gport 3000 -mport 2000
 ```
 
 ### Single server version
