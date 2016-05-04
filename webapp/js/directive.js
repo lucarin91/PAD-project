@@ -21,6 +21,6 @@
                         element[0].childNodes[5].beginElement();
                     }, true);
                 }
-            }
-        })
+            };
+        });
 })();

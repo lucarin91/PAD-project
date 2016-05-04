@@ -4,7 +4,6 @@
     "version": "0.0.1",
     "main": "index.html",
     "window": {
-        "toolbar": true,
         "width": 850,
         "height": 800,
         "min_width": 850,

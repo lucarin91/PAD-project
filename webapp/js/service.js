@@ -3,13 +3,13 @@
         .factory("API", function ($http, $timeout, CONST) {
             return {
                 add: function (key, value) {
-                    return $http.post(CONST.URL + '/api', {key: key, value: value})
+                    return $http.post(CONST.URL + '/api', {key: key, value: value});
                 },
                 rm: function (key) {
-                    return $http.delete(CONST.URL + '/api?key=' + key)
+                    return $http.delete(CONST.URL + '/api?key=' + key);
                 },
                 up: function (key, value) {
-                    return $http.put(CONST.URL + '/api', {key: key, value: value})
+                    return $http.put(CONST.URL + '/api', {key: key, value: value});
                 },
                 status: function (callback) {
                     var me = this;
@@ -30,11 +30,11 @@
                     }).error(function () {
                         console.log('error');
                         $timeout(function () {
-                            me.status(callback)
+                            me.status(callback);
                         }, 5000);
-                    })
+                    });
                 }
-            }
+            };
         })
         .factory('DATA', function (CONST) {
             return {
@@ -67,7 +67,7 @@
                             color: me.heatMapColorforValue(item.store.length > CONST.MAX_STORE ?
                                 1 : item.store.length / CONST.MAX_STORE),
                             list: item.store
-                        }
+                        };
                     });
                     return res;
                 },
@@ -79,10 +79,10 @@
                     var red = Math.round(255 - (150 * value));
                     var green = Math.round(200 * value);
                     var blue = 0;
-                    return "rgb("+red+','+green+','+blue+')'
+                    return "rgb("+red+','+green+','+blue+')';
                 },
                 getCheckValue: function(check){
-                    console.log(check)
+                    console.log(check);
                     var r = 0;
                     var N = 0;
                     for(var i in check){
@@ -101,6 +101,6 @@
                     //}
                     return r/N;
                 }
-            }
-        })
+            };
+        });
 })();
