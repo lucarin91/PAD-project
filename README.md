@@ -3,6 +3,10 @@
 The aim of the project is to create a weakly consistent distributed file system by using gossiping, consistent hashing and vector clocks.
 
 This is the project of the Distributed Enabling Platforms course and [here](./REPORT.pdf) can be found the report.
+[Here](http://lucarin91.github.io/PAD-project) find the slides that presents the PAD-FS project.
+
+Click here for the full video of the development visualization
+[![Development Visualization](https://j.gifs.com/yPzNQz.gif)](https://www.youtube.com/watch?v=dcyLVXIVUX4)
 
 <!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
