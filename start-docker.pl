@@ -7,12 +7,12 @@ my $res = `docker network create --subnet=$IP.0/16 fs-net`;
 print $res;
 
 for my $i (1..$N){
-$res = `docker stop server$i`;
-print $res;
-$res = `docker rm server$i`;
-print $res;
-$res = `docker run -d --name server$i --net fs-net --ip $IP.$i pad-fs/core:0.1 -h server$i:$IP.$i:2000 -m server3:$IP.3:2000`;
-print $res;
+  $res = `docker stop server$i`;
+  print $res;
+  $res = `docker rm server$i`;
+  print $res;
+  $res = `docker run -d --name server$i --net fs-net --ip $IP.$i pad-fs/core:0.1 -h server$i:$IP.$i:2000 -m server3:$IP.3:2000`;
+  print $res;
 }
 
 $res = `docker stop api`;

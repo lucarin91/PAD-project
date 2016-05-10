@@ -3,7 +3,7 @@ use strict;
 
 my $NAME  = 'MonitorWebApp';
 my $PATH  = "build/$NAME";
-my $V     = 'v0.2';
+my $V     = 'v0.3';
 my @files = <"$PATH/*">;
 
 foreach my $file (@files) {

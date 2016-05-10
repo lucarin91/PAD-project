@@ -1,7 +1,7 @@
 {
     "name": "MonitorWebApp",
     "description": "The monitor app for the PAD-FS distributed file system",
-    "version": "0.0.1",
+    "version": "0.0.3",
     "main": "index.html",
     "window": {
         "width": 850,

@@ -155,9 +155,6 @@ public class StorageNode extends Node {
                                 _store.update(msg.getData());
                                 break;
                             case NOTHING:
-//                                Set<Data<?>> set = new HashSet<>();
-//                                set.add(thisData);
-//                                set.add(thatData);
                                 Data<?> conflictData = new Data<>(thisData, thatData);
                                 _store.update(conflictData);
                                 break;

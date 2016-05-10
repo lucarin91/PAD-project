@@ -6,6 +6,8 @@ import com.google.code.gossip.GossipMember;
 import lr.core.CmdArgs.NodeArgs;
 import lr.core.Nodes.GossipResource;
 import lr.core.Helper;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -18,6 +20,9 @@ import java.util.List;
 @SpringBootApplication
 public class FrontAPI {
     public static void main(String[] args) {
+        Logger.getRootLogger().setLevel(Level.OFF);
+        Logger.getLogger("lr").setLevel(Level.INFO);
+
         NodeArgs s = new NodeArgs();
         Helper.parseArgs(s, args);
 

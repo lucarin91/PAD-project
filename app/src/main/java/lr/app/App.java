@@ -9,6 +9,9 @@ import lr.core.Nodes.GossipResource;
 import lr.api.FrontAPI;
 import lr.core.Helper;
 import lr.core.Nodes.StorageNode;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.pattern.LogEvent;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,8 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
-
 /**
  * Created by luca on 24/02/16.
  */
@@ -28,7 +29,9 @@ import org.apache.log4j.Logger;
 public class App {
 
     public static void main(String[] args) throws IOException {
-        final Logger LOG = Logger.getLogger(App.class);
+
+        Logger.getRootLogger().setLevel(Level.OFF);
+        Logger.getLogger("lr").setLevel(Level.INFO);
 
         AppArgs s = new AppArgs();
         Helper.parseArgs(s, args);
