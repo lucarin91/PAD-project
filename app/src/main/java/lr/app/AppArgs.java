@@ -1,12 +1,12 @@
 package lr.app;
 
 import com.beust.jcommander.Parameter;
-import lr.core.CmdArgs;
+import lr.core.CmdArgs.BaseArgs;
 
 /**
  * Created by luca on 11/03/16.
  */
-public class CmdArgsApp extends CmdArgs{
+public class AppArgs extends BaseArgs {
 
     @Parameter(names = "-N", description = "number of servers")
     private int N = 5;

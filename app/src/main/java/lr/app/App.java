@@ -18,18 +18,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.log4j.Logger;
-import org.apache.log4j.net.SyslogAppender;
 
 /**
  * Created by luca on 24/02/16.
  */
 
 public class App {
+
     public static void main(String[] args) throws IOException {
         final Logger LOG = Logger.getLogger(App.class);
 
-        CmdArgsApp s = new CmdArgsApp();
+        AppArgs s = new AppArgs();
         Helper.parseArgs(s, args);
 
         final Map<String, StorageNode> clients = new HashMap<>();
@@ -44,7 +45,7 @@ public class App {
 
             for (int i = 2; i <= lastServerID; i++) {
                 clients.put(i + "", new StorageNode(i + "", "127.0.0." + i, 2000, startupMembers)
-                        .setNBackup(1)
+                        .setNBackup(s.getReplica())
                         .start());
             }
 
@@ -72,7 +73,7 @@ public class App {
                             int id = cmd.length == 1 ? ++lastServerID : Integer.parseInt(cmd[1]);
                             try {
                                 n = new StorageNode("" + id, "127.0.0." + id, 2000, startupMembers)
-                                        .setNBackup(1)
+                                        .setNBackup(s.getReplica())
                                         .start();
                                 clients.put("" + id, n);
                                 System.out.println("add server " + n);
@@ -93,7 +94,7 @@ public class App {
                             }
                             break;
                         case "ls":
-                                clients.forEach((s1, storageNode) -> System.out.println(storageNode));
+                            clients.forEach((s1, storageNode) -> System.out.println(storageNode));
                             break;
                     }
                 }

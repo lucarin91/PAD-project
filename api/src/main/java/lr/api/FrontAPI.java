@@ -3,7 +3,7 @@ package lr.api;
 import com.google.code.gossip.GossipMember;
 //import lr.gossip.GossipMember;
 
-import lr.core.CmdArgs;
+import lr.core.CmdArgs.NodeArgs;
 import lr.core.Nodes.GossipResource;
 import lr.core.Helper;
 import org.springframework.boot.Banner;
@@ -18,14 +18,14 @@ import java.util.List;
 @SpringBootApplication
 public class FrontAPI {
     public static void main(String[] args) {
-        CmdArgs s = new CmdArgs();
-        Helper.parseArgs(s,args);
+        NodeArgs s = new NodeArgs();
+        Helper.parseArgs(s, args);
 
         start(s.getId(), s.getIp(), s.getPort(), s.getMembers());
     }
 
     public static void start(String id, String ip, int port, List<GossipMember> members) {
-        start(id,ip,port,port+1,members);
+        start(id, ip, port, port + 1, members);
     }
 
     public static void start(String id, String ip, int portG, int portM, List<GossipMember> members) {

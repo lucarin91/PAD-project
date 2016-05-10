@@ -2,6 +2,7 @@ package lr.core;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
+import lr.core.CmdArgs.BaseArgs;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -45,7 +46,7 @@ public class Helper {
         return bigInt.longValue();
     }
 
-    public static void parseArgs(CmdArgs s, String[] args){
+    public static void parseArgs(BaseArgs s, String[] args){
         try {
             JCommander jcom = new JCommander(s, args);
             if (s.isHelp()){

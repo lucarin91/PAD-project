@@ -32,7 +32,7 @@ public class StorageNode extends Node {
     private final Thread _passiveThread;
     private AtomicBoolean _toStop;
     private DatagramSocket _server;
-    private int _replica = 2;
+    private int _replica = 1;
 
     public StorageNode clearStorage() {
         _store.close();
